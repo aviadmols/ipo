@@ -108,6 +108,7 @@ if (isset($theme) && is_object($theme)) {
 	$theme->add_style('splide-core.min');
 	$theme->add_style('splide.min');
 	$theme->add_style('animate');
+	$theme->add_style('moreconcerts'); // moreConcerts Splide module — must load last to win cascade
 	//$theme->add_style('fancybox');
 	$theme->add_parent_style('fancybox');
 

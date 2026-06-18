@@ -145,7 +145,8 @@
 
 
 
-        //moreConcerts slider Initialize
+        //moreConcerts slider — LIVE pages now use Splide (.moreConcerts-splide; init in sliders-splide.js).
+        // The owl init below now only matches the legacy static-demo markup still tagged .moreConcerts-slider.
 
         // Check if there are at least 5 items in the slider, or this is mobile
 
@@ -202,29 +203,30 @@
 
         
 
-        $(window).scroll(function() {
-            var scroll = $(window).scrollTop();
+        // order_area sticky toggle — rAF-throttled + passive listener.
+        // (Was an unthrottled $(window).scroll that read scrollTop and queued a
+        //  setTimeout on every frame, hurting mobile scroll smoothness. Thresholds
+        //  600px mobile / 800px desktop are preserved exactly.)
+        (function () {
+            var $orderArea = $('.order_area');
+            if (!$orderArea.length) { return; }
+            var isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            var threshold = isMobileUA ? 600 : 800;
+            var ticking = false;
 
-
-            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                if (scroll > 600) {
-                    $(".order_area").addClass("sticky");
-                } else {
-                    setTimeout(function() {
-                        $(".order_area").removeClass("sticky");
-                    }, 5);
-                }
-            } else {
-
-                if (scroll > 800) {
-                    $(".order_area").addClass("sticky");
-                } else {
-                    setTimeout(function() {
-                        $(".order_area").removeClass("sticky");
-                    }, 5);
-                }
+            function onScrollFrame() {
+                ticking = false;
+                var scroll = window.pageYOffset || document.documentElement.scrollTop;
+                $orderArea.toggleClass('sticky', scroll > threshold);
             }
-        });
+
+            window.addEventListener('scroll', function () {
+                if (!ticking) {
+                    ticking = true;
+                    window.requestAnimationFrame(onScrollFrame);
+                }
+            }, { passive: true });
+        })();
 
 
     });

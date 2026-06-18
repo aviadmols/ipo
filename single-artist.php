@@ -364,7 +364,10 @@ echo $readmoretext; ?></span><span class="less"><?php echo $readlessetext; ?></s
 if (!empty($program_related_programs) && is_array($program_related_programs)) {
     foreach ($program_related_programs as $related_program_id) { 
         $count = $count + 1;
-        $items_html .= $theme->get_part('loop-program', $related_program_id);
+        $part = $theme->get_part('loop-program', $related_program_id);
+        if (trim($part) !== '') {
+            $items_html .= '<li class="splide__slide">' . $part . '</li>';
+        }
     }
 }
 
@@ -385,11 +388,15 @@ if (!empty($program_related_programs) && is_array($program_related_programs)) {
                 </div>
 
                 <!-- slider start -->
-         <div class="owl-carousel owl-theme moreConcerts-slider t3" data-items_ids="<?php echo implode(',', $program_related_programs); ?>">
+         <div class="splide moreConcerts-splide t3" data-items_ids="<?php echo implode(',', $program_related_programs); ?>">
+           <div class="splide__track">
+             <ul class="splide__list">
 
-            <?php 
+            <?php
             echo $items_html;
                 ?>
+             </ul>
+           </div>
            <?php endif; ?>
        
                 

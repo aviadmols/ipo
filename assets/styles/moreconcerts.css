@@ -1,0 +1,61 @@
+/* =============================================================================
+   moreConcerts slider — Splide rebuild (phase 1)
+   -----------------------------------------------------------------------------
+   Related-programs slider used on single-program.php, single-artist.php (.t3)
+   and page-templates/Simple_page.php. Migrated from owlCarousel to Splide.
+   Every rule is scoped to .moreConcerts-splide so it cannot affect the home
+   .upcoming_area owl slider or any other module. This file is enqueued LAST
+   (after splide.min + style-shojib), so it wins on cascade without !important.
+   JS init: assets/scripts/sliders-splide.js
+   ========================================================================== */
+
+/* --- Splide structure --------------------------------------------------- */
+.moreConcerts-splide .splide__track { overflow: hidden; }
+.moreConcerts-splide .splide__list  { display: flex; margin: 0; padding: 0; list-style: none; }
+.moreConcerts-splide .splide__slide { box-sizing: border-box; height: auto; padding-left: 0; padding-right: 0; }
+
+/* Card width is driven by Splide's perPage math, not the legacy fixed 240px
+   (style.css:2291 .moreConcerts .img_box{max-width:240px}). */
+.moreConcerts-splide .img_box { max-width: 100%; width: 100%; margin-left: 0; }
+
+/* Preserve the 4rem slider top-padding the old .moreConcerts-slider gave
+   (style.css:2304), now that the wrapper no longer carries that class. */
+.moreConcerts-splide { padding-top: 4rem; }
+
+/* --- Image pop / jump fix ----------------------------------------------- */
+/* The card image already reserves its height via the shared
+   .wpstack-bg-image:after{padding-bottom:55%} (style-sagi.css:970), so the card
+   proportions stay identical. We only add a neutral placeholder colour so the
+   late background paint no longer flashes against a transparent box. */
+.moreConcerts-splide .loop-program .img_box .wpstack-bg-image { background-color: #eee; }
+
+/* --- FOUC guard --------------------------------------------------------- */
+/* Hide the slider until Splide adds .is-initialized (mirrors the old
+   :not(.owl-loaded) guard) so cards don't flash as a tall un-clipped column.
+   No min-height: a zero-slide wrapper (all related programs eventless) is never
+   mounted, so it must collapse rather than reserve a blank gap. */
+.moreConcerts-splide.splide:not(.is-initialized) { visibility: hidden; }
+
+/* --- Navigation arrows -------------------------------------------------- */
+/* Match the old owl nav: transparent button, only the injected SVG shows.
+   The <img> is injected by sliders-splide.js on the 'arrows:mounted' event. */
+.moreConcerts-splide .splide__arrow {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    opacity: 1;
+    width: auto;
+    height: auto;
+    padding: 0;
+    cursor: pointer;
+    position: absolute;
+    top: 40%;
+    transform: translateY(-50%);
+    z-index: 5;
+}
+.moreConcerts-splide .splide__arrow img { width: 20px; height: auto; display: block; }
+
+/* Positions mirror the previous owl arrows (style.css:3993/4000): prev on the
+   right, next on the left — kept identical for he/en, as the live site did. */
+.moreConcerts-splide .splide__arrow--prev { right: -50px; left: auto; }
+.moreConcerts-splide .splide__arrow--next { left: -50px; right: auto; }

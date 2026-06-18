@@ -385,7 +385,9 @@ if (ICL_LANGUAGE_CODE == 'he') {
                 </div>
 
              <!-- slider start -->
-<div class="owl-carousel owl-theme moreConcerts-slider">
+<div class="splide moreConcerts-splide">
+  <div class="splide__track">
+    <ul class="splide__list">
   
     <?php 
   
@@ -425,21 +427,23 @@ if (ICL_LANGUAGE_CODE == 'he') {
             continue;
         }
     ?>
-        <div class="item <?php  
-            $program = new ipo_program($related_id); 
-            echo $post->post_type; 
-            echo $related_id; 
+        <li class="splide__slide item <?php
+            $program = new ipo_program($related_id);
+            echo $post->post_type;
+            echo $related_id;
         ?>">
             <?php $theme->the_part('loop-program', $related_id); ?>
-        </div>
+        </li>
 
     <?php 
     endif;
 
 endforeach;
  ?>
+    </ul>
+  </div>
 </div>
-     
+
                 <!-- slider end -->
 
    <?php 

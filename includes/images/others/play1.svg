@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="89px" height="90px" viewBox="0 0 89 90" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>icons/play copy 3</title>
+    <defs>
+        <filter x="-67.9%" y="-67.9%" width="234.9%" height="234.9%" filterUnits="objectBoundingBox" id="filter-1">
+            <feOffset dx="0" dy="5" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="5" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.7 0" type="matrix" in="shadowBlurOuter1" result="shadowMatrixOuter1"></feColorMatrix>
+            <feMerge>
+                <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="לובי-דסקטופ" transform="translate(-254.000000, -4334.000000)" fill="#FFFFFF" fill-rule="nonzero">
+            <g id="Group-19" transform="translate(35.000000, 4228.566719)">
+                <g id="Group-18" transform="translate(65.000000, 0.000000)">
+                    <g id="icons/play-copy-3" filter="url(#filter-1)" transform="translate(176.946565, 128.532143)">
+                        <g id="Group-30" transform="translate(-0.371507, -0.371507)">
+                            <path d="M22,0 C34.1502645,0 44,9.8497355 44,22 C44,34.1502645 34.1502645,44 22,44 C9.8497355,44 0,34.1502645 0,22 C0,9.8497355 9.8497355,0 22,0 Z M22,0.885819708 C10.3389602,0.885819708 0.885819708,10.3389602 0.885819708,22 C0.885819708,33.6610398 10.3389602,43.1141803 22,43.1141803 C33.6610398,43.1141803 43.1141803,33.6610398 43.1141803,22 C43.1141803,10.3389602 33.6610398,0.885819708 22,0.885819708 Z M18.8194457,15.6388914 L27.3009238,22.3600627 L18.8194457,28.3611086 L18.8194457,15.6388914 Z" id="Shape"></path>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

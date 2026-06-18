@@ -1,0 +1,4 @@
+node_modules/
+*.log
+log_events.txt
+debug.log

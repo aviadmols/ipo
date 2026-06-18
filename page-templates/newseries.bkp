@@ -1,0 +1,107 @@
+<?php 
+/*
+* Template Name: New Series Page
+*/
+
+get_header();
+
+$bannerimage = get_field('series_banner_image');
+
+?>
+<div class="main_body">
+  <?php if($bannerimage != '' ){ ?>
+  <div class="plan_banner">
+<div class="row">
+        <div class=" col-md-12 col-sm-12 col-xs-12 banner_image"><a href="<?php echo get_permalink(); ?>"><img src="<?php echo $bannerimage['url']; ?>" alt="<?php echo $bannerimage['alt']; ?>" /></a></div>
+      </div>
+  
+   <div class="container">
+      
+    </div>
+  </div>
+  <?php } ?>
+  <div class="container">
+    <div class="row subscription">
+      <div class=" col-md-12 col-sm-12 col-xs-12">
+      
+       	<h1 class="page_title"><?php echo the_title(); ?></h1>
+        <div class="sub_tab">
+			
+		    <?php
+			$args = array(
+				'type'=> 'series', 
+				'taxonomy'  => 'series_location',
+
+				);
+			$categories = get_categories($args);
+			$cate_array = array();
+			$cats = array(19, 20, 21, 179);
+			$i = 0;
+			foreach ($cats as $cat) {
+				$i++;
+				$tid = apply_filters( 'wpml_object_id', $cat, 'series_location', TRUE  );
+				$term = get_term($tid, 'series_location');
+				?>
+				<a href="#sec_<?php echo $term->term_id;?>" <?php if($i == 1){ echo 'class="active"';}?>><?php echo $term->name; ?></a>
+							
+			<?php 	} ?>          
+        </div>
+
+		<?php 
+		$cats = array(19, 20, 21, 179);
+		$j = 0;
+		foreach ($cats as $cat) {
+			$j++;
+			$tid = apply_filters( 'wpml_object_id', $cat, 'series_location', TRUE  );
+			$term = get_term($tid, 'series_location');
+			echo '<div id="sec_'.$tid.'">';
+	        echo '<h3 class="subscription_title">';
+	        echo $term->name;
+	        echo '</h3>';
+	        $posts = get_field('new_series_'.$j);
+	        if( $posts ):
+				$i=1;
+				foreach( $posts as $post):
+				    setup_postdata($post); 
+    				if ($i%3 == 1 || $i == 1){ 
+    					echo '<div class="row subscription_list ">';
+				    }
+				    ?>
+				          
+				    <div class="col-md-4 col-sm-4 col-xs-4">
+				        <div class="subscription_div">
+				    		<div class="series_img">
+				    			<?php 
+				    			$image = wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), 'full' );
+				    			if($image[0] != '') { ?>
+				    				<a href="<?php echo get_permalink(); ?>">
+				    					<img src="<?php echo $image[0]; ?>" alt="<?php echo get_post_meta( get_post_thumbnail_id( $ID ), '_wp_attachment_image_alt', true) ;?>">
+				    				</a>
+				    			<?php } ?> 
+				            </div>
+				            <h5 class="post_title"> <a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h5>
+			                <div class="sub_title"> <?php echo wp_trim_words( get_the_content(), 16, '' ); ?></div>
+		                    <a href="<?php echo get_permalink(); ?>" class="post_more">
+		                    	<?php if(ICL_LANGUAGE_CODE=='en') { ?>
+									Learn more >	
+		    					<?php }	 else {	?>
+		    					  למידע נוסף >
+		    					<?php } ?>
+		                    </a>
+			            </div>
+				    </div>  
+                    <?php
+                    if ($i%3 == 0) {
+    				  echo '</div><!--<div class="seprator"></div>--> ';
+    				}
+				    $i++; 
+				endforeach;  ?>
+				<?php  wp_reset_postdata();  
+			endif;  ?> 
+		<?php } ?>
+        
+		</div>
+	</div><!--Container-->	  
+</div><!--Main Body-->
+
+<?php get_footer(); ?>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="28px" height="25px" viewBox="0 0 28 25" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>small icons/filter</title>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="UIkit-1920/1280_1" transform="translate(-1084.000000, -3310.000000)" stroke="#000000" stroke-width="1.862784">
+            <g id="Group-29" transform="translate(119.000000, 3071.500000)">
+                <g id="Group-20" transform="translate(821.000000, 0.000000)">
+                    <g id="Group-18" transform="translate(0.000000, 92.500000)">
+                        <g id="components/filter/off-copy-5" transform="translate(130.000000, 130.500000)">
+                            <g id="small-icons/filter" transform="translate(15.500000, 16.000000)">
+                                <g id="Group-2" transform="translate(0.325521, 0.545455)">
+                                    <polyline id="Line-2" stroke-linecap="square" points="0 3.26088732 7.63062169 3.26088732 11.6429674 3.26088732 13.5416667 3.26088732"></polyline>
+                                    <g id="Group" transform="translate(0.000000, 18.966385)" stroke-linecap="square">
+                                        <polyline id="Line-2-Copy-2" points="0 0.5 7.63062169 0.5 11.6429674 0.5 13.5416667 0.5"></polyline>
+                                        <polyline id="Line-2-Copy-5" points="20.8333333 0.5 22.8877315 0.5 23.9679784 0.5 24.4791667 0.5"></polyline>
+                                    </g>
+                                    <polyline id="Line-2-Copy" stroke-linecap="square" points="10.9375 11.2467338 18.5681217 11.2467338 22.5804674 11.2467338 24.4791667 11.2467338"></polyline>
+                                    <polyline id="Line-2-Copy-3" stroke-linecap="square" points="20.8333333 3.26088732 22.8877315 3.26088732 23.9679784 3.26088732 24.4791667 3.26088732"></polyline>
+                                    <polyline id="Line-2-Copy-4" stroke-linecap="square" points="0 10.714344 2.05439815 10.714344 3.13464506 10.714344 3.64583333 10.714344"></polyline>
+                                    <ellipse id="Oval" stroke-linecap="round" cx="17.2526042" cy="3.1943386" rx="3.125" ry="3.1943386"></ellipse>
+                                    <ellipse id="Oval-Copy-3" stroke-linecap="round" cx="7.09635417" cy="10.7808928" rx="3.125" ry="3.1943386"></ellipse>
+                                    <ellipse id="Oval-Copy-4" stroke-linecap="round" cx="17.2526042" cy="19.0329341" rx="3.125" ry="3.1943386"></ellipse>
+                                </g>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -1,0 +1,1161 @@
+/* BASE */
+
+
+/* The switch - the box around the slider */
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+
+/* Hide default HTML checkbox */
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+
+/* The slider */
+
+.switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked+.switch-slider {
+    background-color: #2196F3;
+}
+
+input:focus+.switch-slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked+.switch-slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+
+/* Rounded sliders */
+
+.switch-slider.round {
+    border-radius: 34px;
+}
+
+.switch-slider.round:before {
+    border-radius: 50%;
+}
+
+
+/*  */
+
+.calendar_area .numCount li {
+    display: block;
+    border-radius: 0;
+}
+
+.calendar_area .splide__pagination {
+    display: none;
+}
+
+.calendar_area .calendar-row .numCount {
+    border: none;
+}
+
+.calendar_area .calendar-row {}
+
+.calendar_area .calendar-row .splide__track .numCount {
+    padding-bottom: 10px !important;
+    padding-top: 10px !important;
+}
+
+.calendar_area .numCount li {
+    text-align: center;
+}
+
+.calendar_area .splide__track {
+    max-width: calc( 100% - 100px);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.calendar_area .splide__arrow>svg {
+    display: none;
+}
+
+.calendar_area .splide__arrow {
+    background-image: url(/wp-content/uploads/2022/06/left-arrow.png);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: unset;
+    opacity: 1;
+}
+
+.calendar_area .splide__arrow:disabled {
+    opacity: 0.2;
+}
+
+.splide__arrows--rtl .splide__arrow--prev {
+    transform: translateY(-50%) scale(-1, 1);
+}
+
+.calendar_area .numCount li.active {
+    background: unset;
+    color: unset;
+}
+
+.calendar_area .numCount li label {
+    height: 60px;
+    width: 60px;
+    border-radius: 50%;
+    line-height: 1;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.calendar_area .numCount li.active label {
+    display: block;
+    background: black;
+    color: white;
+}
+
+.calendar_area .numCount li.active::before {
+    display: none;
+}
+
+.calendar_area .numCount li {
+    padding-bottom: 25px;
+    padding-top: 25px;
+}
+
+.calendar_area .numCount li.active label::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    bottom: 0;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #000;
+}
+
+.calendar_area .calendar-row:after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background: #000;
+    bottom: 20px;
+}
+
+.calendar_area .numCount li[data-events=""] {
+    opacity: 0.1;
+}
+
+.ajax-calendar-events.loading>* {
+    opacity: 0;
+}
+
+.ajax-calendar-events.loading:after {
+    background: #1b1464;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px;
+    height: 30px;
+    content: "";
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 #1b1464;
+    transform: scale(1);
+    animation: pulse 2s infinite;
+}
+
+.ajax-calendar-events.loading {
+    position: relative;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 #1b1464;
+    }
+    70% {
+        box-shadow: 0 0 0 20px rgba(28, 20, 100, 0.0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(28, 20, 100, 0.0);
+    }
+}
+
+.calendar-slider .loop-calendar-horizontal-event {
+    flex-basis: 50%;
+}
+
+.calendar-slider {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.ipo-calendar-events {
+    min-height: 250px;
+}
+
+.listTariff_item {
+    padding-bottom: 124px;
+}
+
+.calendar-full .calendar-days {
+    display: flex;
+    flex-wrap: wrap;
+    background-color: rgba(243, 243, 243, 1);
+    direction: rtl;
+}
+
+.calendar-full .calendar-days>* {
+    flex-basis: calc( 100% / 7);
+    border-left: 1px solid #a4a4a4;
+    border-bottom: 1px solid #a4a4a4;
+}
+
+.calendar-full .loop-day {
+    position: relative;
+}
+
+.calendar-full .loop-day .contents label {
+    position: absolute;
+    bottom: 15px;
+    right: 20px;
+}
+
+.calendar-full .loop-day {
+    padding: 12px;
+}
+
+.calendar-full .loop-day label {
+    color: #bcbcbc;
+    font-size: 16px;
+    line-height: 33px;
+}
+
+.calendar-full .current-day.loop-day label {
+    color: black;
+}
+
+.calendar-full .loop-day:after {
+    position: relative;
+    padding-bottom: 51%;
+    display: block;
+    content: "";
+}
+
+.calendar-full .calendar-days>*:nth-child(7n) {
+    border-left: unset;
+}
+
+.calendar-full .calendar-days>*:nth-last-child(-n+7) {
+    border-bottom: unset;
+}
+
+.calendar-full .loop-day .contents .events-container,
+.calendar-full .loop-day .contents {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.calendar-full .loop-day .event {
+    height: 100%;
+    flex-basis: 100%;
+    position: relative;
+}
+
+.calendar-full .loop-day.multi-event .event {
+    height: 50%;
+    flex-basis: 50%;
+    position: relative;
+}
+
+.calendar-full .loop-day .event .wpstack-bg {
+    z-index: 1;
+}
+
+.overlay-link {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+
+.calendar-full .loop-day label {
+    z-index: 4;
+    position: relative;
+}
+
+.calendar-full .loop-day label:after {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.3);
+    content: "";
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    left: 50%;
+    top: 50%;
+    z-index: 3;
+}
+
+.calendar-full .loop-day label span {
+    z-index: 4;
+    position: relative;
+}
+
+.calendar-full .calendar-header .date {
+    font-size: 50px;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 1);
+    text-align: right;
+    letter-spacing: 2px;
+    font-family: "Mandatory PH";
+    line-height: 1;
+    margin-left: 45px;
+    margin-right: 45px;
+}
+
+.calendar-full .calendar-header {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.calendar-full .current-month {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.calendar-full {
+    direction: rtl;
+}
+
+i.arrow-left,
+i.arrow-right {
+    background-image: url(/wp-content/uploads/2022/06/left-arrow.png);
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-color: unset;
+    opacity: 1;
+    width: 12px;
+    height: 20px;
+    display: block;
+}
+
+i.arrow-right {
+    transform: scale(-1);
+}
+
+.calendar-layout-controls {
+    margin-right: 60px;
+    display: flex;
+    align-items: center;
+}
+
+.switch-container,
+.switch-container:after {
+    border-radius: 40px;
+}
+
+.switch-container {
+    border: 2px solid black;
+    height: 50px;
+    display: flex;
+    position: relative;
+    align-items: stretch;
+}
+
+.switch-container a {
+    line-height: calc( 44px - 6px * 2);
+    margin: 6px;
+    width: 90px;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+}
+
+.switch-container:after {
+    position: absolute;
+    right: 6px;
+    width: 90px;
+    background: black;
+    content: "";
+    display: block;
+    top: 4px;
+    height: calc( 40px - 2px);
+    z-index: 1;
+    transition: .5s;
+}
+
+.switch-container[data-selected-option="1"] a:last-child,
+.switch-container[data-selected-option="0"] a:first-child {
+    color: white;
+}
+
+.switch-container[data-selected-option="1"]:after {
+    right: calc( 100% - 90px - 6px);
+}
+
+.first-section {
+    margin-top: 100px;
+}
+
+header:not(.sticky) .logo img {
+    pointer-events: none;
+}
+
+.calendar-full .calendar-events,
+.calendar-full .calendar-header {
+    margin-bottom: 80px;
+}
+
+.calendar-full[data-calendar-type="normal"] .calendar-events {
+    display: none;
+}
+
+.calendar-full[data-calendar-type="events"] .calendar-days {
+    display: none;
+}
+
+.calendar-events-header .filters,
+.calendar-events-header {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.calendar-events-header input {
+    border: none;
+}
+
+.calendar-events-header>.search-field {
+    border-bottom: 2px solid black;
+    height: 60px;
+    font-size: 28px;
+    letter-spacing: 1px;
+}
+
+.calendar-events-header>.search-field input,
+.calendar-events-header>.search-field input::placeholder {
+    color: rgba(0, 0, 0, 0.44);
+}
+
+.calendar-events-header .filters,
+.calendar-events-header>.search-field>*,
+.calendar-events-header>.search-field {
+    flex-basis: 100%;
+    width: 100%;
+}
+
+.calendar-events-header>.search-field {
+    display: flex;
+    position: relative;
+    padding-right: 40px;
+}
+
+.calendar-events-header>.search-field>i {
+    position: absolute;
+    right: 0;
+    pointer-events: none;
+}
+
+.calendar-events-header .filters {
+    justify-content: flex-end;
+}
+
+.calendar-events-header .filter {
+    margin-right: 42px;
+    font-size: 18px;
+    color: rgba(0, 0, 0, 0.44);
+    letter-spacing: 0px;
+    line-height: 24px;
+    font-weight: 500;
+    margin-top: 5px;
+}
+
+.filter .panel {
+    display: none;
+}
+
+.ipo-program-image {
+    position: relative;
+    height: 135px;
+    width: 260px;
+    margin-left: 25px;
+}
+
+.ipo-program-image .playlist {
+    width: 25px;
+    display: block;
+    height: 25px;
+    position: absolute;
+    left: 15px;
+    top: 10px;
+}
+
+.ipo-list-right {
+    flex-direction: row-reverse;
+}
+
+.loop-calendar-list-event .row>*,
+.loop-calendar-list-event .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.ipo-program-details h4 {
+    font-size: 3rem;
+}
+
+.ipo-program-details .text {
+    font-size: 20px;
+  
+}
+
+.ipo-event-location {
+    width: 300px;
+    text-align: left;
+}
+
+.loop-calendar-list-event {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+i.sep {
+    font-style: unset;
+}
+
+.ipo-event-details .date {
+    font-size: 26px;
+}
+
+.ipo-event-details,
+.ipo-event-details .date {
+    text-align: center;
+}
+
+.ipo-event-details .date {
+    font-weight: 800;
+}
+
+.ipo-event-details,
+.ipo-event-location,
+.ipo-event-details .time-and-day *,
+.ipo-event-details .time-and-day {
+    font-size: 24px;
+    font-size: 300;
+}
+
+.loop-calendar-list-event {
+    margin-top: 25px;
+    padding-top: 25px;
+    padding-bottom: 57px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid rgba(206, 206, 206, 1);
+}
+
+.calendar-events-body {
+    padding-top: 30px;
+}
+
+.calendar_area .ajax-get-month-trigger p,
+.calendar_area .ajax-get-month-trigger {
+    transition: 0.25s;
+}
+
+.calendar_area .ajax-get-month-trigger.date-loading p {
+    opacity: 0;
+}
+
+.calendar_area .calendar-row:after,
+.calendar_area .ajax-calendar-row.loading {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.calendar_area .ajax-get-month-trigger.date-loading {
+    pointer-events: none;
+}
+
+.calendar_area .title_box .date p {
+    text-align: center;
+    min-width: 125px;
+}
+
+.ajax-calendar-row.loading {
+    opacity: 0.1;
+    pointer-events: none;
+}
+
+section {
+    overflow: hidden;
+}
+
+.ajax-calendar-events.loading .loop-calendar-horizontal-event.revealed {
+    transform: translatey(50px);
+    opacity: 0;
+}
+
+.ajax-calendar-events.loading .loop-calendar-horizontal-event.revealed:nth-child(1) {
+    transition-delay: 0.2s;
+}
+
+.ajax-calendar-events.loading .loop-calendar-horizontal-event.revealed:nth-child(2) {
+    transition-delay: 0.4s;
+}
+
+.ajax-calendar-events.loading .loop-calendar-horizontal-event.revealed:nth-child(3) {
+    transition-delay: 0.6s;
+}
+
+.ajax-calendar-events.loading .loop-calendar-horizontal-event.revealed:nth-child(4) {
+    transition-delay: 0.8s;
+}
+
+.ipo-event-location a {
+    display: flex !important;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+}
+
+.ipo-event-location a>* {
+    margin-right: 10px;
+}
+
+.img_box .arrow {
+    margin-bottom: 0;
+}
+
+.calendar-slider .loop-calendar-horizontal-event .img_box li span:last-child {
+    padding-left: 0;
+}
+
+.calendar-slider .loop-calendar-horizontal-event p.d-flex {
+    justify-content: flex-end;
+}
+
+.calendar-full .loop-day:hover .event .wpstack-bg,
+.loop-calendar-horizontal-event:hover .img_box .position-relative img {
+    transform: scale(1.1);
+}
+
+.calendar-full .loop-day .event .wpstack-bg,
+.loop-calendar-horizontal-event .img_box .position-relative img {
+    transition: 0.4s;
+    max-width: 100%;
+}
+
+.calendar-full .loop-day .contents,
+.loop-calendar-horizontal-event {
+    overflow: hidden;
+}
+
+
+/* EVENT FILTER */
+
+.filter .panel {
+    position: absolute;
+    left: 20%;
+    background: black;
+    border-radius: 30px;
+    padding: 10px 20px;
+    top: -7px;
+    align-items: center;
+}
+
+.filter.open .panel {
+    display: flex;
+}
+
+.calendar-events-header .filters ul.options {
+    display: flex;
+    align-items: center;
+}
+
+.calendar-events-header .filters ul.options li {
+    color: #fff;
+    margin: 0 5px;
+    cursor: pointer;
+    padding: 5px 15px;
+    border-radius: 30px;
+}
+
+.calendar-events-header .filters ul.options li.active {
+    background: #fff;
+    color: black;
+}
+
+.calendar-events-header .filter {
+    position: relative;
+}
+
+.calendar-events-header .filters .close {
+    display: inline-flex;
+    margin-right: 5px;
+    color: #fff;
+}
+
+.calendar-events-header .filters .close i {
+    color: #fff;
+    font-weight: 200;
+}
+
+.calendar-events-header .filter>a {
+    cursor: pointer;
+}
+
+.calendar-events-header>.search-field {
+    flex-basis: 75%;
+}
+
+.calendar-events-header .filters {
+    flex-basis: 25%;
+    height: 100%;
+    min-height: 60px;
+    align-items: flex-end;
+    margin-top: 30px;
+}
+
+.calendar-events-header {
+    align-items: center;
+}
+
+.calendar-events-header .filters a.open-filter i,
+.calendar-events-header .filters a.open-filter span {
+    display: block;
+}
+
+.calendar-events-header .filters a.open-filter {
+    text-align: center;
+}
+
+.calendar-events-header .filters .no-results {
+    display: none;
+}
+
+.calendar-events-header i.icon.icon-filter {
+    border: 2px solid black;
+    width: 40px;
+    height: 40px;
+    margin: auto;
+    border-radius: 50%;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.calendar-events-header .filters ul.options li a {
+    white-space: nowrap;
+}
+
+.calendar-full .calendar-events .no-results {
+    display: none;
+}
+
+.calendar-hint-popup {
+    position: absolute;
+    width: 520px;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 10;
+    transform: translatex(100%);
+    right: -2px;
+    bottom: -30%;
+    padding: 30px;
+    display: flex;
+    flex-wrap: wrap;
+    pointer-events: none;
+    opacity: 0;
+    border-radius: 26px 26px;
+    box-shadow: -1px 11px 34px 0 rgba(0, 0, 0, 0.31);
+}
+
+.loop-day:hover .calendar-hint-popup,
+.calendar-hint-popup.active {
+    opacity: 1;
+    pointer-events: unset;
+}
+
+ul.events-list {
+    max-height: 65vh;
+    padding: 0;
+    list-style: none;
+    margin: 0;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden!important;
+}
+
+ul.events-list::-webkit-scrollbar {
+    width: 2px;
+}
+
+ul.events-list::-webkit-scrollbar-thumb {
+    background-color: #444;
+}
+
+ul.events-list::-webkit-scrollbar-track {
+    background-color: #f9f9f9;
+}
+
+ul.events-list li {
+    display: flex;
+    padding-bottom: 26px;
+    padding-top: 25px;
+    border-bottom: 1px solid rgba(206, 206, 206, 1);
+}
+
+ul.events-list li:last-child {
+    border-bottom: unset;
+    padding-bottom: 0;
+}
+
+ul.events-list li .details {
+    flex-basis: calc( 100% - 140px);
+    font-size: 15px;
+}
+
+ul.events-list li .details .title {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+ul.events-list li .details .subtitle {
+    font-size: 18px;
+}
+
+ul.events-list li .media {
+    position: relative;
+    flex-basis: 140px;
+    margin-left: 18px;
+    min-height: 75px;
+}
+
+.loop-day:nth-child(7n+4) .calendar-hint-popup,
+.loop-day:nth-child(7n+3) .calendar-hint-popup,
+.loop-day:nth-child(7n+2) .calendar-hint-popup,
+.loop-day:nth-child(7n+1) .calendar-hint-popup {
+    right: unset;
+    left: -2px;
+    transform: translatex(-100%);
+}
+
+.calendar-hint-popup .popup-header {
+    display: flex;
+    font-size: 24px;
+    font-weight: bold;
+    width: 100%;
+    border-bottom: 3px solid black;
+    padding-bottom: 12px;
+}
+
+.calendar-hint-popup .popup-header>* {
+    margin-left: 5px;
+}
+
+.calendar-full .calendar-days {
+    background-color: #f7f7f7;
+    border-radius: 16px;
+}
+
+.timeZone_area {
+    overflow: visible;
+}
+
+.concert_body .hero_area {
+    background-size: cover !important;
+    background-color: #000000;
+}
+
+.hero_area .gradient-top,
+.hero_area .gradient-bottom {
+    z-index: 1;
+    pointer-events: none;
+}
+
+
+/*
+.hero_area .gradient-top {
+    background-image: -webkit-linear-gradient(0deg, rgba(7, 23, 119, 0) 0%, rgba(5, 20, 101, 1) 100%);
+    background-image: -moz-linear-gradient(0deg, rgba(7, 23, 119, 0) 0%, rgba(5, 20, 101, 1) 100%);
+    background-image: -o-linear-gradient(0deg, rgba(7, 23, 119, 0) 0%, rgba(5, 20, 101, 1) 100%);
+    background-image: linear-gradient(0deg, rgba(7, 23, 119, 0) 0%, rgba(5, 20, 101, 1) 100%);
+}
+
+.hero_area .gradient-bottom {
+    background-image: -webkit-linear-gradient(-180deg, rgba(7, 23, 119, 0) 0%, rgba(5, 20, 101, 1) 100%);
+    background-image: -moz-linear-gradient(-180deg, rgba(7, 23, 119, 0) 0%, rgba(5, 20, 101, 1) 100%);
+    background-image: -o-linear-gradient(-180deg, rgba(7, 23, 119, 0) 0%, rgba(5, 20, 101, 1) 100%);
+    background-image: linear-gradient(-180deg, rgba(7, 23, 119, 0) 0%, rgba(5, 20, 101, 1) 100%);
+}
+*/
+
+.hero_area>.container {
+    z-index: 4;
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.page-template-action-ipo-importer .site-content.loading form {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.page-template-action-ipo-importer {
+    direction: ltr;
+    text-align: left;
+}
+
+.page-template-action-ipo-importer .ajax-import-msg-log,
+.page-template-action-ipo-importer .ajax-import-msg-container {
+    padding: 20px;
+    font-size: 14px;
+}
+
+.loop-program .img_box .wpstack-bg-image,
+.loop-program .img_box a {
+    display: block;
+    width: 100%;
+}
+
+.loop-program .img_box .wpstack-bg-image {
+    position: relative;
+    width: 100%;
+}
+
+.loop-program .img_box .wpstack-bg-image:after {
+    padding-bottom: 55%;
+    content: "";
+    display: block;
+}
+
+.loop-program .img_box .playlist {
+    width: 25px;
+    top: 10px;
+    left: 15px;
+}
+
+.upcoming_area .img_box .additionalDates,
+.loop-program .event-link {
+    display: flex !important;
+}
+
+.upcoming_area .img_box .additionalDates {
+    justify-content: flex-end;
+}
+
+.loop-program .img_box li .arrow {
+    position: absolute;
+    left: 0;
+    top: 55%;
+    transform: translatey(-50%);
+}
+
+.loop-program .img_box li div {
+    position: relative;
+}
+
+.loop-program .img_box li div .location {
+    margin-left: 8px;
+}
+
+.img_box .additionalDates .arrow {
+    width: 0.5rem;
+}
+
+html[lang="he-IL"] .calendar-slider {
+    flex-direction: row-reverse;
+}
+
+.item .overlay-link {
+    opacity: 0;
+}
+
+.copyright .row>* {
+    align-items: flex-end;
+}
+
+body .site {
+    opacity: 0;
+    transition: 0.8s ease-in-out;
+    pointer-events: none;
+}
+
+body:not(.home) .site,
+body.finished-loading .site {
+    opacity: 1;
+    pointer-events: unset;
+}
+
+.loop-serie-event .overlay_link,
+.artist_box .img_box>.overlay_link {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    opacity: 0;
+}
+
+.loop-serie-event,
+.artist_box .img_box {
+    position: relative;
+}
+
+.wpstack-bg-image {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.wpstack-bg-image>.bg_set {
+    background-size: cover;
+    background-position: center;
+}
+
+section.description {
+    padding-top: 50px;
+    padding-bottom: 50px;
+}
+
+section.description .content h4,
+section.description .content h3 {
+    font-family: 'Simpler';
+    letter-spacing: normal;
+    margin-bottom: 20px;
+}
+
+section.description .content h3 {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+section.description .content h4 {
+    font-size: 20px;
+}
+
+section.hero_area-content {
+    background-size: cover !important;
+    background-position: center;
+}
+
+.row.session:last-child {
+    border-bottom: none;
+}
+
+.row.session h3 {
+    margin-right: -5px;
+}
+
+.time-horizontal .row {
+    display: flex;
+}
+
+.div-infoconcert {
+    width: auto;
+    align-items: flex-end;
+    height: auto;
+    max-width: 550px;
+}
+
+.time_zone p {
+    min-height: 25px;
+}
+
+.ipo-programs-list {
+    display: flex;
+    margin-left: -50px;
+    margin-right: -50px;
+    flex-wrap: wrap;
+}
+
+.ipo-programs-list>* {
+    flex-basis: calc( 100% / 5 - 100px);
+    margin-left: 50px;
+    margin-right: 50px;
+    margin-bottom: 50px;
+}
+
+@media only screen and (max-width: 990px) {
+    .ipo-programs-list {
+        margin-left: -30px;
+        margin-right: -30px;
+    }
+    .ipo-programs-list>* {
+        flex-basis: calc( 100% / 4 - 60px);
+        margin-left: 30px;
+        margin-right: 30px;
+        margin-bottom: 30px;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    .ipo-programs-list {
+        margin-left: -25px;
+        margin-right: -25px;
+    }
+    .ipo-programs-list>* {
+        flex-basis: calc( 100% / 3 - 50px);
+        margin-left: 25px;
+        margin-right: 25px;
+        margin-bottom: 25px;
+    }
+}
+
+@media only screen and (max-width: 500px) {
+    .ipo-programs-list {
+        margin-left: -20px;
+        margin-right: -20px;
+    }
+    .ipo-programs-list>* {
+        flex-basis: calc( 100% / 2 - 40px);
+        margin-left: 20px;
+        margin-right: 20px;
+        margin-bottom: 20px;
+    }
+}

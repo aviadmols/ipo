@@ -1,0 +1,55 @@
+<?php
+
+
+
+add_action('save_post', 'on_event_post_publish_func');
+function on_event_post_publish_func($post_id,$data = false) {
+	
+	$post_type = get_post_type($post_id);
+	if($post_type == 'event'){
+		
+		$api_event = get_field('ipo_api_select_event',$post_id);
+		
+		if(!$data){
+			
+			$events_api = new ipo_events_api();
+			$events_api->init();
+			$api_event = $events_api->get_event($api_event);
+				
+			$date_time = $api_event->dateTime;
+			$event_api_id = $api_event->id;
+			$event_name = $api_event->featureName;
+			
+		} else {
+			
+			$date_time = $data['date_time'];
+			$event_api_id = $data['id'];
+			$event_name = $data['title'];
+			
+		}
+		
+		if($date_time && $event_api_id && $event_name){
+						
+			update_field('event_date_time',$date_time,$post_id);
+			update_field('event_api_id',$event_api_id,$post_id);
+			update_field('event_featured_name',$event_name,$post_id);
+			
+			$new_title = $event_name . ' | ' . $date_time ;
+
+			$post_update = array(
+				'ID'         => $post_id,
+				'post_title' => $new_title
+			);
+			
+			remove_action('save_post', 'on_event_post_publish_func');
+			wp_update_post( $post_update );
+			add_action('save_post', 'on_event_post_publish_func');
+			
+			return $post_id;
+		}
+		
+	}
+	
+
+}
+

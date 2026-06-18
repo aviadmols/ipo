@@ -1,0 +1,129 @@
+.menu-ipo-main {
+    background-color: #1b1464;
+}
+
+.menu-ipo-main img {
+    padding: 5px !important;
+    width: 25px;
+}
+
+.ipo-disabled input {
+    background: rgb(219, 219, 219);
+    pointer-events: none;
+}
+
+.ipo-disabled .acf-input {
+    cursor: not-allowed;
+}
+
+.ipo-disabled.acf-field-post-object .acf-input .select2-container {
+    pointer-events: none;
+}
+
+.ipo-disabled.acf-field-post-object .acf-input .select2-container .select2-selection--multiple {
+    background: rgb(219, 219, 219) !important;
+}
+
+#locationchecklist>li>.selectit {
+    pointer-events: none;
+    font-weight: bold;
+}
+
+#locationchecklist>li>.selectit input {
+    display: none;
+}
+
+#locationchecklist>li {
+    margin-bottom: 20px;
+}
+
+#locationchecklist>li#location-20 {
+    background: rgb(239, 239, 239);
+    padding: 5px 15px;
+}
+
+.taxonomy-serie #addtag .term-description-wrap {
+    display: none;
+}
+
+.acf-field-relationship.ipo-disabled .acf-relationship {
+    pointer-events: none;
+}
+
+.program-link {
+    display: inline-block;
+    font-size: 16px;
+    line-height: 1;
+    padding: 10px 20px;
+    background: #1b1464;
+    color: #fec4c6;
+    text-decoration: unset;
+    margin: 20px 0 0;
+    border-radius: 10px;
+    font-weight: bold;
+    box-shadow: 2px 2px 8px rgba(92, 92, 92, 0.7);
+    transition: .5s;
+}
+
+.program-link:hover {
+    background: #000;
+    color: #fff;
+    box-shadow: 0px 0px 4px rgba(92, 92, 92, 0.5);
+}
+
+#locationchecklist>li:not(#location-20)>.children>li>.selectit input {
+    display: none;
+}
+
+#locationchecklist label {
+    line-height: 1;
+}
+
+#locationchecklist .children {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.dashboard-process table,
+.dashboard-process-messages {
+    width: 100%;
+}
+
+.dashboard-process table,
+.dashboard-process-messages {
+    width: 100%;
+}
+
+.dashboard-process table {
+    background: black;
+    margin: 20px 0;
+    padding: 10px;
+    color: white;
+    text-align: left;
+}
+
+.dashboard-process-messages .sep {
+    color: white;
+}
+
+.acf-input .actions-wraper:not(:last-child) {
+    display: none;
+}
+
+.menu-item-depth-0 .menu-item-bar .menu-item-handle{
+    width: calc( 100% - 100px );
+    max-width: unset;
+}
+
+.menu-item-depth-1 .menu-item-bar .menu-item-handle{
+    background: rgb(204,255,204);
+}
+
+.menu-item-depth-2 .menu-item-bar .menu-item-handle{
+    background: rgb(253,255,204);
+    opacity: 0.3;
+}
+
+.menu-item-depth-3 .menu-item-bar .menu-item-handle{
+    background: rgb(204,205,255);
+}

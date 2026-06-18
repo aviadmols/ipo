@@ -1,0 +1,336 @@
+<?php 
+/*
+* Template Name: ACTION - IPO IMPORTER
+*/
+
+
+/*
+
+1. Loop through events
+2. Generate data for a program
+3. Check if program exist, insert if not, update if does
+4. Create the event under the program
+
+- Translations
+- Redirections
+
+
+*/
+
+
+if ( ! function_exists( 'post_exists' ) ) {
+    require_once( ABSPATH . 'wp-admin/includes/post.php' );
+}
+
+
+//get_header(); 
+
+$msg_html = '';
+$input = '';
+
+if(isset($_POST['json_input'])){
+	
+	$package = base64_decode($_POST['json_input']);
+	$input = htmlspecialchars($_POST['json_input']);
+	
+	$json = json_decode($package,false, 512, JSON_INVALID_UTF8_IGNORE);
+	
+	$msg_html .= 'Starting loop ['.count($json).'] <br>';
+	
+	foreach($json as $item){
+		
+		/*
+		 *	PROGRAM
+		 */
+		
+		// Check if this program exist
+		
+		$event_id = false;
+		$program_id = false;
+		$api_id = $item->api_id;
+		
+		$existing_program = post_exists( $item->title );
+		$update_data_flag = false; 
+		if ( ! $existing_program ) {
+
+			// Collect data for program and add it
+			
+			
+			$program_data = [
+				'post_title' => $item->title,
+				'post_status' => 'publish',
+				'post_type' => 'program',
+			];
+			
+			$program_id = wp_insert_post( $program_data );
+			if($program_id){
+				
+				$msg_html .= 'Created program '. $program_id .': '. $item->title .'<br>';
+				$update_data_flag = true;
+				
+			} else {
+				
+				if( is_wp_error( $program_id ) ) {
+					$msg_html .= 'ERROR: wp_insert_post - ' . $program_id->get_error_message() .'<br>';
+				} else {
+					$msg_html .= 'ERROR: wp_insert_post - unknown error for data '.print_r($program_data,true).'<br>';
+				}
+				
+				
+			}
+
+			
+		} else {
+			
+			$program_id = $existing_program;
+			$msg_html .= 'program '. $existing_program .' already exist: '. $item->title .'<br>';
+			$update_data_flag = true;
+			
+		}
+
+		/*
+		 *	EVENT
+		 */
+
+		// Let's check if the event exist
+		
+		$event_title = $item->title . ' | ' . $item->event_date . ' ' . $item->location->event_time;
+		$existing_event = post_exists( $event_title );
+		if ( ! $existing_event ) {
+			
+			// Event does not exist ,let's add it
+			$event_data = [
+				//'post_title' => $event_title,
+				'post_status' => 'publish',
+				'post_type' => 'event',
+			];
+			$event_id = wp_insert_post( $event_data );
+			if($event_id){
+				$msg_html .= 'Created event '. $event_id .': '. $event_title .'<br>';
+			} else {
+				
+				if( is_wp_error( $event_id ) ) {
+					$msg_html .= 'ERROR: wp_insert_post - ' . $event_id->get_error_message() .'<br>';
+				} else {
+					$msg_html .= 'ERROR: wp_insert_post - unknown error for data '.print_r($event_id,true).'<br>';
+				}
+				
+			}
+		
+		} else {
+			
+			$event_id = $existing_event;
+			$msg_html .= 'event '. $existing_event .' already exist: '. $event_title .'<br>';
+			
+		}
+		
+		/*
+		 *	UPDATING ACF
+		 */
+		
+		$connected_events = [];
+		if($update_data_flag){
+					
+
+		// ---- UPDATE PROGRAM ----
+			
+			// Append to connected events to the program
+			$connected_events = get_field('ipo_created_events',$program_id);
+			if(!$connected_events){
+				$connected_events = [];
+			}
+			
+			$connected_events[] = $event_id;
+			$connected_events = array_unique($connected_events);
+			
+			$msg_html .= 'updating program '.$program_id.' with events: '.implode(',',$connected_events).' | adding '.$event_id.'<br>';
+			
+			update_field('ipo_created_events',$connected_events,$program_id);
+			
+			// update content
+			$content = htmlentities($item->content, null, 'utf-8');
+			$content = str_replace("&nbsp;", "", $content);
+			$content = html_entity_decode($content);
+			update_field('program_description',$content,$program_id);
+			
+			
+			// Upload banner image
+			$img = wp_insert_attachment_from_url($item->banner_image);
+			if($img){
+				update_field('program_banner_image',$img,$program_id);
+				$msg_html .= 'Program banner updated ['. $img .']<br>';
+			}
+			
+			// Update event details
+			update_field('program_length_concert',$item->event_length,$program_id);
+			update_field('program_price_range',$item->event_price_range,$program_id);
+			
+			// update artists
+			$program_artists = $item->artists;
+			$artists_to_add = [];
+			foreach($program_artists as $artist){
+				
+				// check if artist exist
+				$artist_id = false;
+				
+				$existing_artist = post_exists( $artist->post_title , '', '', 'artist' );
+				if ( ! $existing_artist ) {
+					$artist_data = (array) $artist;
+					
+					unset($artist_data['ID']);
+					unset($artist_data['guid']);
+					unset($artist_data['post_author']);
+					
+					$artist_data['post_type'] = 'artist';
+					
+					$artist_id = wp_insert_post( $artist_data );
+					if($artist_id){
+						
+						$msg_html .= 'Created artist '. $artist_id .': '. $artist_data['post_title'] .'<br>';
+						
+					} else {
+						
+						if( is_wp_error( $artist_id ) ) {
+							$msg_html .= 'ERROR: wp_insert_post - ' . $artist_id->get_error_message() .'<br>';
+						} else {
+							$msg_html .= 'ERROR: wp_insert_post - unknown error for data '.print_r($artist_id,true).'<br>';
+						}
+						
+					}
+					
+				} else {
+					
+					$msg_html .= 'Artist ' . $existing_artist .' exists, added<br>';
+					$artist_id = $existing_artist;
+					
+				}
+				
+						
+				// Update artist image
+				$img_url = $artist->image;
+				if($img_url){
+					$result = wp_insert_attachment_from_url($img_url,$artist_id);
+					if(is_wp_error($result)){
+						$result = $result->get_error_message();
+						$msg_html .= 'ERROR: wp_insert_attachment_from_url ['.$img_url.'] - ' . $result .'<br>';
+					} else {
+						$res = set_post_thumbnail($artist_id,$result);
+						$msg_html .= 'Image ['.$result.'] added to artist ['.$artist_id.'] with state ['. print_r($res,true) .']<br>';
+						
+					}
+				} else {
+					$msg_html .= 'Skipping image<br>';
+				}
+				
+				// Update artist content
+				update_field('main_text',$artist->post_content,$artist_id);
+				
+				// Update artist categories
+				foreach($artist->categories as $artist_cat){
+			
+					$term_id = term_exists($artist_cat->name,'artist_cat');
+					if(!$term_id){
+						// Doesnt exist
+						$term_id = wp_insert_term($artist_cat->name, 'artist_cat',['slug'=>$artist_cat->slug]);
+						if (!is_wp_error($term_id)) {
+							$term_id = $term_id['term_id'];
+						}
+					} else {
+						// Exist
+					}
+					
+					$term_id = (int)$term_id['term_id'];
+					wp_set_object_terms($artist_id, [$term_id], 'artist_cat');
+					$msg_html .= 'updating artist '.$artist_id.' with artist_cat term: '.$term_id.'<br>';
+					
+				}
+				
+				//update_field('short_desc',$artist->position,$artist_id);
+				
+				// Add to list of artists to add
+				$artists_to_add[] = $artist_id;
+			}
+			
+			$existing_program_artists = get_field('program_artists',$program_id);
+			if($existing_program_artists){
+				$existing_program_artists = array_merge($existing_program_artists,$artists_to_add);
+			} else {
+				$existing_program_artists = $artists_to_add;
+			}
+			
+			foreach ($existing_program_artists as $key => $number) {
+				if ($number === 0) {
+					unset($existing_program_artists[$key]);
+				}
+			}
+			
+			$existing_program_artists = array_unique($existing_program_artists);
+			$msg_html .= 'Adding artists '.implode(',',$existing_program_artists).'<br>';
+			update_field('program_artists',$existing_program_artists,$program_id);
+
+			// update concert type
+			$program_type = $item->type->label;
+			$term_id = term_exists($program_type,'event_type');
+			if(!$term_id){
+				// Doesnt exist
+				$term_id = wp_insert_term($program_type, 'event_type');
+				if (!is_wp_error($term_id)) {
+					$term_id = $term_id['term_id'];
+				}
+			} else {
+				// Exist
+			}
+			
+			$term_id = (int)$term_id['term_id'];
+			wp_set_object_terms($program_id, [$term_id], 'event_type');
+			$msg_html .= 'updating program '.$program_id.' with event_type term: '.$term_id.'<br>'.
+			
+			
+			
+		// ---- UPDATE EVENT ----
+			
+			// update event related program
+			update_field('related_to_program',$program_id,$event_id);
+			
+			// update API ID
+			update_field('event_api_id',$api_id,$event_id);
+			update_field('ipo_api_select_event',$api_id,$event_id);
+			
+			// update date & time
+			$event_date_time = $item->event_date . ' ' . $item->location->event_time;
+			update_field('event_date_time',$event_date_time,$event_id);
+			update_field('event_date',$item->event_date,$event_id);
+			
+			// update featured name
+			update_field('event_featured_name',$item->title,$event_id);
+			
+
+		
+		} else {
+			$msg_html .= 'update_data_flag = false<br>';
+		}
+		
+		$msg_html .= '<br>';
+		
+	}
+	
+	$msg_html .= 'Ending loop <br>';
+
+}
+
+
+?>
+
+<div style="margin: 2%; padding: 2%; max-width: calc(100vw - 4% - 4%);">
+	
+	<form action="/action-ipo-importer" method="post">
+		<textarea style="width: 100%; min-height: 10vh;" name="json_input"><?php echo $input; ?></textarea>
+		<input type="submit" value="upload">
+	</form>
+	
+	<div style="width: 100%; min-height: 70vh; color: white; background-color: black;"><?php echo $msg_html; ?></div>
+	
+</div>
+
+
+<?php //get_footer(); 

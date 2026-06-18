@@ -1,0 +1,30 @@
+/*
+ Theme Name: IPO
+ Author: 8SCOPE
+ Author URI: https://8scope.com
+ Version: 1.0
+ Template: wpstack-parent
+ License:      GNU General Public License v2 or later
+ License URI:  http://www.gnu.org/licenses/gpl-2.0.html
+ Text Domain:  ipo
+*/
+
+/* Template home: hide body until JS ready */
+body.js-scroll-hide {
+	opacity: 0 !important;
+	overflow: hidden !important;
+}
+
+/* WhatsApp banner (shortcode) */
+.whatsapp-banner { display: none; }
+@media (max-width: 768px) {
+	.whatsapp-banner { display: block; }
+	.whatsapp-banner-desktop { display: none; }
+}
+
+/* SVG container shortcode */
+.svg-pc { display: none; padding-top: 80px; }
+@media (min-width: 768px) {
+	.svg-mobile { display: none; }
+	.svg-pc { display: flex; }
+}

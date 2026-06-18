@@ -1,0 +1,150 @@
+<?php 
+
+
+
+$import_processor = new wpstack_post_processor('import',[
+	'fields' => [
+		[
+			'name' => 'amount',
+			'type' => 'number',
+			'value' => '1',
+		],[
+			'name' => 'offset',
+			'type' => 'number',
+			'value' => '0',
+		],[
+			'name' => 'keep_going',
+			'type' => 'checkbox',
+			'value' => '1',
+		],
+	]
+]);
+
+
+
+add_filter('wpstack_post_processor_import','import_processor_action',10,2);
+function import_processor_action($response,$data){
+	/*
+	if(!isset($response['controls'])){
+		$response['controls'] = [];
+	}
+*/
+
+	//$count_results = 0;
+	//$count_processed = 0;
+	$keep_going = true;
+	$messages = '';
+
+	// Declaring objects
+	if(isset($data['amount']))
+		$amount = $data['amount'];
+	else $amount = 1;
+
+	if(isset($data['offset']))
+		$offset = $data['offset'];
+	else 
+		$offset = 0;
+
+	$ipo_importer_he = new ipo_importer('https://ipoold.local/ipo-extractor',$amount,$offset);
+	$ipo_importer_en = $ipo_importer_he;
+	$ipo_importer_he->importer_lang = 'he';
+
+	// Decoding
+
+	$ipo_importer_he->decode_data();
+
+    //$count_results = count($ipo_importer_he->data);
+    if(isset($response['amount']))
+        $count_results = $response['amount'] + count($ipo_importer_he->data);
+    else
+        $count_results = count($ipo_importer_he->data);
+
+	// Create control in the following format: 0: {name: 'amount', value: '1'}
+
+	$response['amount'] = $count_results;
+
+	foreach($ipo_importer_he->data as $key => $item){
+	
+		$ipo_importer_he->extract_program($item);
+		$ipo_importer_he->extract_event($item);
+		
+		$event_id_he = $ipo_importer_he->event_id;
+		$program_id_he = $ipo_importer_he->program_id;
+		
+		$ipo_importer_he->update_program($item);
+		$artists_he = $ipo_importer_he->update_artists($item);
+		$ipo_importer_he->update_concert_type($item);
+		$ipo_importer_he->update_event($item);
+		
+		// ENGLISH VERSION
+		$eng_obj = $ipo_importer_he->get_translation($item,'en');
+		if($eng_obj){
+
+		  global $sitepress;
+		  $sitepress->switch_lang('en');
+			
+		  $ipo_importer_en->extract_program($eng_obj);
+		  $ipo_importer_en->extract_event($eng_obj);
+			
+		  $event_id_en = $ipo_importer_en->event_id;
+		  $program_id_en = $ipo_importer_en->program_id;
+		  
+		  try{
+			  $ipo_importer_en->connect_to_translation($event_id_he,$event_id_en,'event');
+		  } catch(Exception $ex){
+			  $ipo_importer_en->add_msg('ERROR: connect_to_translation ' . $event_id_he . ' , ' . $event_id_en . ',' . 'event');
+		  }
+		  
+		  try{
+			  $ipo_importer_en->connect_to_translation($program_id_he,$program_id_en,'program');
+		  } catch(Exception $ex){
+			  $ipo_importer_en->add_msg('ERROR: connect_to_translation ' . $program_id_he . ' , ' . $program_id_en . ',' . 'program');
+		  }
+		  
+		  $ipo_importer_en->update_program($eng_obj);
+		  
+		  $artists_en = $ipo_importer_en->update_artists($eng_obj);
+		  foreach($artists_en as $key => $artist_en){
+			  if(is_object($artist_en))
+				  $artist_en = $artist_en->ID;
+			  
+			  try{
+				  $ipo_importer_en->connect_to_translation($artists_he[$key],$artist_en,'artist');
+			  } catch(Exception $ex){
+				  $ipo_importer_en->add_msg('ERROR: connect_to_translation ' . $artist_en . ' , ' . $artists_he[$key] . ',' . 'artist');
+			  }
+		  
+			  
+			  
+		  }
+		  
+		  $ipo_importer_en->update_concert_type($eng_obj);
+		  $ipo_importer_en->update_event($eng_obj);
+
+		  $sitepress->switch_lang('he');
+	
+		}
+		
+	}
+
+	// Building messages
+
+	//$messages .= 'Data: '.print_r($json,true);
+    //$messages = '<p>'.implode('<br>',$ipo_importer_he->msg).'<br><br>'.implode('<br>',$ipo_importer_en->msg).'</p>';
+
+	$messages .= implode('',$ipo_importer_he->msg);
+	$messages .= implode('',$ipo_importer_en->msg);
+
+
+
+	// Finalizing response
+
+	$response['count_results'] = $count_results;
+	$response['count_processed'] = $count_processed;
+	$response['keep_going'] = true;
+	$response['messages'] = $messages;
+	$response['data'] = $data;
+	
+	return $response;
+	
+}

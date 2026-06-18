@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="26px" height="28px" viewBox="0 0 26 28" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>small icons/filter</title>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round">
+        <g id="UIkit-1920/1280_1" transform="translate(-1085.000000, -3178.000000)" stroke="#000000" stroke-width="1.862784">
+            <g id="Group-29" transform="translate(119.000000, 3071.500000)">
+                <g id="Group-20" transform="translate(821.000000, 0.000000)">
+                    <g id="Group-18" transform="translate(0.000000, 92.500000)">
+                        <g id="components/filter/off-copy-4" transform="translate(130.000000, 0.500000)">
+                            <g id="small-icons/filter" transform="translate(15.500000, 16.000000)">
+                                <g id="Group" transform="translate(2.254688, -0.964015)">
+                                    <path d="M10.245312,24.83712 C17.07552,19.19232 20.490624,14.30016 20.490624,10.16064 C20.490624,3.95136 15.9036416,0 10.245312,0 C4.58698243,0 0,3.95136 0,10.16064 C0,14.30016 3.415104,19.19232 10.245312,24.83712 Z" id="Oval-Copy-3"></path>
+                                    <circle id="Oval-Copy-4" cx="10.245312" cy="10.245312" r="4.65696"></circle>
+                                </g>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

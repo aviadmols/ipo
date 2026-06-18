@@ -91,6 +91,7 @@ if (isset($theme) && is_object($theme)) {
 	$theme->add_script('slick.min');
 	$theme->add_script('hc-sticky');
 	$theme->add_script('scripts-custom');
+	$theme->add_script('ipo-custom'); // consolidated code-manager JS — load after main/plugins/slick/wow/hc-sticky
 
 	//$theme->add_script('fancybox.umd');
 	$theme->add_parent_script('fancybox.umd');
@@ -109,6 +110,7 @@ if (isset($theme) && is_object($theme)) {
 	$theme->add_style('splide.min');
 	$theme->add_style('animate');
 	$theme->add_style('moreconcerts'); // moreConcerts Splide module — must load last to win cascade
+	$theme->add_style('ipo-custom'); // consolidated code-manager CSS — load last to win cascade like the snippets did
 	//$theme->add_style('fancybox');
 	$theme->add_parent_style('fancybox');
 
@@ -1558,3 +1560,34 @@ function ipo_get_current_admin_language() {
 
 	return apply_filters('wpml_default_language', null) ?: 'he';
 }
+
+
+/**
+ * Consolidated code-manager 3rd-party markup, migrated from WP admin snippets
+ * into theme part files. Child theme, so resolve from get_stylesheet_directory().
+ */
+
+// HEAD third-party libs (AOS css / lottie-player / anime.js) — origin snippet ID 27610
+add_action('wp_head', function () {
+	$f = get_stylesheet_directory() . '/parts/ipo-third-party-head.php';
+	if (file_exists($f)) {
+		include $f;
+	}
+});
+
+// FOOTER third-party scripts (AOS js + init) — origin snippet ID 27612.
+// Late priority so AOS.init runs after the markup is in the DOM.
+add_action('wp_footer', function () {
+	$f = get_stylesheet_directory() . '/parts/ipo-third-party-footer.php';
+	if (file_exists($f)) {
+		include $f;
+	}
+}, 99);
+
+// Body-level marketing markup (WhatsApp / geo banner / AT-Popup) — origin snippet IDs 63811/60841/60331/54590.
+add_action('wp_footer', function () {
+	$f = get_stylesheet_directory() . '/parts/ipo-marketing-body.php';
+	if (file_exists($f)) {
+		include $f;
+	}
+}, 100);

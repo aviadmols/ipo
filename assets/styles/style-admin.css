@@ -127,3 +127,13 @@
 .menu-item-depth-3 .menu-item-bar .menu-item-handle{
     background: rgb(204,205,255);
 }
+
+/* Moved from ipo-custom snippet #1 (admin code-manager ID: 62889) — admin-only */
+#major-publishing-actions {
+    display: block !important;
+}
+
+/* Moved from ipo-custom snippet #5 (admin code-manager ID: 43033) — admin-only */
+.mce-toolbar .mce-btn-group .mce-btn.mce-wp-dfw {
+    max-width: 100px;
+}

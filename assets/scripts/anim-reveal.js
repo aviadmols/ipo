@@ -110,8 +110,45 @@ jQuery(document).ready(function($) {
 });
 
 /* ************************ */
-/* REVEAL ANIMATION */
+/* REVEAL ANIMATION (WOW)   */
+/* Migrated from admin code-manager snippet ID 25942 — this was the ONLY active */
+/* WOW init (the legacy block below stayed commented out). Keep a single init.   */
 /* ************************ */
+jQuery(document).ready(function ($) {
+
+    $('.animate_wow').addClass('wow fadeInUp');
+    var lastScrollTop = 0;
+    $(window).scroll(function () {
+        var st = $(this).scrollTop();
+        if (st > lastScrollTop) {
+            $('.animate_wow').addClass('no-wow fadeInUp').removeClass('fadeInDown');
+        }
+        lastScrollTop = st;
+    });
+
+    // Helper to add an element box to WOW's list
+    WOW.prototype.addBox = function (element) {
+        this.boxes.push(element);
+    };
+
+    var wow = new WOW({
+        boxClass: 'wow',
+        animateClass: 'animated',
+        offset: 100,
+        mobile: true,
+        live: true
+    });
+
+    wow.init();
+
+    $('.wow-w').on('scrollSpy:exit', function () {
+        $(this).css({ 'visibility': 'hidden', 'animation-name': 'none' }).removeClass('animated');
+        wow.addBox(this);
+    }).scrollSpy();
+
+});
+
+/* Legacy variant (kept commented for reference): */
 /*
 jQuery(document).ready(function($) {
 

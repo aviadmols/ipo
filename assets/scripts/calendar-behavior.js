@@ -29,13 +29,12 @@ jQuery(document).ready(function($) {
     $('.calendar_area .ipo-calendar ul.numCount .active').removeClass('active');
 
 
-    // Run select_next_day_with_events() 2.5s after page load; then keep page at top (no scroll to calendar).
+    // Auto-select today (or the first day) in the calendar 2.5s after load.
+    // (Removed the forced window.scrollTo(0,…) that yanked the page back to the
+    //  top on the English/Arabic home pages after load. The programmatic-click
+    //  guard above already prevents the auto-select from scrolling the page.)
     setTimeout(function() {
-        var scrollY = window.scrollY || window.pageYOffset;
         select_next_day_with_events('today');
-        setTimeout(function() {
-            window.scrollTo(0, Math.min(scrollY, 10));
-        }, 350);
     }, 2500);
 
     /*

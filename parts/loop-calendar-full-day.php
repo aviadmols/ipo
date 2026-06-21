@@ -115,7 +115,7 @@ $link = '#';
 							<a href="'.$link.'">
 								'.$program->get_title().'
 								<div style="display: flex;" class="link-arrow">
-									<img src="<?php echo ipo_arrow_icon_url(); ?>" class="arrow" alt="">
+									<img src="'.ipo_arrow_icon_url().'" class="arrow" alt="">
 								</div>
 							</a>
 						</div>

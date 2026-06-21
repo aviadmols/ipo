@@ -2710,6 +2710,7 @@ body:not(.home) footer * .fadeInDown {
 
 
 body .mobile-menu > .menu .sub-menu {
+    display: block;
     background-color: #f2f2f2!important
 }
 

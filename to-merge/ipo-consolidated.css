@@ -1487,6 +1487,7 @@ p.hoverflow:after {
 	}
 
 	body .mobile-menu > .menu .sub-menu{
+        display: block;
 		background: rgb(221,221,221);
 		padding-bottom: 7px;
 	}

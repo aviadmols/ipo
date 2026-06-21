@@ -541,6 +541,7 @@ $('.video-slider').owlCarousel({
 document.addEventListener('DOMContentLoaded', function () {
   const header = document.querySelector('.header');
     const intronlottie = document.querySelector('.intor_lottie_en');
+  if (!header) { return; } // some templates (landing/Shogun) have no .header
   const headerHeight = header.offsetHeight;
   const startScroll = 49;
 if ( intronlottie ){
@@ -566,6 +567,7 @@ const lottieElementlogo = document.querySelector('.logo-lottie');
 let scrollInProgress = false;
 
 function resetAnimationSmoothly() {
+  if (!lottieElementlogo) { return; } // no .logo-lottie on this page
   if (!scrollInProgress) {
     scrollInProgress = true;
    lottieElementlogo.setDirection(-1);

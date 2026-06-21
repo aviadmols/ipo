@@ -184,13 +184,15 @@ readMoreButtons.forEach(button => {
 readLessButtons.forEach(button => {
   button.addEventListener('click', () => {
     if (document.documentElement.lang === 'he') {
-      const buttonText = button.textContent.trim();
       const programInfoDiv = button.closest('.program-info');
 
-      if (programInfoDiv.classList.contains('show-read-more')) {
+      if (programInfoDiv && programInfoDiv.classList.contains('show-read-more')) {
         programInfoDiv.classList.remove('show-read-more');
-        readMoreButton.textContent = 'קרא עוד';
-        readMoreButton.classList.remove('read-less');
+        const readMoreButton = programInfoDiv.querySelector('.read-more');
+        if (readMoreButton) {
+          readMoreButton.textContent = 'קרא עוד';
+          readMoreButton.classList.remove('read-less');
+        }
       }
     }
   });
@@ -862,19 +864,12 @@ End of comment */
 
 
        var inputElement = document.querySelector('[lang="en-US"] input[name="input_3"]');
-    inputElement.setAttribute('placeholder', 'Full name');
+    if (inputElement) { inputElement.setAttribute('placeholder', 'Full name'); }
 
 
-function isScrolledIntoView(elem) {
-     var docViewTop = $(window).scrollTop();
-    var docViewBottom = docViewTop + $(window).height();
-
-    var elemTop = $(elem).offset().top;
-    var elemBottom = elemTop + $(elem).height();
-
-    return (elemTop-500<=docViewTop);
-
-}
+// isScrolledIntoView removed here — use the canonical definition in anim-base.js,
+// which supports the $extra offset param that callers (anim-reveal.js: 120/900) pass.
+// This duplicate dropped the param and silently broke reveal thresholds site-wide.
 
 
 

@@ -270,6 +270,7 @@ body.white-intro header:not(.sticky){
     font-weight: 900;
 }
 
+header .search_input img {
     flex-shrink: 0;
     width: 2.6rem;
     cursor: pointer;
@@ -3592,6 +3593,7 @@ position: relative;
     padding-left: 25px;
 	}
 
+	.serie-template-default .session .bg_set {
     min-height: 230px;
 		height: 230px;
     width: 390px;

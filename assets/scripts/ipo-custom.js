@@ -27,7 +27,7 @@ if (window.location.hash === "#contact") {
 
 jQuery(document).ready(function($){
 
-    jQuery('.slider-banner.desktop').slick({
+    jQuery('.slider-banner.desktop').not('.slick-initialized').slick({
         centerMode: true,
         infinite: true,
       margin: 30,
@@ -35,7 +35,7 @@ jQuery(document).ready(function($){
         slidesToScroll: 1
     });
 
-    jQuery('.slider-banner.mobile').slick({
+    jQuery('.slider-banner.mobile').not('.slick-initialized').slick({
          infinite:  false,
 rtl:  true,
   centerMode:  false,
@@ -239,23 +239,10 @@ if (videoElement && videoSource) {
 	});
 }
 
-jQuery(document).ready(function ($) {
-	jQuery('.slider-banner.desktop').slick({
-		centerMode: true,
-		infinite: true,
-		margin: 30,
-		slidesToShow: 2,
-		slidesToScroll: 1
-	});
-
-	jQuery('.slider-banner.mobile').slick({
-		infinite: false,
-		rtl: true,
-		centerMode: false,
-		slidesToShow: 1.5,
-		slidesToScroll: 1
-	});
-});
+// NOTE: .slider-banner sliders are already initialized by snippet #2 above.
+// The duplicate slick() init that used to live here caused Slick to run
+// twice on the same elements, which throws "initADA: Cannot read properties
+// of null (reading 'add')" on the second pass. Removed to prevent double-init.
 
 
 // ============================================================

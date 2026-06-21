@@ -277,7 +277,13 @@ function calendar_slider() {
     if ($('html').attr('lang') == 'en-US') {
         $rtl = false;
     }
-    $('.calendar-slider').slick({
+    // Guard against double-init: re-initializing Slick on an already
+    // initialized element skips buildOut() and leaves $slides null, which
+    // throws "initADA: Cannot read properties of null (reading 'add')".
+    if ($('.calendar-slider').hasClass('slick-initialized')) {
+        $('.calendar-slider').slick('unslick');
+    }
+    $('.calendar-slider').not('.slick-initialized').slick({
         slidesToShow: 1,
         slidesToScroll: 1,
         // autoplay: true,

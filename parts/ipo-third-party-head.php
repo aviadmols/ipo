@@ -21,5 +21,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<?php /* Guard: skip a custom-element re-definition (e.g. lottie-player loaded twice) so it
+         can't throw "NotSupportedError: the name 'lottie-player' has already been used".
+         Works regardless of load order/source (incl. a still-active duplicate code snippet). */ ?>
+<script>(function(){var d=customElements.define.bind(customElements);customElements.define=function(n,c,o){if(!customElements.get(n)){try{d(n,c,o);}catch(e){}}};})();</script>
 <script src="https://unpkg.com/@lottiefiles/lottie-player@1.0.0/dist/lottie-player.js" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.0.2/anime.min.js"></script>

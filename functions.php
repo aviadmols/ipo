@@ -78,8 +78,8 @@ if (isset($theme) && is_object($theme)) {
 	$theme->add_script('plugins');
 	$theme->add_script('main');
 	$theme->add_script('scripts-admin',array('admin'=>true));
-	$theme->add_script('splide.min');
-	$theme->add_script('sliders-splide');
+	$theme->add_script('splide.min'); // still needed by the calendar (.calendar-row)
+	// sliders-splide.js drove only .moreConcerts-splide, which is now an OWL slider (.moreConcerts-slider) — no longer enqueued.
 
 	// Calendar scripts: load everywhere so .calendar_area works on any page (not only front page).
 	$theme->add_script('calendar-behavior');
@@ -109,7 +109,7 @@ if (isset($theme) && is_object($theme)) {
 	$theme->add_style('splide-core.min');
 	$theme->add_style('splide.min');
 	$theme->add_style('animate');
-	$theme->add_style('moreconcerts'); // moreConcerts Splide module — must load last to win cascade
+	// moreconcerts.css styled the Splide-based .moreConcerts-splide — the slider is now OWL (.moreConcerts-slider), styled by style.css — no longer enqueued.
 	$theme->add_style('ipo-custom'); // consolidated code-manager CSS — load last to win cascade like the snippets did
 	//$theme->add_style('fancybox');
 	$theme->add_parent_style('fancybox');
@@ -123,6 +123,36 @@ if (isset($theme) && is_object($theme)) {
 	$theme->allow_json();
 } else {
 	error_log('Expected $theme to be an object, but it is not set or not an object.');
+}
+
+
+/**
+ * Cache-bust child-theme assets with their file modification time.
+ *
+ * The theme enqueues every asset with a static `?ver=7.0`, so editing a JS/CSS
+ * file does not invalidate the browser/CDN cache (returning visitors keep the
+ * stale file). This rewrites `?ver=` to filemtime() for files that live under
+ * the child theme directory, so any code change auto-busts the cache.
+ */
+if ( ! function_exists( 'ipo_filemtime_cache_bust' ) ) {
+	function ipo_filemtime_cache_bust( $src ) {
+		if ( ! is_string( $src ) || $src === '' ) {
+			return $src;
+		}
+		$dir_uri = get_stylesheet_directory_uri();
+		if ( strpos( $src, $dir_uri ) !== 0 ) {
+			return $src; // only touch this child theme's own assets
+		}
+		$clean = strtok( $src, '?' );
+		$rel   = str_replace( $dir_uri, '', $clean );
+		$path  = get_stylesheet_directory() . $rel;
+		if ( is_file( $path ) ) {
+			$src = add_query_arg( 'ver', filemtime( $path ), $clean );
+		}
+		return $src;
+	}
+	add_filter( 'style_loader_src', 'ipo_filemtime_cache_bust', 9999 );
+	add_filter( 'script_loader_src', 'ipo_filemtime_cache_bust', 9999 );
 }
 
 
@@ -253,23 +283,35 @@ function render_event_update_button_meta_box($post) {
     //  wp_nonce_field('event_update_action', 'event_update_nonce');
 }
 
+// SECURITY: logged-in editors only. The only caller is the admin-editor JS in
+// assets/scripts/scripts-admin.js (snippet 44812), so the wp_ajax_nopriv_
+// (unauthenticated) registration is intentionally removed.
 add_action('wp_ajax_fetch_presentation_data', 'handle_fetch_presentation_data');
-add_action('wp_ajax_nopriv_fetch_presentation_data', 'handle_fetch_presentation_data');
 
 function handle_fetch_presentation_data() {
-    if (isset($_POST['apiEventId']) && !empty($_POST['apiEventId'])) {
-        $apiEventId = sanitize_text_field($_POST['apiEventId']);
-$response = wp_remote_get("https://ipo.pres.global/api/presentations/{$apiEventId}", array('sslverify' => false));
+
+    // The caller JS sends a nonce (#event_update_nonce, action 'event_update_nonce').
+    check_ajax_referer('event_update_nonce', 'nonce');
+
+    if ( ! current_user_can('edit_posts') ) {
+        wp_send_json_error('forbidden');
+    }
+
+    $apiEventId = absint($_POST['apiEventId'] ?? 0);
+
+    if ($apiEventId) {
+        // absint() guarantees a non-negative integer; rawurlencode for safety.
+        $response = wp_safe_remote_get("https://ipo.pres.global/api/presentations/" . rawurlencode($apiEventId));
 
         if (is_wp_error($response)) {
-               $error_message = $response->get_error_message();
-    wp_send_json_error('Failed to fetch data from API. Error: ' . $error_message);
+            $error_message = $response->get_error_message();
+            wp_send_json_error('Failed to fetch data from API. Error: ' . $error_message);
         } else {
             $body = wp_remote_retrieve_body($response);
             wp_send_json_success(json_decode($body, true));
         }
     } else {
-     wp_send_json_success(json_decode($body, true));
+        wp_send_json_error('Missing event ID');
     }
 
     wp_die();

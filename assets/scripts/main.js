@@ -165,19 +165,18 @@
                 ],
                 responsive: {
                     0: {
-                         
-                            autoWidth: true,
-                        items: 1,
-                        margin: 30,
-                   
+                        autoWidth: false,
+                        items: 1.15,
+                        margin: 16,
+                        nav: false,
                     },
                     576: {
-                            autoWidth: true,
-                        nav: true,
-                       loop:  false,
-                                items: 1,
-                   center: false,
-                        margin: 30,
+                        autoWidth: false,
+                        items: 1.15,
+                        loop:  false,
+                        center: false,
+                        margin: 16,
+                        nav: false,
                     },
                     768: {
                          nav: true,

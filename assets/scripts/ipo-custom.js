@@ -144,6 +144,11 @@ $(document).ready(function() {
 // #6 | Page Program JS (ID: 41342 | type: js)
 // ============================================================
 
+// Scoped in an IIFE so the top-level `const readMoreButtons`/`readLessButtons`
+// don't leak to the global scope and collide with a still-active duplicate of
+// this snippet (origin code-manager #41342), which caused
+// "Identifier 'readMoreButtons' has already been declared".
+(function () {
 const readMoreButtons = document.querySelectorAll('.read-more');
 const readLessButtons = document.querySelectorAll('.read-less');
 
@@ -197,6 +202,7 @@ readLessButtons.forEach(button => {
     }
   });
 });
+})();
 
 
 // ============================================================

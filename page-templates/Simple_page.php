@@ -148,9 +148,7 @@ iframe{
                 </div>
 
              <!-- slider start -->
-         <div class="splide moreConcerts-splide">
-           <div class="splide__track">
-             <ul class="splide__list">
+         <div class="owl-carousel owl-theme moreConcerts-slider">
             <?php 
         
                 foreach($program_related_programsnew as $related_program_id){ 
@@ -158,17 +156,15 @@ iframe{
                     $ipo_created_events = get_related_event_ids($related_program_id);
 
                     if($ipo_created_events){
-                        echo '<li class="splide__slide">';
+                        echo '<div class="item">';
                         $theme->the_part('loop-program', $related_program_id);
-                        echo '</li>';
+                        echo '</div>';
                     }
                     
 
                 }
             ?>
 
-             </ul>
-           </div>
            </div>
                 <!-- slider end -->
 

@@ -385,10 +385,8 @@ if (ICL_LANGUAGE_CODE == 'he') {
                 </div>
 
              <!-- slider start -->
-<div class="splide moreConcerts-splide">
-  <div class="splide__track">
-    <ul class="splide__list">
-  
+<div class="owl-carousel owl-theme moreConcerts-slider">
+
     <?php 
   
  foreach ($ids as $rel):
@@ -427,21 +425,19 @@ if (ICL_LANGUAGE_CODE == 'he') {
             continue;
         }
     ?>
-        <li class="splide__slide item <?php
+        <div class="item <?php
             $program = new ipo_program($related_id);
             echo $related_post->post_type;
             echo $related_id;
         ?>">
             <?php $theme->the_part('loop-program', $related_id); ?>
-        </li>
+        </div>
 
     <?php 
     endif;
 
 endforeach;
  ?>
-    </ul>
-  </div>
 </div>
 
                 <!-- slider end -->

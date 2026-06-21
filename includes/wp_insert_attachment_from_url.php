@@ -11,11 +11,11 @@
 function get_attachment_id_by_title( $title ) {
     global $wpdb;
 
-    $attachments = $wpdb->get_results( "SELECT * FROM $wpdb->posts WHERE post_title = '$title' AND post_type = 'attachment' ", OBJECT );
-    //print_r($attachments);
-    if ( $attachments ){
+    $attachment = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_title = %s AND post_type = 'attachment'", $title ) );
+    //print_r($attachment);
+    if ( $attachment ){
 
-        $attachment_url = $attachments[0]->ID;
+        $attachment_url = $attachment[0];
 
     }else{
         return false;

@@ -47,22 +47,16 @@ class ipo_importer {
 
 				$this->raw_url = $raw_url;
 
-				// Get content from raw_url using CURL
-				$ch = curl_init();
-				curl_setopt($ch, CURLOPT_URL, $this->raw_url);
-				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-				$data = curl_exec($ch);
-				curl_close($ch);
-
-				
+				// Fetch content using WordPress' safe HTTP API. wp_safe_remote_get()
+				// blocks internal/loopback hosts (SSRF mitigation) and verifies SSL.
+				$data = $this->fetch_remote( $this->raw_url );
 
 
 			} else if($file_url){
 				// Escape $_POST['file_url'] as text
 				$this->file_url = $file_url;
-				// Get the file contents from the URL
-				$data = file_get_contents($this->file_url);
+				// Fetch the file contents via the safe HTTP API (SSRF mitigation).
+				$data = $this->fetch_remote( $this->file_url );
 
 			} else if(isset($json_input)){
 				$data = $json_input;
@@ -78,7 +72,34 @@ class ipo_importer {
 	public function add_msg($string){
 		$this->msg[] = $string;
 	}
-	
+
+	/**
+	 * Fetch a remote URL body using the WordPress safe HTTP API.
+	 *
+	 * wp_safe_remote_get() applies wp_http_validate_url() which blocks
+	 * loopback/internal hosts (SSRF mitigation) and keeps SSL verification on.
+	 * Non-http(s) schemes (e.g. file://) are rejected before any request.
+	 *
+	 * @param string $url
+	 * @return string Response body, or '' on failure.
+	 */
+	public function fetch_remote( $url ) {
+
+		$scheme = wp_parse_url( $url, PHP_URL_SCHEME );
+		if ( ! in_array( $scheme, array( 'http', 'https' ), true ) ) {
+			$this->add_msg( 'ERROR: refused to fetch non-http(s) URL [' . $url . ']' );
+			return '';
+		}
+
+		$response = wp_safe_remote_get( $url, array( 'timeout' => 30 ) );
+		if ( is_wp_error( $response ) ) {
+			$this->add_msg( 'ERROR: fetch_remote [' . $url . '] - ' . $response->get_error_message() );
+			return '';
+		}
+
+		return wp_remote_retrieve_body( $response );
+	}
+
 	public function decode_data(){
 
 		// If the $this->data string has ',' in it, explode it into array
@@ -426,7 +447,14 @@ class ipo_importer {
         $wpml_element_type = apply_filters( 'wpml_element_type', $post_type );
         $get_language_args = array('element_id' => $original_id, 'element_type' => $post_type );
         $original_post_language_info = apply_filters( 'wpml_element_language_details', null, $get_language_args );
-         
+
+        // Guard: if WPML is inactive or no details were returned, the result is
+        // not an object and dereferencing ->trid / ->language_code would fatal.
+        if ( ! is_object( $original_post_language_info ) ) {
+            $this->add_msg( 'Skipping connect_to_translation: no WPML language details for [' . $original_id . '] type [' . $post_type . ']' );
+            return;
+        }
+
         $set_language_args = array(
             'element_id'    => $translation_id,
             'element_type'  => $wpml_element_type,

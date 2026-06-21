@@ -45,7 +45,7 @@ function import_processor_action($response,$data){
 	else 
 		$offset = 0;
 
-	$ipo_importer_he = new ipo_importer('https://ipoold.local/extractor-custom',$amount,$offset);
+	$ipo_importer_he = new ipo_artist_plan_importer('https://ipoold.local/extractor-custom',$amount,$offset);
 	$ipo_importer_en = $ipo_importer_he;
 
 	$ipo_importer_he->importer_lang = 'he';
@@ -69,10 +69,10 @@ function import_processor_action($response,$data){
 
 	//$ipo_importer_en->add_msg('DEBUG: data ' . print_r($ipo_importer_he->data,true));
 
-	
+
 	foreach($ipo_importer_he->data as $key => $item){
-	
-		$artist_plan_id_he = $ipo_importer_he->extract_and_update_artist_plan($item);		
+
+		$artist_plan_id_he = $ipo_importer_he->extract_and_update_artist_plan($item);
 
 		$eng_obj = $ipo_importer_en->get_artist_plan_translation($item,'en');
 		if($eng_obj){

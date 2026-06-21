@@ -5,7 +5,7 @@
 @media(max-width: 768px) {
 	
 	.hero_page-section {
-    min-height: 107vw!important;
+    min-height: auto!important;
 	}
 
 	.ipo-breadcrumbs {
@@ -7325,6 +7325,30 @@ footer h2 {
     flex-wrap: nowrap!important;
 }
 }
+}
+
+
+/* loop-program card typography on mobile */
+@media (max-width: 768px) {
+	.img_box .text {
+		font-size: 16px;
+	}
+
+	.img_box li .date {
+		font-size: 14px !important;
+	}
+
+	.img_box li span {
+		font-size: 14px !important;
+	}
+
+	[lang="he-IL"] .img_box .additionalDates .arrow {
+		width: 5px;
+	}
+
+	body:not(.home) .upcoming_area .img_box {
+		margin-top: 0px;
+	}
 }
 
 

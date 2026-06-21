@@ -4,7 +4,7 @@ if ( ! function_exists( 'post_exists' ) ) {
     require_once( ABSPATH . 'wp-admin/includes/post.php' );
 }
 
-class ipo_importer {
+class ipo_artist_plan_importer {
 	
 	public $msg;
 	public $data;

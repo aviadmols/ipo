@@ -4,12 +4,22 @@ class ajax_process_posts extends wpstack_ajax{
 	
 	public function filter($response,$data){
 
+		// SECURITY: this is a bulk write tool (updates ACF fields). The parent
+		// wpstack_ajax base class is not present in this child theme (lives in the
+		// parent theme) and is assumed NOT to enforce capability/nonce, so gate
+		// explicitly here.
+		if ( ! current_user_can('manage_options') ) {
+			wp_send_json_error('forbidden');
+		}
+		// TODO: wire a nonce from the caller JS and verify with
+		// check_ajax_referer('ajax_process_posts','nonce').
+
 		global $theme;
 		$response['console_msg'] = '';
-		
 
-		$offset = (isset($data['offset'])) ? $data['offset'] : ''; 
-		$amount = (isset($data['amount'])) ? $data['amount'] : ''; 
+
+		$offset = (isset($data['offset'])) ? intval($data['offset']) : 0;
+		$amount = (isset($data['amount'])) ? intval($data['amount']) : 0;
 
 		$response['console_msg'] = $data;
 		$response['messages'] = '';

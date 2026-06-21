@@ -47,7 +47,7 @@ function import_processor_action($response,$data){
 
 	$amount = 3;
 
-	$ipo_importer_he = new ipo_importer('https://ipoold.local/extractor-custom',$amount,$offset);
+	$ipo_importer_he = new ipo_series_importer('https://ipoold.local/extractor-custom',$amount,$offset);
 	$ipo_importer_en = $ipo_importer_he;
 
 	$ipo_importer_he->importer_lang = 'he';

@@ -1,5 +1,11 @@
 jQuery(document).ready(function($) {
 
+    // Only initialise the calendar Splide when the markup is present on the page.
+    // (calendar-behavior.js loads globally, but most pages have no .calendar-row,
+    //  and `new Splide(null)` throws "[splide] null is invalid".)
+    if (!document.querySelector('.calendar-row')) {
+        return;
+    }
 
     const $splide_calendar = new Splide('.calendar-row', {
         breakpoints: {
@@ -74,6 +80,10 @@ jQuery(document).ready(function($) {
 
 function select_next_day_with_events($type = 'start') {
 
+    if (!document.querySelector('.calendar-row')) {
+        return;
+    }
+
     const $splide_calendar = new Splide('.calendar-row', {
         breakpoints: {
             500: {
@@ -131,6 +141,9 @@ function select_next_day_with_events($type = 'start') {
 
 function reveal_events($container) {
     //console.log('reveal_events triggered');
+    if (!document.querySelector('.calendar-row')) {
+        return;
+    }
     $reveal_delay = 500;
     $i = 1;
 

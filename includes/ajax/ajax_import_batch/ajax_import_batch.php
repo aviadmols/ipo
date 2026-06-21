@@ -4,11 +4,21 @@ class ajax_import_batch extends wpstack_ajax{
 	
 	public function filter($response,$data){
 
+		// SECURITY: this is a write/import tool. The parent wpstack_ajax base class
+		// is not present in this child theme (lives in the parent theme) and is
+		// assumed NOT to enforce capability/nonce, so gate explicitly here.
+		if ( ! current_user_can('manage_options') ) {
+			wp_send_json_error('forbidden');
+		}
+		// TODO: wire a nonce from the caller JS and verify with
+		// check_ajax_referer('ajax_import_batch','nonce'); the current importer
+		// form (page-templates/action-ipo-importer.php) does not send one.
+
 		global $theme;
 		$response['console_msg'] = '';
-		
 
-		$url = (isset($data['url'])) ? $data['url'] : ''; 
+
+		$url = (isset($data['url'])) ? $data['url'] : '';
 		$response['console_msg'] = $data;
 		$response['logs'] = '';
 

@@ -126,25 +126,31 @@ jQuery(document).ready(function ($) {
         lastScrollTop = st;
     });
 
-    // Helper to add an element box to WOW's list
-    WOW.prototype.addBox = function (element) {
-        this.boxes.push(element);
-    };
+    // NOTE: assets/scripts/wow.js ships EMPTY in this theme, so the global WOW is
+    // undefined and these reveals never actually run. Guard so it doesn't throw a
+    // ReferenceError on every page (it threw before too, inside admin snippet
+    // 25942). To enable WOW reveals, load a real wow.js; otherwise the
+    // .animate_wow elements simply display without the entrance animation.
+    if (typeof WOW !== 'undefined') {
+        WOW.prototype.addBox = function (element) {
+            this.boxes.push(element);
+        };
 
-    var wow = new WOW({
-        boxClass: 'wow',
-        animateClass: 'animated',
-        offset: 100,
-        mobile: true,
-        live: true
-    });
+        var wow = new WOW({
+            boxClass: 'wow',
+            animateClass: 'animated',
+            offset: 100,
+            mobile: true,
+            live: true
+        });
 
-    wow.init();
+        wow.init();
 
-    $('.wow-w').on('scrollSpy:exit', function () {
-        $(this).css({ 'visibility': 'hidden', 'animation-name': 'none' }).removeClass('animated');
-        wow.addBox(this);
-    }).scrollSpy();
+        $('.wow-w').on('scrollSpy:exit', function () {
+            $(this).css({ 'visibility': 'hidden', 'animation-name': 'none' }).removeClass('animated');
+            wow.addBox(this);
+        }).scrollSpy();
+    }
 
 });
 

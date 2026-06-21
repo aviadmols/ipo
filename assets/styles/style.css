@@ -2789,8 +2789,12 @@ body .mobile-menu .wpstack-image img {
   body:not(.home) .upcoming_area .img_box {
     width: 210px!important;
   }
+
+  body:not(.home) .upcoming_area .moreConcerts-slider .img_box {
+    width: auto!important;
+  }
   
-  body:not(.home) .upcoming_area .owl-carousel.owl-drag .owl-item {
+  body:not(.home) .upcoming_area .owl-carousel.owl-drag:not(.moreConcerts-slider) .owl-item {
     width: 240px!important;
 }
 
@@ -2798,9 +2802,7 @@ body .mobile-menu .wpstack-image img {
     flex-direction: column-reverse!important;
   }
 
-  .moreConcerts  .owl-carousel.owl-rtl .owl-item {
-    width: 240px!important;
-}
+  /* moreConcerts is now a responsive OWL slider (items:1.15) — let OWL control item width; do not force a fixed width here. */
 
 
 .btn.sersess {
@@ -3225,7 +3227,7 @@ display: inline-flex;
         width: 100%;
         height: 95vh!important;
     }
-    body:not(.home) .upcoming_area .owl-carousel.owl-drag .owl-item {
+    body:not(.home) .upcoming_area .owl-carousel.owl-drag:not(.moreConcerts-slider) .owl-item {
         max-width: 210px;
     }
     body.home .upcoming_area>.container>.flex-center>.row {

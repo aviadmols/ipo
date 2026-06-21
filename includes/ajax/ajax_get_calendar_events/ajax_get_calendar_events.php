@@ -96,7 +96,6 @@ class ajax_get_calendar_events extends wpstack_ajax{
 		
 		$response['data'] = $data;
 		$response['data']['count'] = count($events);
-		$response['data']['content'] = $events_html;
 		$response['data']['days'] = $days;
 		$response['data']['list_events_html'] = $list_events_html;
 		$response['data']['current_date'] = $current_date;

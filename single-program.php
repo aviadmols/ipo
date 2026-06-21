@@ -394,12 +394,12 @@ if (ICL_LANGUAGE_CODE == 'he') {
  foreach ($ids as $rel):
 
     $related_id = is_object($rel) ? $rel->ID : (int) $rel;
-    $post = get_post($related_id);
+    $related_post = get_post($related_id);
 
     if (
-        $post &&
-        $post->post_status === 'publish' &&
-        in_array($post->post_type, ['program', 'artist_plan'])
+        $related_post &&
+        $related_post->post_status === 'publish' &&
+        in_array($related_post->post_type, ['program', 'artist_plan'])
     ):
 
         // שליפת כל האירועים המשויכים לתוכנית
@@ -423,13 +423,13 @@ if (ICL_LANGUAGE_CODE == 'he') {
         }
 
         // דילוג אם אין אירועים עתידיים (רק ל-program)
-        if ($post->post_type === 'program' && !$has_future_events) {
+        if ($related_post->post_type === 'program' && !$has_future_events) {
             continue;
         }
     ?>
         <li class="splide__slide item <?php
             $program = new ipo_program($related_id);
-            echo $post->post_type;
+            echo $related_post->post_type;
             echo $related_id;
         ?>">
             <?php $theme->the_part('loop-program', $related_id); ?>

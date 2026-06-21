@@ -397,8 +397,7 @@ if (!empty($program_related_programs) && is_array($program_related_programs)) {
                 ?>
              </ul>
            </div>
-           <?php endif; ?>
-       
+
                 
 
            </div> 
@@ -407,6 +406,7 @@ if (!empty($program_related_programs) && is_array($program_related_programs)) {
 
             </div>
         </section>
+<?php endif; ?>
         <!-- =============== More concerts area end =============== -->
 
       

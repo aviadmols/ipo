@@ -7353,48 +7353,410 @@ footer h2 {
 
 
 /* ==========================================================================
-   Restore mega-menu + footer component CSS
-   The parent theme's theme-components.min.css is empty (0 bytes) on the
-   server, so the desktop mega-menu dropdowns rendered expanded with
-   full-size images and the footer collaboration logos showed at natural
-   resolution. These rules (preserved in to-merge/ipo-consolidated.css)
-   restore the intended behavior.
+   Restore mega-menu mechanism (code-manager snippet #30 "Header menu", ID 28200)
+   This snippet lives in to-merge/ipo-consolidated.css (staging only, never
+   wired into a loaded stylesheet during the theme refactor), so the live site
+   lost the desktop/mobile mega-menu CSS. Restored here verbatim so the
+   full-width dropdowns position and open correctly on hover.
    ========================================================================== */
 
-/* Large image icon inside desktop top-level menu titles must stay hidden */
-.desktop-menu .menu .wpstack-menu-item-title > i {
-	display: none;
+.desktop-menu .menu .wpstack-menu-item-title > i{
+    display: none;
+}
+.desktop-menu  .menu-pc .menu .menu-item{
+	position: relative;
+	
 }
 
-/* Desktop mega-menu dropdown: hidden until hover, positioned below the header */
-.desktop-menu .menu > li > ul.sub-menu {
-	position: absolute;
-	background: #fff;
-	padding: 75px 0px;
+.hide.menu-item{
 	display: flex;
-	box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
-	justify-content: center;
-	opacity: 0;
-	visibility: hidden;
-	transform: none;
-	transition: .3s;
+    align-items: center;
 }
+
+.desktop-menu .menu > li > ul.sub-menu > .container li a {
+	
+	    font-variation-settings: "wght" 400, "wdth" 20 !important;
+}
+
+.hide.menu-item>a{
+	display: none!important;
+}
+
 
 header:not(.sticky) .desktop-menu .menu > li > .sub-menu {
-	top: 110px;
+    top: 110px;
 }
 
-header.sticky .desktop-menu .menu > li > .sub-menu {
-	top: 84px;
-	box-shadow: 2px 7px 10px rgba(0, 0, 0, 0.08);
+.desktop-menu .menu-pc .menu > .menu-item:after {
+    content: '';
+    position: absolute;
+    height: 100px;
+    width: 100%;
+    top: 100%;
+	display: none;
+	border-top: 6px solid black;
+    top: 46px
+}
+.desktop-menu .menu-pc .menu > .menu-item:before {
+    content: '';
+    position: absolute;
+    height: 100px;
+    width: 100%;
+    top: 100%;
+    top: 0;
+	z-index: -1;
+}
+.desktop-menu .menu > .menu-item:hover:after{
+	display: block;
+}
+.desktop-menu .menu > li > ul.sub-menu{
+    position: absolute;
+/*     width: 1903px; */
+/*     top: 40px; */
+    background: #fff;
+    padding: 75px 0px;
+    display: flex;
+    box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
+    justify-content: center;
+/*     display: none; */
+	opacity: 0;
+    visibility: hidden;
+	transform: none;
+	transition: .3s;
+    
 }
 
 .desktop-menu .menu > li.hover > ul.sub-menu,
-.desktop-menu .menu > li:hover > .sub-menu {
-	opacity: 1;
-	visibility: visible;
+.desktop-menu .menu > li.hover > ul.sub-menu > .container,
+.desktop-menu .menu > li:hover > .sub-menu,
+.desktop-menu .menu > li > ul.sub-menu > .container {
+   display: flex;
+ 	opacity: 1;
+    visibility: visible;
 	transform: translateY(0);
 	pointer-events: unset !important;
+}
+.desktop-menu .menu > li > ul.sub-menu > li > a,
+.desktop-menu .menu > li > ul.sub-menu > .container > li > a{
+    font-size: 60px;
+    margin-bottom: 0px;
+    display: block;
+    font-family: 'Mandatory PH';
+    font-weight: 400 !important;
+}
+.desktop-menu .menu > li > ul.sub-menu li a, 
+.desktop-menu .menu > li > ul.sub-menu > .container li a{
+    color: #000;
+    font-weight: 400;
+	    line-height: 1;
+}
+.menu-item-has-children>.sub-menu a{
+line-height: 1.6;	
+}
+.menu-item-has-children>a{
+margin-bottom: 25px!important;
+}
+.desktop-menu .menu > li > ul.sub-menu > li > ul.sub-menu > li,
+.desktop-menu .menu > li > ul.sub-menu > .container > li > ul.sub-menu > li{
+    display: block;
+    margin-bottom: 15px;
+}
+.desktop-menu .menu > li > ul.sub-menu > li,
+.desktop-menu .menu > li > ul.sub-menu > .container > li {
+/*     display: inline; */
+    width: auto;
+}
+.menu-image-container {
+    height: 280px;
+    width: 400px;
+}
+.mobile-menu {
+    position: absolute;
+    top: 100%;
+    background: #fff;
+    width: 100%;
+    right: 0;
+    padding: 10px 20px 100px;
+    height: 100vh;
+    overflow: hidden;
+    overflow-y: scroll;
+    max-height: 100vh;
+	transform: translateX(100%);
+    transition: .5s;
+}
+
+.mobile-menu ul li a ,
+.mobile-menu ul li a:hover{
+    font-size: 18px;
+    font-weight: 500 !important;
+}
+
+.mobile-menu ul li {
+    margin-top: 20px;
+    display: block;
+}
+header.current .mobile-menu {
+	transform: translateX(0);
+}
+.mobile-menu ul li .sub-menu {
+    display: none;
+}
+.mobile-menu ul li.menu-item-has-children > a {
+    position: relative;
+	display: block;
+	width: 100%;
+}
+
+.mobile-menu ul li.menu-item-has-children > a:after {
+    display: block;
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 10px;
+    height: 10px;
+    border: solid 3px #212121;
+    border-left: none;
+    border-top: none;
+    transform: rotate(45deg);
+    transition: 0.3s ease all;
+    margin-top: -6px;
+}
+.mobile-menu ul li.menu-item-has-children.open > a:after{
+	transform: rotate(224deg);
+	margin-top: 0px;
+}
+.mobile-menu ul li.menu-item-has-children.open > a {
+    font-weight: 900 !important;
+}
+
+
+.desktop-menu .menu-pc .menu > .menu-item:before{
+    width: calc( 100% + 3.5rem );
+    transform: translatex(1.8rem)
+}
+.desktop-menu .menu > li > ul.sub-menu:before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100px;
+    background: transparent;
+    top: -10px;
+    z-index: -1;
+}
+
+.anchor{
+    transform: translatey(-70px);
+}
+
+.desktop-menu .menu > li > ul.sub-menu{
+    pointer-events: none;
+}
+
+.desktop-menu .menu > li > ul.sub-menu:hover,
+.desktop-menu .menu > li:hover > ul.sub-menu{
+    pointer-events: unset;
+}
+
+.desktop-menu .menu > li > ul.sub-menu:before{
+    height: 100%;
+}
+
+.desktop-menu .menu-pc .menu > .menu-item:before{
+    height: 48px;
+}
+
+
+.hero_area-content{
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.hero_area-content .container{
+    align-self: flex-end;
+}
+
+.sub-menu > li{
+    display: block;
+    width: 100%;
+}
+
+.menu > .menu-item > .sub-menu > .container{
+    
+}
+
+.menu > .menu-item > .sub-menu > .container > .menu-item{
+    
+}
+
+.menu > .menu-item > .sub-menu > .container > .menu-item > .sub-menu{
+    display: flex;
+}
+
+.menu > .menu-item > .sub-menu > .container > .menu-item > .sub-menu> *{
+    flex-basis: 50%;
+}
+
+.menu > .menu-item > .sub-menu > .menu-item > .sub-menu > .menu-item > a,
+.menu > .menu-item > .sub-menu > .container > .menu-item > .sub-menu > .menu-item > a{
+    display: none;
+}
+
+.desktop-menu .menu-pc .menu > .menu-item:after{
+    border-color: transparent !important;
+}
+
+
+.sub-menu li a {
+	font-size: 18px;
+}
+
+
+/* QA */
+
+.desktop-menu .menu > li > .sub-menu{
+    position: fixed !important;
+    right: 0 !important;
+    top: 77px;
+    width: 100%;
+}
+
+
+
+.desktop-menu .menu > li:hover > .sub-menu{
+    right: 0 !important;
+}
+
+.desktop-menu .menu-pc .menu > .menu-item:before{
+    width: 100%;
+    transform: translatex(10px);
+}
+
+.desktop-menu .menu > li > .sub-menu > .container > .menu-item:nth-child(2):last-child .sub-menu> *{
+    flex-basis: 100%;
+}
+
+.desktop-menu .menu > li > ul.sub-menu ul.sub-menu li > a:hover, 
+.desktop-menu .menu > li > ul.sub-menu  ul.sub-menu > .container li > a:hover{
+    line-height: 1;
+}
+
+.desktop-menu .menu > li > ul.sub-menu > li > a, .desktop-menu .menu > li > ul.sub-menu > .container > li > a{
+    font-weight: 400 !important;
+    letter-spacing: 1px !important;
+}
+
+
+
+
+.desktop-menu .menu > li > ul.sub-menu.layout-layout_1 > .container{
+    align-items: center !important;
+}
+
+.desktop-menu .menu-item[data-children-count="3"] > .sub-menu > .container > .ipo-has-children{
+    flex-basis: 40%;
+}
+
+.desktop-menu .menu-item[data-children-count="3"] > .sub-menu > .container > .ipo-has-one-child{
+    margin-left: 0;
+    margin-right: auto;
+    padding-right: 4vw;
+}
+
+.desktop-menu .menu-item[data-children-count="3"] > .sub-menu > .container > .ipo-has-one-child:after{
+    content: "";
+    display: block;
+    height: 100%;
+
+    width: 2px;
+    background:rgba(229, 229, 229, 1);
+    position: absolute;
+    right: 0;
+    top: auto;
+	bottom: 0px;
+}
+
+.desktop-menu .menu .sub-menu .sub-menu li{
+    line-height: 1.5 !important;
+    padding-bottom: 5px;
+    padding-top: 5px;
+}
+
+@media only screen and (max-width: 1300px){
+    .desktop-menu .menu-item .menu-item-image .menu-image-container{
+        max-width: 100%;
+    }
+}
+
+@media only screen and (max-width: 1300px) and (min-width: 991px){
+    .desktop-menu .menu > li > ul.sub-menu > li > a, 
+    .desktop-menu .menu > li > ul.sub-menu > .container > li > a{
+        font-size: 40px !important;
+    }
+}
+
+
+.menu > .menu-item > .sub-menu.layout-layout_2 > .container > .menu-item {
+    display: table-cell!important;
+    vertical-align: top;
+}
+.menu > .menu-item > .sub-menu.layout-layout_2 > .container {
+
+    display: table!important;
+    width: 100%!important;
+    }
+
+
+header.sticky .desktop-menu .menu > li > .sub-menu{
+    top: 84px;
+    box-shadow: 2px 7px 10px rgba(0,0,0,0.08);
+}
+
+header.sticky .desktop-menu .menu > li > .sub-menu:after{
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 50px;
+    background: white;
+    content: "";
+    box-shadow: inset 0px 5px 10px rgba(0,0,0,0.05);
+}
+
+@media (min-width: 991px){
+	
+
+	.lang.menu {
+		    min-width: 79px;
+	}
+
+.desktop-menu .menu-pc>ul>li>a {
+       white-space: nowrap;
+}
+	
+	.desktop-menu{
+    flex-wrap: wrap;
+}
+
+#menu-item-32485 .menu-item.menu-item-image {
+    width: 320px;
+    max-width: 320px!important;
+    min-width: 320px!important;
+}
+
+#menu-item-32486 {
+        max-width: calc(100% - 25% - 320px)!important;
+       width: auto;
+       display: block;
+}
+
+.desktop-menu .menu > li > ul.sub-menu > .container li a {
+    white-space: unset!important;
+}
+
+#menu-item-32494 {
+    max-width: calc(25% - 20px);
+    width: auto;
+}
 }
 
 /* Footer collaboration / sponsor logos must be size-constrained */
@@ -7416,6 +7778,19 @@ header.sticky .desktop-menu .menu > li > .sub-menu {
 		width: auto !important;
 		margin-right: 15px;
 	}
+}
+
+
+/* Desktop top-menu title color (requested) */
+@media (min-width: 991px) {
+	#menu-item-241 .title-text,
+	#menu-item-32459 .title-text {
+		color: #000;
+	}
+}
+
+.horizontal-img {
+	width: 100%;
 }
 
 

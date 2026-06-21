@@ -7352,3 +7352,70 @@ footer h2 {
 }
 
 
+/* ==========================================================================
+   Restore mega-menu + footer component CSS
+   The parent theme's theme-components.min.css is empty (0 bytes) on the
+   server, so the desktop mega-menu dropdowns rendered expanded with
+   full-size images and the footer collaboration logos showed at natural
+   resolution. These rules (preserved in to-merge/ipo-consolidated.css)
+   restore the intended behavior.
+   ========================================================================== */
+
+/* Large image icon inside desktop top-level menu titles must stay hidden */
+.desktop-menu .menu .wpstack-menu-item-title > i {
+	display: none;
+}
+
+/* Desktop mega-menu dropdown: hidden until hover, positioned below the header */
+.desktop-menu .menu > li > ul.sub-menu {
+	position: absolute;
+	background: #fff;
+	padding: 75px 0px;
+	display: flex;
+	box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
+	justify-content: center;
+	opacity: 0;
+	visibility: hidden;
+	transform: none;
+	transition: .3s;
+}
+
+header:not(.sticky) .desktop-menu .menu > li > .sub-menu {
+	top: 110px;
+}
+
+header.sticky .desktop-menu .menu > li > .sub-menu {
+	top: 84px;
+	box-shadow: 2px 7px 10px rgba(0, 0, 0, 0.08);
+}
+
+.desktop-menu .menu > li.hover > ul.sub-menu,
+.desktop-menu .menu > li:hover > .sub-menu {
+	opacity: 1;
+	visibility: visible;
+	transform: translateY(0);
+	pointer-events: unset !important;
+}
+
+/* Footer collaboration / sponsor logos must be size-constrained */
+.Collaborations {
+	display: flex;
+	justify-content: center;
+	flex-flow: wrap;
+	align-items: center;
+}
+
+.Collaborations img {
+	max-height: 60px;
+	width: auto;
+}
+
+@media (min-width: 768px) {
+	.Collaborations img {
+		max-height: 45px !important;
+		width: auto !important;
+		margin-right: 15px;
+	}
+}
+
+

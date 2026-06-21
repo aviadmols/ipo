@@ -487,6 +487,47 @@ if (!function_exists('replace_font_icons_links_with_data_lzhref_redirect')) {
 add_action( 'template_redirect', 'replace_font_icons_links_with_data_lzhref_redirect' );
 
 
+/**
+ * Remove the UserWay accessibility widget.
+ *
+ * The UserWay loader (an inline snippet that injects cdn.userway.org/widget.js)
+ * is added outside this theme — it has no WordPress enqueue handle, so it cannot
+ * be dequeued. We strip it from the final HTML instead. The site already ships a
+ * separate accessibility tool (andifn / user-a.co.il), so UserWay is redundant.
+ */
+if ( ! function_exists( 'ipo_strip_userway' ) ) {
+	function ipo_strip_userway( $buffer ) {
+		if ( stripos( $buffer, 'userway' ) === false ) {
+			return $buffer;
+		}
+		// Inline loader snippet (references cdn.userway.org/widget.js).
+		$buffer = preg_replace(
+			'#<script\b[^>]*>(?:(?!</script>)[\s\S])*?userway(?:(?!</script>)[\s\S])*?</script>#i',
+			'',
+			$buffer
+		);
+		// External script tags pointing at userway.org.
+		$buffer = preg_replace(
+			'#<script\b[^>]*\buserway\.org\b[^>]*>\s*</script>#i',
+			'',
+			$buffer
+		);
+		return $buffer;
+	}
+}
+
+if ( ! function_exists( 'ipo_strip_userway_buffer_start' ) ) {
+	function ipo_strip_userway_buffer_start() {
+		if ( is_admin() ) {
+			return;
+		}
+		ob_start( 'ipo_strip_userway' );
+	}
+}
+
+add_action( 'template_redirect', 'ipo_strip_userway_buffer_start', 0 );
+
+
 if ( ! function_exists( 'ipo_event_has_program' ) ) {
 	function ipo_event_has_program( $event_id ) {
 		$program = get_field( 'related_to_program', $event_id );

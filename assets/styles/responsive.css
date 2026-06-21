@@ -779,7 +779,7 @@ display: none!important;
 		box-shadow: none;
 	}
 	.moreConcerts .owl-carousel .owl-stage-outer{
-		overflow: hidden;
+		overflow: visible;
 	}
 	.plan_area li h3 {
 	    font-size: 50px;

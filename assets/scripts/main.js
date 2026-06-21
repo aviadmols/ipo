@@ -166,14 +166,15 @@
                 responsive: {
                     0: {
                         autoWidth: false,
-                        items: 1.15,
+                        items: 1.5,
+                        loop: true,
                         margin: 16,
                         nav: false,
                     },
                     576: {
                         autoWidth: false,
-                        items: 1.15,
-                        loop:  false,
+                        items: 1.5,
+                        loop: true,
                         center: false,
                         margin: 16,
                         nav: false,

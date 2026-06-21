@@ -1673,6 +1673,7 @@ p.hoverflow:after {
 	}
 	body .calendar-events-header .filters ul.options li{
 		padding: 5px 10px;
+	}
 
 	body .calendar-full .current-month{
 		justify-content: center;
@@ -7325,7 +7326,6 @@ footer h2 {
     flex-wrap: nowrap!important;
 }
 }
-}
 
 
 /* loop-program card typography on mobile */
@@ -7785,7 +7785,7 @@ header.sticky .desktop-menu .menu > li > .sub-menu:after{
 @media (min-width: 991px) {
 	#menu-item-241 .title-text,
 	#menu-item-32459 .title-text {
-		color: #000;
+	
 	}
 }
 

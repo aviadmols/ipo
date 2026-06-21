@@ -155,7 +155,7 @@ usort($reordered, function($a, $b) {
             foreach ($reordered as $event) {
                 $event = $event['event'];
                 $event_id = $event->get_id();
-                $theme->the_part('loop-program-event', $event_id, $i);
+                $theme->the_part('loop-program-event', $event_id);
             }
             ?>
             <?php if (count($reordered) > 3) : ?>

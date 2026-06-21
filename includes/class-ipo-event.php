@@ -531,7 +531,8 @@ if ($city !== '') {
 	public function get_link(){
 		$event_id = $this->post->ID;
 		$program = $this->get_program();
-		$program_permalink = get_permalink($program->ID);
+		$program_id = is_object($program) ? $program->ID : $program;
+		$program_permalink = get_permalink($program_id);
 		$event_permalink = $program_permalink.'?event_id='.$event_id;
 		return $event_permalink;
 	}

@@ -389,8 +389,8 @@ $delay = 100;
                                 $role = get_the_terms($artist,'artist_role');
                                 $artist_cat = get_the_terms($artist,'artist_cat');
 
-                                $artist_cat = $artist_cat[0]->name;
-                                $artist_role = $role[0]->name;
+                                $artist_cat  = ( is_array($artist_cat) && ! empty($artist_cat) ) ? $artist_cat[0]->name : '';
+                                $artist_role = ( is_array($role) && ! empty($role) ) ? $role[0]->name : '';
 
                                 $artist_role_override = get_field('artist_role_override',$artist);
                                 $artist_cat_override = get_field('artist_cat_override',$artist);

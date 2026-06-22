@@ -23,7 +23,7 @@ body.js-scroll-hide {
 }
 
 /* SVG container shortcode */
-.svg-pc { display: none; padding-top: 80px; }
+.svg-pc { display: flex; padding-top: 80px; }
 @media (min-width: 768px) {
 	.svg-mobile { display: none; }
 	.svg-pc { display: flex; }

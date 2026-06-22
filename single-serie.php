@@ -205,6 +205,12 @@ if (!empty($svg_pc)) {
         justify-content: space-around;
     }
 }
+
+  @media (max-width: 768px) {
+    .open-search img {
+        filter: invert(1);
+    }
+}
 </style>
     
 

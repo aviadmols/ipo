@@ -1648,7 +1648,12 @@ add_filter('intermediate_image_sizes_advanced', 'increase_image_dimensions');
 
 add_action('wp_footer', function () {
     if (is_admin()) return;
-    if (!empty($_COOKIE['rg_privacy_consent']) && $_COOKIE['rg_privacy_consent'] === '1') return;
+    // NOTE: do NOT gate this server-side on $_COOKIE. The site serves pages from a
+    // full-page cache, so the cached HTML (generated without a consent cookie) is
+    // sent to everyone and the PHP cookie check never re-runs. We always emit the
+    // banner hidden (display:none) and reveal it client-side only when the visitor
+    // has not consented - this keeps it cache-safe and prevents the flash where the
+    // banner showed for a moment and was then removed for users who already accepted.
 
     $lang = defined('ICL_LANGUAGE_CODE') ? ICL_LANGUAGE_CODE : substr(get_locale(), 0, 2);
     $is_he = in_array(strtolower($lang), ['he','he-il','he_il']);
@@ -1662,7 +1667,7 @@ add_action('wp_footer', function () {
     $link_label = $is_he ? 'תקנות האתר ומדיניות פרטיות' : 'View Privacy Policy';
     $accept_label = $is_he ? 'מאשר' : 'Accept';
     ?>
-    <div id="rg-privacy-wrap" style="position:fixed;left:0;right:0;bottom:0;z-index:99999">
+    <div id="rg-privacy-wrap" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:99999">
       <div style="direction:<?php echo esc_attr($dir); ?>;background:#1f1f22;color:#fff;border-radius:0;padding:14px 18px;display:flex;flex-flow:wrap;align-items:center;gap:12px;box-shadow:0 -2px 10px rgba(0,0,0,.35);width:100%;margin:0;font-family:'Simpler',sans-serif;font-size:14px">
         <div style="flex:1 1 100%;margin-bottom:6px"><?php echo esc_html($text); ?></div>
         <a href="<?php echo esc_url($policy_url); ?>" style="display:inline-flex;align-items:center;justify-content:center;border:1px solid #fff;color:#fff;text-decoration:none;border-radius:9999px;padding:10px 22px;white-space:nowrap"><?php echo esc_html($link_label); ?></a>
@@ -1671,16 +1676,18 @@ add_action('wp_footer', function () {
     </div>
     <script>
       (function () {
-        if (document.cookie.indexOf('rg_privacy_consent=1') !== -1) {
-          var w = document.getElementById('rg-privacy-wrap'); if (w) w.remove();
-          return;
-        }
+        var w = document.getElementById('rg-privacy-wrap');
+        if (!w) return;
+        // Already consented: leave it hidden (it was never shown -> no flash).
+        if (document.cookie.indexOf('rg_privacy_consent=1') !== -1) return;
+        // Not consented yet: reveal the banner.
+        w.style.display = 'block';
         var btn = document.getElementById('rg-privacy-accept');
         if (!btn) return;
         btn.addEventListener('click', function () {
           var expires = new Date(Date.now() + 365*24*60*60*1000).toUTCString();
           document.cookie = 'rg_privacy_consent=1; expires=' + expires + '; path=/; SameSite=Lax';
-          var w = document.getElementById('rg-privacy-wrap'); if (w) w.remove();
+          w.style.display = 'none';
         });
       })();
     </script>

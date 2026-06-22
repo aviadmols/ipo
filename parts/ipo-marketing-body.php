@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 <!-- WhatsApp floating button (origin snippet #4 / ID: 54590) -->
 <a href="https://wa.me/972557000232" target="_blank" class="whatsapp-button">
-  <img src="https://www.ipo.co.il/wp-content/uploads/2025/05/whatsapp-1.png" alt="WhatsApp" />
+  <img src="https://www.ipo.co.il/wp-content/uploads/2025/05/whatsapp-1.png" alt="WhatsApp" width="50" height="50" loading="lazy" decoding="async" />
 </a>
 
 <style>

@@ -25,5 +25,5 @@ if ( ! defined( 'ABSPATH' ) ) {
          can't throw "NotSupportedError: the name 'lottie-player' has already been used".
          Works regardless of load order/source (incl. a still-active duplicate code snippet). */ ?>
 <script>(function(){var d=customElements.define.bind(customElements);customElements.define=function(n,c,o){if(!customElements.get(n)){try{d(n,c,o);}catch(e){}}};})();</script>
-<script src="https://unpkg.com/@lottiefiles/lottie-player@1.0.0/dist/lottie-player.js" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.0.2/anime.min.js"></script>
+<script defer src="https://unpkg.com/@lottiefiles/lottie-player@1.0.0/dist/lottie-player.js" crossorigin="anonymous"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.0.2/anime.min.js"></script>

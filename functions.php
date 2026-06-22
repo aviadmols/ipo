@@ -162,6 +162,11 @@ function ipo_image_sizes(){
 	add_image_size( 'blog_featured_image', 400, 400, false); 
 	add_image_size( 'loop-artist-team', 195, 245, false);
 	add_image_size( 'loop-artist-team-large', 290, 370, false);
+	// Mega-menu icons display at ~223x134; this ~2x size lets the menu serve a
+	// small thumbnail instead of the full 1280x772 originals once thumbnails are
+	// regenerated and the menu/plugin is pointed at it. Keeps the source aspect
+	// ratio (~1.66) so images are not cropped.
+	add_image_size( 'ipo-menu-thumb', 460, 278, false );
 }
 
 // Register taxonomy category_program for post type program
@@ -526,6 +531,72 @@ if ( ! function_exists( 'ipo_strip_userway_buffer_start' ) ) {
 }
 
 add_action( 'template_redirect', 'ipo_strip_userway_buffer_start', 0 );
+
+
+/**
+ * Lazy-load below-the-fold images that ship without a loading attribute.
+ *
+ * The parent theme / menu walker prints <img> tags (e.g. the 30 full-size
+ * mega-menu images at .wpstack-menu-item-title) with no loading attribute, so
+ * the browser fetches every one of them up-front - even the ones hidden on
+ * desktop. We add loading="lazy" decoding="async" to any <img> that does not
+ * already declare loading, which preserves the eager hero/LCP image (it ships
+ * loading="eager") while deferring everything else.
+ */
+if ( ! function_exists( 'ipo_lazyload_images' ) ) {
+	function ipo_lazyload_images( $buffer ) {
+		if ( stripos( $buffer, '<img' ) === false ) {
+			return $buffer;
+		}
+		return preg_replace_callback(
+			'#<img\b[^>]*>#i',
+			function ( $m ) {
+				$tag = $m[0];
+				// Respect an explicit loading attribute (eager hero/LCP, or already-lazy).
+				if ( preg_match( '/\bloading\s*=/i', $tag ) ) {
+					return $tag;
+				}
+				$inject = ' loading="lazy"';
+				if ( ! preg_match( '/\bdecoding\s*=/i', $tag ) ) {
+					$inject .= ' decoding="async"';
+				}
+				return preg_replace( '/<img\b/i', '<img' . $inject, $tag, 1 );
+			},
+			$buffer
+		);
+	}
+}
+
+if ( ! function_exists( 'ipo_lazyload_images_buffer_start' ) ) {
+	function ipo_lazyload_images_buffer_start() {
+		if ( is_admin() ) {
+			return;
+		}
+		ob_start( 'ipo_lazyload_images' );
+	}
+}
+
+add_action( 'template_redirect', 'ipo_lazyload_images_buffer_start', 0 );
+
+
+/**
+ * Add loading="lazy" / decoding="async" to attachment-rendered images.
+ *
+ * Complements ipo_lazyload_images() for images output via wp_get_attachment_image().
+ * Never overrides an explicit value, so an eager LCP image keeps loading="eager".
+ */
+if ( ! function_exists( 'ipo_attachment_lazy_attrs' ) ) {
+	function ipo_attachment_lazy_attrs( $attr ) {
+		if ( empty( $attr['loading'] ) ) {
+			$attr['loading'] = 'lazy';
+		}
+		if ( empty( $attr['decoding'] ) ) {
+			$attr['decoding'] = 'async';
+		}
+		return $attr;
+	}
+}
+add_filter( 'wp_get_attachment_image_attributes', 'ipo_attachment_lazy_attrs', 20 );
 
 
 if ( ! function_exists( 'ipo_event_has_program' ) ) {

@@ -2379,6 +2379,7 @@ span.hall{
 
 .calendar-full .loop-day.current-day label span{
     font-family: "Mandatory PH", sans-serif;
+    font-variation-settings: "wght" 400, "wdth" 20 !important;
     font-size: 30px;
     letter-spacing: 2px;
     transform: translatey(-2px);
@@ -2854,6 +2855,7 @@ ul.events-list li .details .title  img.arrow {
 
 .calendar-full  li.loop-day.current-day label span {
     font-size: 40px !important;
+    font-variation-settings: "wght" 400, "wdth" 20 !important;
 }
 
 @keyframes scaleUpDown {
@@ -6572,6 +6574,7 @@ li.loop-serie-event{
 .calendar_area .numCount li.active label p,
 .calendar_area .numCount li.active span{
     color: white !important;
+    font-variation-settings: "wght" 400, "wdth" 20 !important;
 }
 	.ipo-program-image .wpstack-bg-image{
 		background-color: rgba(234,234,234,0.62);

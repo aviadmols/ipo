@@ -2413,6 +2413,7 @@ span.hall{
 
 .calendar-full .loop-day.current-day label span{
     font-family: "Mandatory PH", sans-serif;
+    font-variation-settings: "wght" 400, "wdth" 20 !important;
     font-size: 30px;
     letter-spacing: 2px;
     transform: translatey(-2px);

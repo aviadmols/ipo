@@ -2710,7 +2710,7 @@ body:not(.home) footer * .fadeInDown {
 
 
 body .mobile-menu > .menu .sub-menu {
-    display: block;
+
     background-color: #f2f2f2!important
 }
 
@@ -4480,6 +4480,7 @@ heaer.sticky .lang .wpml-ls-last-item {
 .calendar_area.loaded .numCount li:hover label * {
         transition: all 0.5s;
     color: white!important;
+    font-variation-settings: "wght" 400, "wdth" 20 !important;
 }
 
 
@@ -4491,6 +4492,7 @@ heaer.sticky .lang .wpml-ls-last-item {
 
 .calendar_area.loaded .numCount li label * {
         transition: all 0.5s;
+        font-variation-settings: "wght" 400, "wdth" 20 !important;
 }
 
 [lang="en-US"] .page-template-Lobby-series-subscriptions .subscribe-content .title, [lang="en-US"] .subscribe-content .sb-text {

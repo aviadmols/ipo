@@ -65,6 +65,19 @@ if ( ! function_exists( 'ipo_arrow_icon_url' ) ) {
 	}
 }
 
+// Fix the Theme File Editor fatal "Call to undefined method wpstack_theme::display()".
+// wp-admin/theme-editor.php runs in the global scope and sets $theme = wp_get_theme()
+// (a WP_Theme, which has a display() method). But the parent theme stores its
+// wpstack_theme object in the SAME global $theme and re-assigns it during the
+// admin-header hooks, clobbering core's WP_Theme. We restore the WP_Theme on the
+// theme-editor screen, running last (PHP_INT_MAX) so it wins over the parent.
+add_action( 'admin_head-theme-editor.php', function () {
+	$stylesheet = ! empty( $_REQUEST['theme'] )
+		? sanitize_text_field( wp_unslash( $_REQUEST['theme'] ) )
+		: get_stylesheet();
+	$GLOBALS['theme'] = wp_get_theme( $stylesheet );
+}, PHP_INT_MAX );
+
 // Base – must run at load time so parent theme includes these scripts in output.
 // (Registering on wp_enqueue_scripts caused Slick / isScrolledIntoView to be missing.)
 if (isset($theme) && is_object($theme)) {

@@ -209,111 +209,127 @@ function shortcode_ipo_programs($args){
 
 
 function at_popup_shortcode() {
-    ob_start();
-    ?>
+  ob_start();
+  ?>
 <!-- AT Popup 2023 BEGIN -->
 <link href="//cdn-media.web-view.net/popups/style/v1/main_combined-rtl.css?v=2.0.8611.28926" rel="stylesheet" type="text/css" />
 <div id="_atPopupSU" class="shown"><div class="bl-template row-fluid bl-content-removable popup-dir-rtl" id="template-body" data-page-width="300" data-new-from-template="false">     <!-- BEGIN TEMPLATE OUTER -->     <div class="bl-template-main-wrapper span12" id="bl_0" valign="top">        <!-- BEGIN TEMPLATE MARGIN (Outside Margin - Padding) -->        <div class="bl-template-margin span12" id="bl_1" valign="top">            <!-- BEGIN TEMPLATE WRAPPER (Background) -->            <div class="template-main-table bl-template-background span12" id="bl_2" valign="top">                <!-- BEGIN TEMPLATE CONTAINER (Border, Inner Padding) -->                <div class="bl-template-border span12" id="bl_3" valign="top">                    <!-- BEGIN ZONES CONTAINER -->                    <!--zone-marked-->                    <div class="bl-zone bl-zone-dropable bl-zone-body row-fluid" id="bl_4" style="margin-top: 0px !important; background-color: transparent;" name="BodyZone" valign="top" height="">					<div class="bl-block bl-block-signuptextpage" id="bl_5" blocktype="signuptextpage" name="signuptextpage" style="width: 300px;"><div class="bl-block-content" contenteditable="false"> <div> <div class="bl-block-content-table bl-block-dir-ltr span12"> <div class="bl-block-content-row bl-block-content-first-row bl-block-content-last-row span12" style="" data-bi=""> <div class="bl-block-content-row-inner span12" style="padding: 12px 35px 20px 24px;"><div class="bl-block-content-column bl-block-content-new-column span12"><div class="bl-padding-columns bl-content-wrapper span12"> <div class="bl-signup-container span12 offset0" at-form-width="12" style="border: 0px solid #191919; border-radius: 5px; padding: 8px 14px; background-color: transparent;">  <div class="bl-block-content-item bl-block-content-item-signupfieldpage bl-content-item-unremovable fields-right" style="text-align: center; margin-bottom: 14px;" data-is-auto-fill="true"><input type="text" maxlength="50" class="signup-field span12 input-ltr first-input" readonly="readonly" data-field-type="text" data-field-source="FirstName" data-mandatory="true" placeholder="שם פרטי*" data-field-validation-msg="הערך שהוכנס בשדה זה אינו תקין" style="font-size: 18px; margin-bottom: 14px; height: 38px; line-height: 18px; font-family: "Open Sans Hebrew"; text-align: right;" data-hidden="false" data-custom-values="" data-input-type="text" data-tag="First Name"><input type="text" maxlength="50" class="signup-field span12 input-ltr" readonly="readonly" data-field-type="text" data-field-source="LastName" data-mandatory="true" placeholder="שם משפחה*" data-field-validation-msg="הערך שהוכנס בשדה זה אינו תקין" style="font-size: 18px; margin-bottom: 14px; height: 38px; line-height: 18px; font-family: "Open Sans Hebrew"; text-align: right;" data-hidden="false" data-custom-values="" data-input-type="text" data-tag="Last Name"><input type="text" maxlength="50" class="signup-field span12 input-ltr" readonly="readonly" data-field-type="email" data-field-source="Email" data-mandatory="true" placeholder="אימייל " data-field-validation-msg="הערך שהוכנס בשדה זה אינו תקין" style="font-size: 18px; margin-bottom: 14px; height: 38px; line-height: 18px; font-family: "Open Sans Hebrew"; text-align: right;" data-hidden="false" data-custom-values="" data-input-type="text" data-tag="undefined"><input type="text" maxlength="50" class="signup-field span12 input-ltr" readonly="readonly" data-field-type="mobile" data-field-source="SMS" data-mandatory="true" placeholder="נייד*" data-field-validation-msg="המספר שגוי או חסר, נא לנסות שנית" style="font-size: 18px; margin-bottom: 14px; height: 38px; line-height: 18px; font-family: "Open Sans Hebrew"; text-align: right;" data-hidden="false" data-custom-values="" data-input-type="text" data-tag="SMS"><input type="text" maxlength="50" class="signup-field span12 input-ltr" readonly="readonly" data-field-type="date" data-field-source="Birthday" data-mandatory="true" placeholder="תאריך לידה" data-field-validation-msg="הערך שהוכנס בשדה זה אינו תקין" style="font-size: 18px; margin-bottom: 14px; height: 38px; line-height: 18px; font-family: "Open Sans Hebrew"; text-align: right;" data-hidden="false" data-custom-values="" data-input-type="text" data-tag="Birthday"><div class="confirm-emails" data-field-validation-msg="נא אשר כדי לקבל דיוור" style="font-family: "Open Sans Hebrew";"> <div class="checkbox rtl"> <label style="cursor: auto;"> <input type="checkbox" disabled="disabled" style="text-align: right;"><label class="confirm-label dir-label" style="font-family: "Open Sans Hebrew"; text-align: right; cursor: auto; font-size: 18px; color: #000000;">אני מאשר לקבל חומר שיווקי ופרסומות מהפילהרמונית הישראלית</label></label></div> </div><div class="confirm-terms hidden" data-field-validation-msg="יש לאשר את תנאי השימוש" style="font-family: "Open Sans Hebrew";"> <div class="checkbox rtl"> <label style="cursor: auto;"> <input type="checkbox" disabled="disabled" style="text-align: right;"><label class="confirm-label dir-label" style="font-family: "Open Sans Hebrew"; text-align: right; cursor: auto; font-size: 18px; color: #000000;">קראתי ואישרתי את תנאי השימוש</label></label></div> </div></div> <div class="bl-padding-columns bl-content-wrapper-columns" style="text-align: center;"> <div class="bl-block-button-content-wrapper" style="display: block; border-radius: 5px; background-color: #0d0d6d;"> <div class="bl-block-button-content-item-wrapper" style="font-size: 16px; padding: 9px;"> <div class="bl-block-content-item bl-block-content-item-button bl-content-item-unremovable" style="min-width: 1px; min-height: 16px; display: block; text-align: center; text-decoration: none;" data-gramm="false"><span style="font-family:'Open Sans Hebrew';"><span style="font-size:22px;"><span style="color:#FFFFFF;"><strong>הירשמו עכשיו</strong></span></span></span></div> </div> </div> </div> </div> </div></div></div> </div> </div> </div> </div></div>                     </div>                    <!-- END ZONES CONTAINER -->                </div>                <!-- END TEMPLATE CONTAINER -->            </div>            <!-- END TEMPLATE WRAPPER -->        </div>        <!-- END TEMPLATE MARGIN -->    </div>    <!-- END TEMPLATE OUTER --></div></div>
 
 <script type='text/javascript'>
-	(function () {
-		var _atpopq = window._atpopq || (window._atpopq = []);
-		window._atpopobj = {};
-		if (!_atpopq.loaded) {
-			var v = Math.floor((Math.random() * 1000000) + 1);
-			var atpopjs = document.createElement('script');
-			atpopjs.type = 'text/javascript';
-			atpopjs.async = true;
-			atpopjs.src = '//cdn-media.web-view.net/popups/lib/v1/loader.min.js?v=' + v;
-			var s = document.getElementsByTagName('script')[0];
-			s.parentNode.insertBefore(atpopjs, s);
-			_atpopq.loaded = true;
-		}
-		_atpopq.push(['UserId', 'zw3jefdca8w2']);
-		_atpopq.push(['PopupId', 'x3fafsa2u2']);
-		_atpopq.push(['IsraelCode', '104']);
-		_atpopq.push(['CountryCode', '104']);
-		_atpopq.push(['IsEmbed', true]);
-		_atpopq.push(['IgnoreMainCss', true]);
-		_atpopq.push(['OnEventCallback', 'handleATPopupEvent']);
-	})();
+(function () {
+  var _atpopq = window._atpopq || (window._atpopq = []);
+  window._atpopobj = {};
+  if (!_atpopq.loaded) {
+    var v = Math.floor((Math.random() * 1000000) + 1);
+    var atpopjs = document.createElement('script');
+    atpopjs.type = 'text/javascript';
+    atpopjs.async = true;
+    atpopjs.src = '//cdn-media.web-view.net/popups/lib/v1/loader.min.js?v=' + v;
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(atpopjs, s);
+    _atpopq.loaded = true;
+  }
+  _atpopq.push(['UserId', 'zw3jefdca8w2']);
+  _atpopq.push(['PopupId', 'x3fafsa2u2']);
+  _atpopq.push(['IsraelCode', '104']);
+  _atpopq.push(['CountryCode', '104']);
+  _atpopq.push(['IsEmbed', true]);
+  _atpopq.push(['IgnoreMainCss', true]);
+  _atpopq.push(['OnEventCallback', 'handleATPopupEvent']);
+})();
 </script>
 <script type="text/javascript">
-	//Sample event handler function
-	function handleATPopupEvent(ev,args){
-		switch(ev){
-			case 'display':
-				//Do this when the popup is displayed
-				break;
-			case 'close':
-				//Do this when the popup gets closed by the user
-				break;
-			case 'submit':
-				//Do this when popup gets submitted and the user doesn't get redirected to a URL
-				break;
-		}
-	}
+//Sample event handler function
+function handleATPopupEvent(ev,args){
+  switch(ev){
+    case 'display':
+      //Do this when the popup is displayed
+      break;
+    case 'close':
+      //Do this when the popup gets closed by the user
+      break;
+    case 'submit':
+      //Do this when popup gets submitted and the user doesn't get redirected to a URL
+      break;
+  }
+}
 </script>
 <style>
+
+.about_area h1, .main_body h1 {
+    font-size: 50px;
+}
+
+
+h3 {
+    font-size: 30px;
+    direction: rtl;
+    font-family: 'Simpler';
+    letter-spacing: 0;
+    margin-bottom: 15px;
+}
+
+
 .bl-block-content * {
-        font-family: 'Simpler'!important;
-    font-weight: 300;
-    font-size: 18px;
+      font-family: 'Simpler'!important;
+  font-weight: 300;
+  font-size: 18px;
 }
 
 .bl-block-content input {
-    border-radius: 0px!important;
+  border-radius: 0px!important;
 }
 
-  .page_title {
-    display: none!important;
-  }
-  
-  .bl-block-button-content-wrapper{    border-radius: 50px!important;
-  }
-  .bl-block-content-column input {
-      color: #000!important;
-      border-bottom: 2px solid #000!important;
-      box-shadow: none!important;
-      border-top: none!important;
-      border-right: none!important;
-      border-left: none!important;
-  }
-  
-  .bl-block-content-row-inner{
-    padding: 12px 0px 20px 0px!important;
-  }
-  
-  .bl-signup-container, .bl-padding-columns, .bl-block-signuptextpage{
-   padding: 0px!important; 
-  }
-  
-  
-  .bl-block-signuptextpage {
-      min-width: 100%!important;
-  
-  }
-  
-  #_atPopupSU.shown  {
+.page_title {
+  display: none!important;
+}
+
+.bl-block-button-content-wrapper{    border-radius: 50px!important;
+}
+.bl-block-content-column input {
+    color: #000!important;
+    border-bottom: 2px solid #000!important;
+    box-shadow: none!important;
+    border-top: none!important;
+    border-right: none!important;
+    border-left: none!important;
+}
+
+.bl-block-content-row-inner{
+  padding: 12px 0px 20px 0px!important;
+}
+
+.bl-signup-container, .bl-padding-columns, .bl-block-signuptextpage{
+ padding: 0px!important; 
+}
+
+
+.bl-block-signuptextpage {
+    min-width: 100%!important;
+
+}
+
+#_atPopupSU.shown  {
 max-width: 400px!important;
-    margin-right: auto!important;
-    margin-bottom: 25px!important;
-    margin-left: auto!important;
+  margin-right: auto!important;
+  margin-bottom: 25px!important;
+  margin-left: auto!important;
 }
 
 #template-body {
-    text-align: center!important;
+  text-align: center!important;
 }
 
 #_atPopupSU .bl-template .bl-block-button-content-wrapper {
-    background: #000!important;
+  background: #000!important;
 }
 </style>
 <!-- AT Popup END -->
-    <?php
-    return ob_get_clean();
+  <?php
+  return ob_get_clean();
 }
 add_shortcode( 'subscribe_contact', 'at_popup_shortcode' );
+
 
 
 

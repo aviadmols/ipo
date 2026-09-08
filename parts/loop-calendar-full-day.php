@@ -104,26 +104,25 @@ $link = '#';
 
 		$events_popup_html .= '
 			<li class="event-single-item '.$post_status.'" data-event-id="'.$event->get_id().'">
-				<a class="overlay-link" href="'.$link.'"></a>
-				<div class="media"><a href="'.$link.'">'.$image.'</a></div>
-				<div class="details">
-					<div class="meta">
-						<div class="time">
-							<span class="time">'.$event->get_time().'</span> | <span class="location">'.$event->get_city().'</span>
-						</div>
-						<div class="title">
-							<a href="'.$link.'">
+				<a class="event-item-link" href="'.$link.'">
+					<div class="media">'.$image.'</div>
+					<div class="details">
+						<div class="meta">
+							<div class="time">
+								<span class="time">'.$event->get_time().'</span> | <span class="location">'.$event->get_city().'</span>
+							</div>
+							<div class="title">
 								'.$program->get_title().'
 								<div style="display: flex;" class="link-arrow">
 									<img src="'.ipo_arrow_icon_url().'" class="arrow" alt="">
 								</div>
-							</a>
-						</div>
-						<div class="subtitle">
-							'.$program->gf('program_subtitle').'
+							</div>
+							<div class="subtitle">
+								'.$program->gf('program_subtitle').'
+							</div>
 						</div>
 					</div>
-				</div>
+				</a>
 			</li>
 		';
 

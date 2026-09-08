@@ -18,6 +18,7 @@ require_once(get_template_directory().'/functions.php');
    require_once get_stylesheet_directory() . '/includes/class-ipo-event.php';
     require_once get_stylesheet_directory() . '/includes/class-ipo-program.php';
     require_once get_stylesheet_directory() . '/includes/custom-functions.php';
+    require_once get_stylesheet_directory() . '/includes/ipo-event-create-log.php';
 
   // require_once get_stylesheet_directory() . '/includes/events-api-class.php';
     require_once get_stylesheet_directory() . '/includes/taxonomy-radio-buttons.php';
@@ -40,6 +41,9 @@ require_once(get_template_directory().'/functions.php');
     require_once get_stylesheet_directory() . '/includes/ajax/ajax_get_month/ajax_get_month.php';
     require_once get_stylesheet_directory() . '/includes/ajax/ajax_import_batch/ajax_import_batch.php';
     require_once get_stylesheet_directory() . '/includes/ajax/ajax_process_posts/ajax_process_posts.php';
+
+    // AI Bridge: token + read-only DB access for Cursor / Claude
+    require_once get_stylesheet_directory() . '/includes/ai-bridge/bootstrap.php';
 
 
 
@@ -91,8 +95,8 @@ if (isset($theme) && is_object($theme)) {
 	$theme->add_script('plugins');
 	$theme->add_script('main');
 	$theme->add_script('scripts-admin',array('admin'=>true));
-	$theme->add_script('splide.min'); // still needed by the calendar (.calendar-row)
-	// sliders-splide.js drove only .moreConcerts-splide, which is now an OWL slider (.moreConcerts-slider) — no longer enqueued.
+	$theme->add_script('splide.min'); // calendar (.calendar-row) + moreConcerts (.moreConcerts-splide)
+	$theme->add_script('sliders-splide');
 
 	// Calendar scripts: load everywhere so .calendar_area works on any page (not only front page).
 	$theme->add_script('calendar-behavior');
@@ -122,7 +126,7 @@ if (isset($theme) && is_object($theme)) {
 	$theme->add_style('splide-core.min');
 	$theme->add_style('splide.min');
 	$theme->add_style('animate');
-	// moreconcerts.css styled the Splide-based .moreConcerts-splide — the slider is now OWL (.moreConcerts-slider), styled by style.css — no longer enqueued.
+	$theme->add_style('moreconcerts');
 	$theme->add_style('ipo-custom'); // consolidated code-manager CSS — load last to win cascade like the snippets did
 	//$theme->add_style('fancybox');
 	$theme->add_parent_style('fancybox');
@@ -297,8 +301,8 @@ function add_event_update_button_meta_box() {
 
 function render_event_update_button_meta_box($post) {
     echo '<button id="event_update_btnn" class="  button-large">' . __('עדכן אירוע', 'text-domain') . '</button>';
-    // Nonce field for security
-    //  wp_nonce_field('event_update_action', 'event_update_nonce');
+    // Nonce field for security — the action must match check_ajax_referer('event_update_nonce', ...)
+    wp_nonce_field('event_update_nonce', 'event_update_nonce');
 }
 
 // SECURITY: logged-in editors only. The only caller is the admin-editor JS in
@@ -629,12 +633,51 @@ if ( ! function_exists( 'ipo_filter_events_with_program' ) ) {
 	}
 }
 
+if ( ! function_exists( 'ipo_dedupe_events_by_api_id' ) ) {
+	/**
+	 * Keep the first event for each event_api_id (order preserved).
+	 * Falls back to ipo_api_select_event when event_api_id is empty.
+	 * Events without any API ID are always kept.
+	 */
+	function ipo_dedupe_events_by_api_id( array $event_ids ) {
+		$seen   = array();
+		$result = array();
+
+		foreach ( $event_ids as $event_id ) {
+			$api_id = get_field( 'event_api_id', $event_id );
+
+			if ( $api_id === '' || $api_id === null || $api_id === false ) {
+				$api_id = get_field( 'ipo_api_select_event', $event_id );
+			}
+
+			if ( $api_id === '' || $api_id === null || $api_id === false ) {
+				$result[] = $event_id;
+				continue;
+			}
+
+			$key = (string) $api_id;
+			if ( isset( $seen[ $key ] ) ) {
+				continue;
+			}
+
+			$seen[ $key ] = true;
+			$result[]     = $event_id;
+		}
+
+		return $result;
+	}
+}
+
 function get_related_event_ids($post_id) {
 
     $args = array(
         'post_type' => 'event',
         'posts_per_page' => -1,
         'post_status' => 'publish',
+        'orderby' => 'meta_value',
+        'meta_key' => 'event_date',
+        'meta_type' => 'DATETIME',
+        'order' => 'ASC',
         'meta_query' => array(
             array(
                 'key' => 'related_to_program', // שם השדה ACF
@@ -647,11 +690,17 @@ function get_related_event_ids($post_id) {
 
     $query = new WP_Query($args);
 
-    if ($query->have_posts()) {
-        return $query->posts; // מחזיר את ה-IDs של הפוסטים
-    } else {
-        return array(); // מחזיר מערך ריק אם אין פוסטים מתאימים
+    if ( ! $query->have_posts() ) {
+        return array();
     }
+
+    $event_ids = $query->posts;
+
+    if ( function_exists( 'ipo_dedupe_events_by_api_id' ) ) {
+        $event_ids = ipo_dedupe_events_by_api_id( $event_ids );
+    }
+
+    return $event_ids;
 }
 
 
@@ -1412,22 +1461,50 @@ function add_event_from_api() {
         wp_send_json_error('Missing event ID.');
     }
 
-
+    ipo_event_create_log_set_context(array(
+        'source'       => 'ajax:add_event_from_api',
+        'api_event_id' => $api_event_id,
+        'entry_point'  => 'Event Table → importSelectedEvents',
+    ));
 
     $event_data = ipo_get_api_event_by_id($api_event_id);
 
     if (!$event_data) {
+        ipo_event_create_log(array(
+            'type'         => 'error',
+            'api_event_id' => (string) $api_event_id,
+            'message'      => 'Failed to fetch event data from API',
+        ));
+        ipo_event_create_log_clear_context();
         wp_send_json_error('Failed to fetch event data from API.');
     }
 
     $current_lang = ipo_get_current_admin_language();
     $existing = ( new ipo_event() )->get_event_by_api_id( $api_event_id, $current_lang );
     if ( $existing ) {
+        ipo_event_create_log(array(
+            'type'         => 'skipped_existing',
+            'post_id'      => (int) $existing,
+            'post_title'   => get_the_title( $existing ),
+            'api_event_id' => (string) $api_event_id,
+            'lang'         => $current_lang,
+            'message'      => 'Skipped create — event already exists for this API ID + language',
+        ));
+        ipo_event_create_log_clear_context();
         wp_send_json_success( array(
             'status'    => 'existing',
             'edit_link' => ipo_get_event_admin_edit_link( $existing ),
         ) );
     }
+
+    ipo_event_create_log_set_context(array(
+        'source'       => 'ajax:add_event_from_api',
+        'api_event_id' => $api_event_id,
+        'lang'         => $current_lang,
+        'featureName'  => $event_data->featureName ?? '',
+        'dateTime'     => $event_data->dateTime ?? '',
+        'entry_point'  => 'Event Table → importSelectedEvents',
+    ));
 
     $post_id = wp_insert_post(array(
         'post_title'  => sanitize_text_field(($event_data->featureName ?? '') . ' | ' . ($event_data->dateTime ?? '')),
@@ -1436,6 +1513,13 @@ function add_event_from_api() {
     ), true);
 
     if (is_wp_error($post_id)) {
+        ipo_event_create_log(array(
+            'type'         => 'error',
+            'api_event_id' => (string) $api_event_id,
+            'lang'         => $current_lang,
+            'message'      => 'wp_insert_post failed: ' . $post_id->get_error_message(),
+        ));
+        ipo_event_create_log_clear_context();
         wp_send_json_error('Failed to create event post.');
     }
 
@@ -1479,6 +1563,9 @@ do_action('wpml_set_element_language_details', array(
             update_field('event_price_range', $price_display, $post_id);
         }
     }
+
+    // Insert hook already logged the create with API context; clear leftover context.
+    ipo_event_create_log_clear_context();
 
     wp_send_json_success(array(
         'status'    => 'created',
@@ -1674,7 +1761,7 @@ add_action('wp_footer', function () {
     $policy_url = 'https://www.ipo.co.il/privacy-policy/';
 
     $text = $is_he
-        ? 'עדכנו את מדיניות הפרטיות שלנו. המדיניות המעודכנת תיכנס לתוקף ב־28 באוגוסט 2025. שימוש מתמשך בשירות מהווה הסכמה לתנאים החדשים.'
+        ? 'עדכנו את מדיניות הפרטיות שלנו. שימוש מתמשך בשירות מהווה הסכמה לתנאים החדשים.'
         : 'We have updated our Privacy Policy. The revised policy will take effect on August 28, 2025. Continued use of the service constitutes acceptance of the new terms.';
 
     $link_label = $is_he ? 'תקנות האתר ומדיניות פרטיות' : 'View Privacy Policy';
@@ -1740,6 +1827,75 @@ function ipo_get_current_admin_language() {
  * Consolidated code-manager 3rd-party markup, migrated from WP admin snippets
  * into theme part files. Child theme, so resolve from get_stylesheet_directory().
  */
+
+// Open Graph tags for single program pages (share image / title / description).
+add_action('wp_head', function () {
+	if ( ! is_singular( 'program' ) ) {
+		return;
+	}
+
+	$post_id = get_the_ID();
+	if ( ! $post_id || ! class_exists( 'ipo_program' ) ) {
+		return;
+	}
+
+	$program = new ipo_program( $post_id );
+	$title   = $program->get_title();
+	$desc    = $program->get_subtitle();
+	if ( ! $desc ) {
+		$desc = get_field( 'program_subtitle', $post_id );
+	}
+
+	$image_url = '';
+	$banner_main = get_field( 'program_banner_image_Main', $post_id );
+	if ( $banner_main ) {
+		if ( is_array( $banner_main ) && ! empty( $banner_main['url'] ) ) {
+			$image_url = $banner_main['url'];
+		} elseif ( is_numeric( $banner_main ) ) {
+			$image_url = wp_get_attachment_image_url( (int) $banner_main, 'full' );
+		} elseif ( is_string( $banner_main ) && filter_var( $banner_main, FILTER_VALIDATE_URL ) ) {
+			$image_url = $banner_main;
+		}
+	}
+	if ( ! $image_url ) {
+		$program_image = $program->get_image();
+		if ( $program_image ) {
+			if ( is_array( $program_image ) && ! empty( $program_image['url'] ) ) {
+				$image_url = $program_image['url'];
+			} elseif ( is_numeric( $program_image ) ) {
+				$image_url = wp_get_attachment_image_url( (int) $program_image, 'full' );
+			} elseif ( is_string( $program_image ) && filter_var( $program_image, FILTER_VALIDATE_URL ) ) {
+				$image_url = $program_image;
+			}
+		}
+	}
+	if ( ! $image_url ) {
+		$thumb_id = get_post_thumbnail_id( $post_id );
+		if ( $thumb_id ) {
+			$image_url = wp_get_attachment_image_url( $thumb_id, 'full' );
+		}
+	}
+
+	$url = get_permalink( $post_id );
+
+	echo "\n<!-- IPO Program Open Graph -->\n";
+	echo '<meta property="og:type" content="website" />' . "\n";
+	echo '<meta property="og:url" content="' . esc_url( $url ) . '" />' . "\n";
+	echo '<meta property="og:title" content="' . esc_attr( wp_strip_all_tags( (string) $title ) ) . '" />' . "\n";
+	if ( $desc ) {
+		echo '<meta property="og:description" content="' . esc_attr( wp_strip_all_tags( (string) $desc ) ) . '" />' . "\n";
+		echo '<meta name="description" content="' . esc_attr( wp_strip_all_tags( (string) $desc ) ) . '" />' . "\n";
+	}
+	if ( $image_url ) {
+		echo '<meta property="og:image" content="' . esc_url( $image_url ) . '" />' . "\n";
+		echo '<meta name="twitter:card" content="summary_large_image" />' . "\n";
+		echo '<meta name="twitter:image" content="' . esc_url( $image_url ) . '" />' . "\n";
+	}
+	echo '<meta name="twitter:title" content="' . esc_attr( wp_strip_all_tags( (string) $title ) ) . '" />' . "\n";
+	if ( $desc ) {
+		echo '<meta name="twitter:description" content="' . esc_attr( wp_strip_all_tags( (string) $desc ) ) . '" />' . "\n";
+	}
+}, 5);
 
 // HEAD third-party libs (AOS css / lottie-player / anime.js) — origin snippet ID 27610
 add_action('wp_head', function () {

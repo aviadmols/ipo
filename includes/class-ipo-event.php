@@ -36,6 +36,15 @@ class ipo_event{
 
 	public function create($event_api_id,$program_id = false,$status='publish'){
 
+		if ( function_exists( 'ipo_event_create_log_set_context' ) ) {
+			ipo_event_create_log_set_context( array(
+				'source'       => 'ipo_event::create',
+				'api_event_id' => $event_api_id,
+				'program_id'   => $program_id ? (int) $program_id : 0,
+				'entry_point'  => 'ipo_event::create()',
+			) );
+		}
+
 		$event_api = new ipo_events_api();
 		$event_api->init();
 		$event = $event_api->get_event($event_api_id);
@@ -50,6 +59,17 @@ class ipo_event{
 
 		$existing_event = $this->get_event_by_api_id($event_api_id,$program_lang_code);
 		if($existing_event){
+			if ( function_exists( 'ipo_event_create_log' ) ) {
+				ipo_event_create_log( array(
+					'type'         => 'skipped_existing',
+					'post_id'      => (int) $existing_event,
+					'api_event_id' => (string) $event_api_id,
+					'program_id'   => $program_id ? (int) $program_id : 0,
+					'lang'         => $program_lang_code,
+					'message'      => 'ipo_event::create skipped — already exists',
+				) );
+				ipo_event_create_log_clear_context();
+			}
 			return $existing_event;
 		}
 
@@ -579,27 +599,25 @@ if ($city !== '') {
 	
 	public function get_events_by_api_id($api_id,$lang=false){
 
-		$tax_query = [];
-		if($lang){
-			$tax_query = array(
-				array(
-					'taxonomy' => 'language', // WPML taxonomy for languages
-					'field' => 'slug', // Query by slug
-					'terms' => $lang, // The language slug you want
-				),
-			);
+		$previous_lang = null;
+		if ( $lang && has_action( 'wpml_switch_language' ) ) {
+			$previous_lang = apply_filters( 'wpml_current_language', null );
+			do_action( 'wpml_switch_language', $lang );
 		}
 
-		// Get only of the current language in WPML
 		$events = get_posts(array(
-			'post_type' => 'event',
-			'meta_key' => 'event_api_id',
-			'meta_value' => $api_id,
-			'posts_per_page' => 2,
+			'post_type'        => 'event',
+			'meta_key'         => 'event_api_id',
+			'meta_value'       => $api_id,
+			'posts_per_page'   => 2,
+			'post_status'      => array( 'publish', 'draft', 'pending', 'private' ),
 			'suppress_filters' => false,
-			'tax_query' => $tax_query,
-			'fields' => 'ids',
+			'fields'           => 'ids',
 		));
+
+		if ( $previous_lang !== null ) {
+			do_action( 'wpml_switch_language', $previous_lang );
+		}
 
 		return $events;
 

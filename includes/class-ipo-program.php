@@ -185,6 +185,10 @@ class ipo_program{
 				unset($events[$key]);
 			}
 		}
+		$events = array_values( $events );
+		if ( function_exists( 'ipo_dedupe_events_by_api_id' ) ) {
+			$events = ipo_dedupe_events_by_api_id( $events );
+		}
 		return $events;
 	}
 	

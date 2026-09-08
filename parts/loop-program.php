@@ -276,7 +276,7 @@ if($post_type == 'artist_plan'){
         </ul>
 
         <?php if($total_ipo_created_events > $limit){ ?>
-            <a class="additionalDates" href="<?php echo $permalink;?>" data-aos="fade-in"  data-aos-duration="500" data-aos-delay="<?php  $html_attributes_str = $html_attributes_str + 25; echo $html_attributes_str; ?>"><span>
+            <a class="additionalDates" href="<?php echo esc_url( $permalink . '#time_zone' ); ?>" data-aos="fade-in"  data-aos-duration="500" data-aos-delay="<?php  $html_attributes_str = $html_attributes_str + 25; echo $html_attributes_str; ?>"><span>
                <?php echo $more_dates_str; ?>
 </span> <img src="<?php echo ipo_arrow_icon_url(); ?>" class="arrow" alt="">
             </a>

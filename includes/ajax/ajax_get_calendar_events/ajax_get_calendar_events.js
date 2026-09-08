@@ -2,82 +2,147 @@ jQuery(window).on('load', function() {
 
     (function($) {
 
-        function request_calendar_events(month, year) {
+        var calendarRequest = null;
 
-            $ajax_container = $('.ipo-calendar.calendar-full');
+        var monthNamesHe = [
+            'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
+            'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'
+        ];
+        var monthNamesEn = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        function isHebrew() {
+            var lang = ($('html').attr('lang') || '').toLowerCase();
+            return lang === 'he' || lang === 'he-il' || lang.indexOf('he') === 0;
+        }
+
+        function monthLabel(month, year) {
+            var names = isHebrew() ? monthNamesHe : monthNamesEn;
+            var idx = parseInt(month, 10) - 1;
+            if (idx < 0 || idx > 11) {
+                return month + ' ' + year;
+            }
+            return names[idx] + ' ' + year;
+        }
+
+        function updateDateLabelOptimistic($container, month, year) {
+            var $dateEl = $container.find('.current-month .rendered-date').first();
+            if (!$dateEl.length) {
+                $container.find('.current-month .date').html(
+                    '<p class="rendered-date date-il8n" data-t="1" data-month="' + month + '" data-year="' + year + '">' +
+                    monthLabel(month, year) + '</p><div id="monthsPopup" style="display:none;"></div>'
+                );
+                return;
+            }
+            $dateEl.attr('data-month', month).attr('data-year', year);
+            var $svg = $dateEl.children('svg').detach();
+            $dateEl.text(monthLabel(month, year) + ' ');
+            if ($svg.length) {
+                $dateEl.append($svg);
+            }
+        }
+
+        function showCalendarSkeleton($container) {
+            var skeleton = '';
+            for (var i = 0; i < 35; i++) {
+                skeleton += '<li class="loop-day skeleton-day"><div class="contents"><label><span></span></label></div></li>';
+            }
+            $container.find('.calendar-days').html(skeleton);
+            $container.find('.calendar-events ul.events').empty();
+            $container.find('.calendar-events .no-results').hide();
+        }
+
+        window.request_calendar_events = function(month, year) {
+
+            var $ajax_container = $('.ipo-calendar.calendar-full');
+            if (!$ajax_container.length) {
+                return;
+            }
+
+            month = parseInt(month, 10);
+            year = parseInt(year, 10);
+            if (!month || !year) {
+                return;
+            }
+
+            if (calendarRequest && calendarRequest.readyState !== 4) {
+                calendarRequest.abort();
+            }
+
             $ajax_container.addClass('loading');
+            if (typeof window.closeCalendarPopups === 'function') {
+                window.closeCalendarPopups($ajax_container);
+            }
+            updateDateLabelOptimistic($ajax_container, month, year);
+            showCalendarSkeleton($ajax_container);
 
-            $calendar_type = $ajax_container.attr('data-calendar-type');
+            var $calendar_type = $ajax_container.attr('data-calendar-type') || 'normal';
 
-            $data = {
+            var $data = {
                 action: 'ajax_get_calendar_events',
                 month: month,
                 year: year,
                 calendar_type: $calendar_type
-
             };
 
-            // build url query string from month, year and calendar type
-            $url = '?month=' + month + '&y=' + year + '&layout=' + $calendar_type;
-
-            // update url
+            var $url = '?month=' + month + '&y=' + year + '&layout=' + encodeURIComponent($calendar_type);
             window.history.pushState({}, '', $url);
 
-
-            $.ajax({
+            calendarRequest = $.ajax({
                 url: ajax_get_calendar_events.ajaxurl,
-                type: "get",
-                dataType: "json",
+                type: 'get',
+                dataType: 'json',
                 data: $data,
                 success: function(response) {
 
-                    $data = response.data;
+                    var $resp = response.data;
 
                     $('.calendar-full .calendar-events .no-results').hide();
 
-                    $('.calendar-full .current-month a.prev').attr('data-month', $data.prev_month);
-                    $('.calendar-full .current-month a.prev').attr('data-year', $data.prev_year);
-                    $('.calendar-full .current-month a.next').attr('data-month', $data.next_month);
-                    $('.calendar-full .current-month a.next').attr('data-year', $data.next_year);
+                    $('.calendar-full .current-month a.prev').attr('data-month', $resp.prev_month);
+                    $('.calendar-full .current-month a.prev').attr('data-year', $resp.prev_year);
+                    $('.calendar-full .current-month a.next').attr('data-month', $resp.next_month);
+                    $('.calendar-full .current-month a.next').attr('data-year', $resp.next_year);
 
-                    $('.calendar-full .current-month a.prev').attr('href', $data.prev_month_url);
-                    $('.calendar-full .current-month a.next').attr('href', $data.next_month_url);
+                    $('.calendar-full .current-month a.prev').attr('href', $resp.prev_month_url);
+                    $('.calendar-full .current-month a.next').attr('href', $resp.next_month_url);
 
-                    $('.calendar-full .calendar-header .date').html($data.current_date);
+                    $('.calendar-full .calendar-header .date').html($resp.current_date);
 
-                    $('.calendar-full .calendar-days').html($data.days);
+                    $('.calendar-full .calendar-days').html($resp.days);
 
-                    $('.calendar-full .calendar-events ul.events').html($data.list_events_html);
+                    $('.calendar-full .calendar-events ul.events').html($resp.list_events_html);
 
-                    if ($data.list_events_html == '') {
+                    if (!$resp.list_events_html) {
                         $('.calendar-full .calendar-events .no-results').show();
                     }
 
-
                     $ajax_container.removeClass('loading');
 
-                    reveal_events($ajax_container);
-
+                    if (typeof reveal_events === 'function') {
+                        reveal_events($ajax_container);
+                    }
 
                 },
-                error: function(xhr, ajaxOptions, thrownError) {
-                    console.log('AJAX Failed ' + xhr.status);
-                    console.log(xhr.responseText);
+                error: function(xhr) {
+                    if (xhr.statusText === 'abort') {
+                        return;
+                    }
                     $ajax_container.removeClass('loading');
-
                 }
             });
 
+        };
 
-        }
-
-        $(document).on('click', '.page-template-template-calendar-full-ajax .calendar-full .current-month a', function(e) {
+        $(document).on('click', '.calendar-full .current-month a.prev, .calendar-full .current-month a.next', function(e) {
             e.preventDefault();
 
-            $month = $(this).attr('data-month');
-            $year = $(this).attr('data-year');
+            var $month = $(this).attr('data-month');
+            var $year = $(this).attr('data-year');
 
-            request_calendar_events($month, $year);
+            window.request_calendar_events($month, $year);
         });
 
     })(jQuery);

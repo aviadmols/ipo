@@ -50,7 +50,12 @@ if(isset($_GET['y'])){
 	$year = intval(sanitize_text_field($_GET['y']));
 }
 
-$list_events_html = $calendar->get_events_html(array('month'=>$month,'year'=>$year));
+// Reuse events already loaded for the grid when available
+if (is_array($calendar->last_month_events)) {
+	$list_events_html = $calendar->get_events_html(array('events' => $calendar->last_month_events));
+} else {
+	$list_events_html = $calendar->get_events_html(array('month'=>$month,'year'=>$year));
+}
 
 
 $month_start_day = '';

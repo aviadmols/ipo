@@ -566,8 +566,14 @@ padding-top: 10px!important;
       padding-left: 8px!important;
 }
 
-  .moreevent {
-    display: none!important;
+  .timeZone_area .moreevent {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .timeZone_area .moreevent.active {
+    display: none !important;
   }
 
   .order_area.sticky {
@@ -615,7 +621,7 @@ position: absolute;
     padding: 100px 0 25px!important;
   }
  
-  .moreConcerts-slider:not(.owl-loaded) .loop-program {
+  .moreConcerts-splide:not(.is-initialized) .loop-program {
     margin-left: 30px!important;
 }
 
@@ -777,9 +783,6 @@ display: none!important;
 	.time_zone{
 		margin-top: 0;
 		box-shadow: none;
-	}
-	.moreConcerts .owl-carousel .owl-stage-outer{
-		overflow: visible;
 	}
 	.plan_area li h3 {
 	    font-size: 50px;
@@ -1055,10 +1058,6 @@ line-height: 22px!important;
 
   body:not(.home) .moreConcerts{
       padding-right: 25px;
-}
-  
-  .moreConcerts .owl-carousel .owl-stage-outer {
-       padding-right: 25px;
 }
 
   .order_area h2 span.first-child{

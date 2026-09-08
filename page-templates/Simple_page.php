@@ -148,7 +148,9 @@ iframe{
                 </div>
 
              <!-- slider start -->
-         <div class="owl-carousel owl-theme moreConcerts-slider">
+         <div class="splide moreConcerts-splide" aria-label="<?php echo esc_attr( get_field('title_programs', $post_id) ?: 'לרכישת כרטיסים' ); ?>">
+            <div class="splide__track">
+                <ul class="splide__list">
             <?php 
         
                 foreach($program_related_programsnew as $related_program_id){ 
@@ -156,15 +158,16 @@ iframe{
                     $ipo_created_events = get_related_event_ids($related_program_id);
 
                     if($ipo_created_events){
-                        echo '<div class="item">';
+                        echo '<li class="splide__slide"><div class="item">';
                         $theme->the_part('loop-program', $related_program_id);
-                        echo '</div>';
+                        echo '</div></li>';
                     }
                     
 
                 }
             ?>
-
+                </ul>
+            </div>
            </div>
                 <!-- slider end -->
 

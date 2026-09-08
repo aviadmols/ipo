@@ -813,10 +813,36 @@ section {
     box-shadow: -1px 11px 34px 0 rgba(0, 0, 0, 0.31);
 }
 
-.loop-day:hover .calendar-hint-popup,
+.calendar-full.popup-open .calendar-days {
+    pointer-events: none !important;
+}
+
+.calendar-full.popup-open .loop-day.popup-active {
+    pointer-events: auto !important;
+    z-index: 50;
+}
+
+.calendar-full.popup-open .loop-day:not(.popup-active) .calendar-hint-popup {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.calendar-full:not(.popup-open) .loop-day.has-events:hover .calendar-hint-popup,
+.calendar-full .loop-day.popup-active .calendar-hint-popup,
 .calendar-hint-popup.active {
     opacity: 1;
-    pointer-events: unset;
+    pointer-events: auto;
+}
+
+body > .calendar-hint-popup.is-fixed-open {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 100000 !important;
+    display: flex !important;
+}
+
+body > .calendar-hint-popup.is-fixed-open:after {
+    display: none;
 }
 
 ul.events-list {

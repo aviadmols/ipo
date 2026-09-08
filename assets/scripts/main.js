@@ -145,61 +145,7 @@
 
 
 
-        //moreConcerts slider — LIVE pages now use Splide (.moreConcerts-splide; init in sliders-splide.js).
-        // The owl init below now only matches the legacy static-demo markup still tagged .moreConcerts-slider.
-
-        // Check if there are at least 5 items in the slider, or this is mobile
-
-
-
-            $('.moreConcerts-slider').owlCarousel({
-                loop: false,
-                autoplay: false,
-                rtl: $rtl,
-                dots: false,
-                margin: 30,
-                nav: true,
-                navText: [
-                    '<img src="/wp-content/uploads/2023/02/small_icons_arrow_copy_6.svg" alt="">',
-                    '<img src="/wp-content/uploads/2023/02/small_icons_arrow_copy_7.svg" alt="">'
-                ],
-                responsive: {
-                    0: {
-                        autoWidth: false,
-                        items: 1.5,
-                        loop: true,
-                        margin: 16,
-                        nav: false,
-                    },
-                    576: {
-                        autoWidth: false,
-                        items: 1.5,
-                        loop: true,
-                        center: false,
-                        margin: 16,
-                        nav: false,
-                    },
-                    768: {
-                         nav: true,
-                       loop:  false,
-                        items: 3,
-                        margin: 30,
-                    },
-                    992: {
-                           nav: true,
-                         loop:  false,
-                       center: false,
-                        items: 4,
-                        margin: 50,
-                    },
-                    1500: {
-                             nav: true,
-                         loop:  false,
-                       center: false,
-                        items: 5
-                    }
-                }
-            });
+        // moreConcerts slider — Splide (.moreConcerts-splide; init in sliders-splide.js)
 
         
 

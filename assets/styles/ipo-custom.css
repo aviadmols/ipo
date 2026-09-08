@@ -461,6 +461,10 @@ content: '';
     direction: rtl;
 }
 
+[lang="en-US"] .slider-banner.mobile {
+    direction: ltr;
+}
+
 [lang="en-US"] .calendar_area .schedule,
 [lang="en-US"] .meet_area .schedule, 
 [lang="en-US"] .view-more a,
@@ -928,11 +932,6 @@ padding-left: 0px!important;
     color: #000;
 	}
 
-	
-	[lang="en-US"] .moreConcerts .owl-carousel .owl-stage-outer {
-		padding-left: 25px!important;
-		padding-right: 0px!important;
-	}
 	
 	[lang="en-US"] .pr-50 {
     padding-left: 0!important;
@@ -1908,7 +1907,7 @@ ul.slick-dots li {
 		padding-right: 25px;
 	}
 	.calendar_area .loop-calendar-horizontal-event.revealed.slick-slide .img_box > .row{
-		flex-wrap: nowrap;
+		flex-wrap: wrap;
 	}
 	.loop-calendar-horizontal-event.revealed.slick-slide .order-1{
 		min-width: 300px;
@@ -2489,6 +2488,54 @@ span.hall{
 
 .calendar-hint-popup{
     background: rgba(255, 255, 255, 1);
+}
+
+/* While popup is open, freeze the grid so cells under the popup cannot steal hover/clicks */
+.calendar-full.popup-open .calendar-days {
+    pointer-events: none !important;
+}
+
+.calendar-full.popup-open .loop-day.popup-active {
+    pointer-events: auto !important;
+    z-index: 50;
+}
+
+.calendar-full.popup-open .loop-day:not(.popup-active) .calendar-hint-popup {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.calendar-full:not(.popup-open) .loop-day.has-events:hover .calendar-hint-popup,
+.calendar-full .loop-day.popup-active .calendar-hint-popup,
+.calendar-full .calendar-hint-popup.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Detached fixed popup lives on body — always clickable above the grid */
+body > .calendar-hint-popup.is-fixed-open {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 100000 !important;
+    display: flex !important;
+}
+
+body > .calendar-hint-popup.is-fixed-open:after {
+    display: none;
+}
+
+.calendar-full .calendar-hint-popup .event-single-item .overlay-link {
+    z-index: 3;
+}
+
+.calendar-full .calendar-hint-popup .event-single-item > .event-item-link,
+body > .calendar-hint-popup.is-fixed-open .event-single-item > .event-item-link {
+    display: flex;
+    width: 100%;
+    color: inherit;
+    text-decoration: none;
+    position: relative;
+    z-index: 3;
 }
 
 .location_box {
@@ -6272,8 +6319,15 @@ p.donor-text {
     font-weight: 400;
 }
 
-.moreevent {
-	display: none!important;
+/* .moreevent is rendered in PHP only when there are more than 3 dates — keep it visible */
+.timeZone_area .moreevent {
+	display: flex !important;
+	align-items: center;
+	justify-content: center;
+}
+
+.timeZone_area .moreevent.active {
+	display: none !important;
 }
 
  .postid-46720 .hero_area .content {
@@ -6365,8 +6419,68 @@ li.loop-serie-event{
 /*     overflow: hidden; */
 }
 .ipo-calendar.calendar-full.loading{
-    opacity: .3;
+    opacity: 1;
     pointer-events: none;
+    position: relative;
+}
+
+.ipo-calendar.calendar-full.loading .calendar-days,
+.ipo-calendar.calendar-full.loading .calendar-events-body{
+    opacity: 0.35;
+    transition: opacity 0.2s ease;
+}
+
+.ipo-calendar.calendar-full.loading:after{
+    content: '';
+    background: #1b1464;
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    z-index: 20;
+    transform: translate(-50%, -50%);
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    animation: calendarFullPulse 1.6s infinite;
+    pointer-events: none;
+}
+
+@media (max-width: 768px) {
+    /* Blue pulse preloader — hide on mobile; skeleton + list opacity is enough */
+    .ipo-calendar.calendar-full.loading:after,
+    .ajax-calendar-events.loading:after {
+        display: none;
+    }
+}
+
+@keyframes calendarFullPulse {
+    0% {
+        box-shadow: 0 0 0 0 #1b1464;
+    }
+    70% {
+        box-shadow: 0 0 0 18px rgba(28, 20, 100, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(28, 20, 100, 0);
+    }
+}
+
+.ipo-calendar.calendar-full .loop-day.skeleton-day .contents{
+    min-height: 70px;
+}
+
+.ipo-calendar.calendar-full .loop-day.skeleton-day label span{
+    display: inline-block;
+    width: 1.2em;
+    height: 1em;
+    border-radius: 2px;
+    background: rgba(27, 20, 100, 0.12);
+    animation: calendarSkeletonShimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes calendarSkeletonShimmer {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 0.85; }
 }
 
 .calendar-full .loop-day label{
@@ -7800,4 +7914,60 @@ header.sticky .desktop-menu .menu > li > .sub-menu:after{
 	width: 100%;
 }
 
+
+/* Program share buttons (under timeZone_area) */
+.program-share-area {
+	padding: 20px 0 40px;
+}
+
+.program-share {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+}
+
+.program-share__label {
+	font-weight: 900;
+	font-size: 18px;
+	letter-spacing: 0.5px;
+	color: #000;
+	white-space: nowrap;
+}
+
+.program-share__list {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	gap: 10px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.program-share__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	padding: 0;
+	border: 1px solid #eee;
+	background: #fff;
+	color: #000;
+	text-decoration: none !important;
+	transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+.program-share__btn:hover,
+.program-share__btn:focus {
+	background: #000;
+	border-color: #000;
+	color: #fff;
+}
+
+.program-share__btn svg {
+	flex-shrink: 0;
+}
 

@@ -2789,7 +2789,7 @@ body .mobile-menu .wpstack-image img {
 
 
   body:not(.home) .upcoming_area .img_box {
-    width: 210px!important;
+    width: 100% !important;
   }
 
   body:not(.home) .upcoming_area .moreConcerts-slider .img_box {
@@ -3612,8 +3612,8 @@ bottom: 0px!important;
 }
 
   
- .upcoming_area  .owl-stage-outer {
-        overflow: visible;
+ .upcoming_area .moreConcerts-splide .splide__track {
+        overflow: hidden;
   }
 .recommended-slider .owl-nav {
     width: calc(100% - 25px);

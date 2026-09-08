@@ -17,6 +17,11 @@
         var isEn = document.documentElement.getAttribute('lang') === 'en-US';
         var dir = isEn ? 'ltr' : 'rtl';
 
+        // Splide requires integer perPage; use track padding for mobile peek (replaces items: 1.5).
+        var peekPadding = isEn
+            ? { left: '25px', right: '20%' }
+            : { right: '25px', left: '20%' };
+
         // Reuse the same arrow SVGs the old owl nav used.
         var arrowPrev = '<img src="/wp-content/uploads/2023/02/small_icons_arrow_copy_6.svg" alt="">';
         var arrowNext = '<img src="/wp-content/uploads/2023/02/small_icons_arrow_copy_7.svg" alt="">';
@@ -43,7 +48,7 @@
                 breakpoints: {
                     1499: { perPage: 4, gap: '50px' },
                     991:  { perPage: 3, gap: '30px' },
-                    767:  { perPage: 1.15, gap: '16px', arrows: false }
+                    767:  { perPage: 1, gap: '16px', arrows: false, padding: peekPadding }
                 }
             });
 

@@ -80,6 +80,9 @@ class ipo_calendar{
 		
 	}
 	
+	/** @var array|null Event IDs for the current month from the last grid query */
+	public $last_month_events = null;
+
 	public function get_events($args = array()){
 
 
@@ -91,6 +94,7 @@ class ipo_calendar{
 				'day'   => false,
 				'month'   => false,
 				'year'   => false,
+				'preserve_date_end' => false,
 			), 
 			$args
 		);
@@ -208,8 +212,9 @@ class ipo_calendar{
 
 			// Now we check if date_end_month is the same as date_start_month
 			// If not, we need to change the date_end to the last day of the month
+			// (skipped when preserve_date_end is set — used for multi-month grid queries)
 
-			if($date_start_month != $date_end_month){
+			if(!$args['preserve_date_end'] && $date_start_month != $date_end_month){
 				$args['date_end'] = $date_end_new->format('Y-m-d');
 			}
 
@@ -246,8 +251,12 @@ class ipo_calendar{
 			);
 		}
 		
-		// Limit results: when date range is set use 200, else safety cap of 500
-		$posts_limit = ($args['date'] && $args['date_end']) ? 200 : 500;
+		// Limit results: cross-month grid needs a higher cap; single month uses 200; else 500
+		if ($args['preserve_date_end'] && $args['date'] && $args['date_end']) {
+			$posts_limit = 500;
+		} else {
+			$posts_limit = ($args['date'] && $args['date_end']) ? 200 : 500;
+		}
 		
 		$query = array(
 			'post_type' => 'event',
@@ -268,9 +277,15 @@ class ipo_calendar{
 
 		$events = get_posts($query);
 
-		return function_exists( 'ipo_filter_events_with_program' )
-			? ipo_filter_events_with_program( $events )
-			: $events;
+		if ( function_exists( 'ipo_filter_events_with_program' ) ) {
+			$events = ipo_filter_events_with_program( $events );
+		}
+
+		if ( function_exists( 'ipo_dedupe_events_by_api_id' ) ) {
+			$events = ipo_dedupe_events_by_api_id( $events );
+		}
+
+		return $events;
 				
 	}
 	
@@ -326,7 +341,8 @@ class ipo_calendar{
 		
 		
 		
-		//$days_html = $this->get_days_html($template,$month,$year);
+		
+		
 		$n_days_slots = 6 * 7;
 		$try_to_limit_to = 5 * 7;
 		
@@ -338,30 +354,20 @@ class ipo_calendar{
 		if($year == 'today' || $year == false){
 			$year = date('Y');
 		}
+
+		$month = (int) $month;
+		$year = (int) $year;
+		$month_padded = str_pad($month, 2, '0', STR_PAD_LEFT);
 		
-		$start_date = $year.'-'.$month.'-01';
+		$start_date = $year.'-'.$month_padded.'-01';
 		
-		//$days_in_month = count($days_html);
+		
 		
 		$month_start_date = strtotime($start_date);
 		$month_start_day = date('w',$month_start_date);
 		$month_end_day = date('t',$month_start_date);
 		$day_slots = array();
 		
-		// STOPED HERE - determine next and prev month
-		/*
-		$prev_year = $year - 1;
-		if($prev_month == 0){
-			$prev_month = 12;
-		}
-		
-		$prev_month = $month - 1;
-		if($prev_month == 0){
-			$prev_month = 12;
-		}
-		*/
-		
-
 
 		
 		$prev_month_slots = $month_start_day; // The amount of days we give the prev month is the number of the day the month starts on
@@ -373,85 +379,149 @@ class ipo_calendar{
 		}
 		
 		
-		//echo 'start_date: ' . $start_date . '<br>';
-		//echo 'month_start_date: ' . $month_start_date . '<br>';
-		//echo 'month_start_day: ' . $month_start_day . '<br>';
-		//echo 'month_end_day: ' . $month_end_day . '<br><br>';
-		
-		//echo 'total_slots: ' . $n_days_slots . '<br>';
-		//echo 'prev_month_slots: ' . $prev_month_slots . '<br>';
-		//echo 'this_month_slots: ' . $this_month_slots . '<br>';
-		//echo 'next_month_slots: ' . $next_month_slots . '<br><br>';
-		
-		$this_month_days = $this->get_days_html($template,$month,$year);
-
-		
-		$t_month = $month;
-		$t_year = $year;
-		$t_month--;
-		if($t_month==0){
-			$t_month = 12;
-			$t_year--;
+		$prev_month = $month - 1;
+		$prev_year = $year;
+		if($prev_month == 0){
+			$prev_month = 12;
+			$prev_year--;
 		}
 
+		$next_month = $month + 1;
+		$next_year = $year;
+		if($next_month == 13){
+			$next_month = 1;
+			$next_year++;
+		}
+
+		// Single query covering prev + current + next month (or current only when no neighbor slots)
+		$range_start_month = ($prev_month_slots > 0) ? $prev_month : $month;
+		$range_start_year = ($prev_month_slots > 0) ? $prev_year : $year;
+		$range_end_month = ($next_month_slots > 0) ? $next_month : $month;
+		$range_end_year = ($next_month_slots > 0) ? $next_year : $year;
+
+		$range_start = sprintf('%04d-%02d-01', $range_start_year, $range_start_month);
+		$range_end = date('Y-m-t', strtotime(sprintf('%04d-%02d-01', $range_end_year, $range_end_month)));
+
+		$all_events = $this->get_events(array(
+			'date' => $range_start,
+			'date_end' => $range_end,
+			'preserve_date_end' => true,
+		));
+
+		$this->prime_events_cache($all_events);
+
+		$events_by_ymd = $this->group_events_by_ymd($all_events);
+
+		// Current-month event IDs for list view reuse (preserve query order)
+		$current_prefix = sprintf('%04d-%02d-', $year, $month);
+		$current_month_events = array();
+		foreach ($all_events as $event_id) {
+			$date = get_field('event_date', $event_id);
+			if ($date && strpos($date, $current_prefix) === 0) {
+				$current_month_events[] = $event_id;
+			}
+		}
+		$this->last_month_events = $current_month_events;
+
+		$this_month_days = $this->get_days_html($template, $month, $year, 0, $events_by_ymd);
+
 		if($prev_month_slots > 0){
-			$prev_month_days = $this->get_days_html($template,$t_month,$t_year,-$prev_month_slots);
+			$prev_month_days = $this->get_days_html($template, $prev_month, $prev_year, -$prev_month_slots, $events_by_ymd);
 		} else {
 			$prev_month_days = array();
 		}
 		
-		// $prev_month_days = $this->get_days_html($template,$t_month,$t_year,-$prev_month_slots);
-		
-		$t_month = $month;
-		$t_year = $year;
-		$t_month++;
-		if($t_month==13){
-			$t_month = 1;
-			$t_year++;
-		}
-
 		if($next_month_slots > 0){
-			$next_month_days = $this->get_days_html($template,$t_month,$t_year,$next_month_slots);
+			$next_month_days = $this->get_days_html($template, $next_month, $next_year, $next_month_slots, $events_by_ymd);
 		} else {
 			$next_month_days = array();
 		}
 		
-		// $next_month_days = $this->get_days_html($template,$t_month,$t_year,$next_month_slots);
-		
 		$slots_filled_with_days = array_merge($prev_month_days,$this_month_days,$next_month_days);
 
-		/*
-		while($prev_month_slots>0){
-			
-			// Create HTML for prev and next months
-			//$days_prev_month_html = $this->get_days_html($template,$prev_month,$year);
-			
-			$day_slots[] = 'SLOT '.$slot_counter.' PREV MONTH DAY' . '<br>';
-			$prev_month_slots--;
-			$slot_counter++;
-		}
-		
-		while($this_month_slots>0){
-			$day_slots[] = 'SLOT '.$slot_counter.' THIS MONTH DAY' . '<br>';
-			$this_month_slots--;
-			$day_counter++;
-			$slot_counter++;
-		}
-		
-		while($next_month_slots>0){
-			$day_slots[] = 'SLOT '.$slot_counter.' NEXT MONTH DAY' . '<br>';
-			$next_month_slots--;
-			$slot_counter++;
-		}
-		*/
 		
 		
 		
 		return $slots_filled_with_days;
 		
 	}
+
+	/**
+	 * Group event IDs by Y-m-d from ACF event_date.
+	 *
+	 * @param array $event_ids
+	 * @return array<string,string> Map of Y-m-d => comma-separated event IDs
+	 */
+	public function group_events_by_ymd($event_ids){
+		$events_by_ymd = array();
+		if(!$event_ids || !is_array($event_ids)){
+			return $events_by_ymd;
+		}
+		foreach($event_ids as $event){
+			$date = get_field('event_date', $event);
+			if(!$date){
+				continue;
+			}
+			$ymd = date('Y-m-d', strtotime($date));
+			if(isset($events_by_ymd[$ymd])){
+				$events_by_ymd[$ymd] .= ',' . $event;
+			} else {
+				$events_by_ymd[$ymd] = (string) $event;
+			}
+		}
+		return $events_by_ymd;
+	}
+
+	/**
+	 * Warm post/meta caches for events and related programs to avoid N+1 queries in day loops.
+	 *
+	 * @param array $event_ids
+	 */
+	public function prime_events_cache($event_ids){
+		if(!$event_ids || !is_array($event_ids)){
+			return;
+		}
+
+		$event_ids = array_values(array_unique(array_map('intval', $event_ids)));
+		if(empty($event_ids)){
+			return;
+		}
+
+		if (function_exists('_prime_post_caches')) {
+			_prime_post_caches($event_ids, true, true);
+		} else {
+			update_postmeta_cache($event_ids);
+		}
+
+		$program_ids = array();
+		foreach($event_ids as $event_id){
+			$programs = get_field('related_to_program', $event_id);
+			if(!$programs){
+				continue;
+			}
+			if(!is_array($programs)){
+				$programs = array($programs);
+			}
+			foreach($programs as $program){
+				if(is_object($program) && isset($program->ID)){
+					$program_ids[] = (int) $program->ID;
+				} elseif(is_numeric($program)){
+					$program_ids[] = (int) $program;
+				}
+			}
+		}
+
+		$program_ids = array_values(array_unique(array_filter($program_ids)));
+		if(!empty($program_ids)){
+			if (function_exists('_prime_post_caches')) {
+				_prime_post_caches($program_ids, true, true);
+			} else {
+				update_postmeta_cache($program_ids);
+			}
+		}
+	}
 	
-	public function get_days_html($template,$month = false, $year = false, $offset = 0){
+	public function get_days_html($template,$month = false, $year = false, $offset = 0, $events_by_ymd = null){
 
 
 
@@ -460,21 +530,16 @@ class ipo_calendar{
 		
 
 		$days = $this->get_days($month,$year, $offset);
+
+		$month = (int) (($month == 'today' || $month == false) ? date('m') : $month);
+		$year = (int) (($year == 'today' || $year == false) ? date('Y') : $year);
+		$month_padded = str_pad($month, 2, '0', STR_PAD_LEFT);
 		
-		// Get this time frame events
-		
-		$events_this_month = $this->get_events(array('month'=>$month,'year'=>$year));
-		$events_by_days = array();
-		foreach($events_this_month as $event){
-			$date = get_field('event_date',$event);
-			$day = date('d',strtotime($date));
-			if(isset($events_by_days[intval($day)]))
-				$events_by_days[intval($day)] .= ','.$event;
-			else 
-				$events_by_days[intval($day)] = $event;
-
-
-
+		// Get this time frame events (skipped when a pre-fetched map is provided)
+		if($events_by_ymd === null){
+			$events_this_month = $this->get_events(array('month'=>$month,'year'=>$year));
+			$this->prime_events_cache($events_this_month);
+			$events_by_ymd = $this->group_events_by_ymd($events_this_month);
 		}
 
 
@@ -482,8 +547,9 @@ class ipo_calendar{
 		
 		$days_html = array();
 		foreach($days as $day){
-			if(isset($events_by_days[$day->day])){
-				$day->events = $events_by_days[$day->day];
+			$ymd = sprintf('%04d-%02d-%02d', $year, $month, (int) $day->day);
+			if(isset($events_by_ymd[$ymd])){
+				$day->events = $events_by_ymd[$ymd];
 			}
 			
 			$days_html[] = $theme->get_part($template,array('ipo_calendar_day'=>$day));
@@ -622,7 +688,12 @@ class ipo_calendar{
 	}
 
 	public function get_events_html($args = array(),$template = 'loop-calendar-list-event'){
-		$events = $this->get_events($args);
+		if(isset($args['events']) && is_array($args['events'])){
+			$events = $args['events'];
+		} else {
+			$events = $this->get_events($args);
+			$this->prime_events_cache($events);
+		}
 
 		$checked_events = [];
 

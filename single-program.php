@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 
 get_header();
@@ -148,9 +148,10 @@ usort($reordered, function($a, $b) {
 ?>
 
 <!-- =============== Time Zone area start =============== -->
+<?php $has_more_dates = count($reordered) > 3; ?>
 <section class="timeZone_area active" <?php echo 'data-items-count="' . count($reordered) . '"'; ?> data-aos="fade-in" data-aos-offset="0" data-aos-duration="500" data-aos-delay="300">
     <div class="container custom max-1440">
-        <div class="time_zone active" id="time_zone">
+        <div class="time_zone<?php echo $has_more_dates ? '' : ' active'; ?>" id="time_zone">
             <?php
             foreach ($reordered as $event) {
                 $event = $event['event'];
@@ -158,13 +159,17 @@ usort($reordered, function($a, $b) {
                 $theme->the_part('loop-program-event', $event_id);
             }
             ?>
-            <?php if (count($reordered) > 3) : ?>
-                <div class="moreevent"></div>
-            <?php endif; ?>
         </div>
+        <?php if ($has_more_dates) : ?>
+            <div class="moreevent">
+                <button type="button" class="readmore js-more-dates"><?php echo esc_html( $more_dates_str ); ?></button>
+            </div>
+        <?php endif; ?>
     </div>
 </section>
 <!-- =============== Time Zone area end =============== -->
+
+<?php $theme->the_part('program-share', $post_id); ?>
 
         <!-- =============== about area start =============== -->
         <section class="program-info pt-100 ">
@@ -385,7 +390,9 @@ if (ICL_LANGUAGE_CODE == 'he') {
                 </div>
 
              <!-- slider start -->
-<div class="owl-carousel owl-theme moreConcerts-slider">
+<div class="splide moreConcerts-splide" aria-label="<?php echo esc_attr( ICL_LANGUAGE_CODE == 'he' ? 'תוכניות קשורות' : 'Related programs' ); ?>">
+    <div class="splide__track">
+        <ul class="splide__list">
 
     <?php 
   
@@ -425,6 +432,7 @@ if (ICL_LANGUAGE_CODE == 'he') {
             continue;
         }
     ?>
+        <li class="splide__slide">
         <div class="item <?php
             $program = new ipo_program($related_id);
             echo $related_post->post_type;
@@ -432,12 +440,15 @@ if (ICL_LANGUAGE_CODE == 'he') {
         ?>">
             <?php $theme->the_part('loop-program', $related_id); ?>
         </div>
+        </li>
 
     <?php 
     endif;
 
 endforeach;
  ?>
+        </ul>
+    </div>
 </div>
 
                 <!-- slider end -->
@@ -472,8 +483,6 @@ $series_button = get_field('upcoming_button', $home_id_2);
          
         
         ?>
-        <?php get_footer();?>
-		
 
 <style>
   
@@ -482,77 +491,58 @@ $series_button = get_field('upcoming_button', $home_id_2);
 }
 </style>
 		
-		<script>
+<script>
+(function ($) {
+	function showMoreProgramDates() {
+		$('.time_zone').addClass('active');
+		$('.order_area').removeClass('sticky');
+		$('.moreevent').addClass('active');
+	}
 
-          if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+	// Keep global alias for any leftover inline handlers.
+	window.onclickreadmore = showMoreProgramDates;
 
-} else{
- document.querySelector('.moreevent').innerHTML = '<button onclick="onclickreadmore()" class="readmore"><?php echo   $more_dates_str; ?></button>';
+	$(document).on('click', '.js-more-dates, .timeZone_area .moreevent .readmore', function (e) {
+		e.preventDefault();
+		showMoreProgramDates();
+	});
 
-
-          
-}
-          function onclickreadmore() {
-   jQuery('.time_zone').addClass('active');
-  jQuery(".order_area").removeClass("sticky");
-      jQuery('.moreevent').addClass('active');
-}
-          
-          
-jQuery(window).on('load', function() {
-  const findOverflows = () => {
-        const documentWidth = document.documentElement.offsetWidth;
-
-        document.querySelectorAll('.time_zone p').forEach(element => {
-            const box = element.getBoundingClientRect();
-
-            if (element.offsetHeight > 32) { // check if the height is greater than 38px (19px*2)
-                element.classList.add("hoverflow");
-               } else {
-                // your element doesn't have overflow
-            }
-        });
-    };
-
-  findOverflows();
-});
-
-		</script>
-
-
-
+	$(window).on('load', function () {
+		document.querySelectorAll('.time_zone p').forEach(function (element) {
+			if (element.offsetHeight > 32) {
+				element.classList.add('hoverflow');
+			}
+		});
+	});
+})(jQuery);
+</script>
 
 <style>
-
-
-@media (min-width: 768px){
-.loop-event{
+.timeZone_area .loop-event{
     display: none;
 }
 
-  }
-  
-.loop-event:nth-child(1), .loop-event:nth-child(2), .loop-event:nth-child(3){
-    
-display: flex;
+.timeZone_area .loop-event:nth-child(1),
+.timeZone_area .loop-event:nth-child(2),
+.timeZone_area .loop-event:nth-child(3){
+    display: flex;
 }
 
-
-   .time_zone.active .loop-event{
-display: flex!important;
-  }
+.time_zone.active .loop-event{
+    display: flex!important;
+}
   
-  .moreevent.active {
+.moreevent.active {
     display: none!important;
-  }
+}
   
-  .time_zone {
+.time_zone {
     padding-bottom: 0px!important;
-  }
+}
 
 .moreevent {
     background: #fff;
-    display: flex; 
+    display: flex !important; 
     bottom: 0px;
     left: 0px;
     right: 0px;
@@ -561,42 +551,47 @@ display: flex!important;
     padding-top: 15px;
     padding-bottom: 15px;
     border-top: 1px solid #eee;
+    position: relative;
+    z-index: 2;
 }
 
-  .moreevent .readmore {
-display: flex!important;
+.moreevent .readmore {
+    display: flex!important;
     font-size: 18px;
     align-items: center;
+    justify-content: center;
     color: #000000;
-    text-align: right;
+    text-align: center;
     line-height: 28px;
     text-decoration: none!important;
     font-weight: 900;
-border: none!important
-    letter-spacing: 1px;
-    padding: 1rem 4.5rem;
-        line-height: 1!important;
-    transition: .2s;
-        background: transparent!important;
-        cursor: pointer;
     border: none!important;
-  }
- .moreevent.active{
-  opacity: 0!important;
-  }
+    letter-spacing: 1px;
+    padding: 1rem 2rem;
+    line-height: 1!important;
+    transition: .2s;
+    background: transparent!important;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
 
-  .time_zone {
-    max-height: 1800px!important;
-  }
+.moreevent.active{
+    display: none!important;
+    opacity: 0!important;
+}
 
 .time_zone {
-      position: relative;
-
-     overflow: hidden;
+    max-height: 1800px!important;
+    position: relative;
+    overflow: hidden;
 }
   
-  .time_zone.active {
- 
+.time_zone.active {
     height: auto!important;
+    max-height: none!important;
+    overflow: visible;
 }
 </style>
+
+        <?php get_footer();?>

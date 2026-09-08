@@ -22,10 +22,10 @@
 .single-artist_plan .name-contents .wpstack-image img{
     max-width: 100%; 
 }
-.moreConcerts-slider:not(.owl-loaded) .loop-program{
+.moreConcerts-splide:not(.is-initialized) .loop-program{
     margin-left: 100px;
 }
-.moreConcerts-slider:not(.owl-loaded){
+.moreConcerts-splide:not(.is-initialized){
     display: flex;
 }
 .artist-plan-content {

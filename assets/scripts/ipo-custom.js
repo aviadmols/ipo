@@ -27,18 +27,21 @@ if (window.location.hash === "#contact") {
 
 jQuery(document).ready(function($){
 
+    var isRtl = $('html').attr('lang') !== 'en-US';
+
     jQuery('.slider-banner.desktop').not('.slick-initialized').slick({
         centerMode: true,
         infinite: true,
-      margin: 30,
+        margin: 30,
         slidesToShow: 2,
-        slidesToScroll: 1
+        slidesToScroll: 1,
+        rtl: isRtl
     });
 
     jQuery('.slider-banner.mobile').not('.slick-initialized').slick({
-         infinite:  false,
-rtl:  true,
-  centerMode:  false,
+        infinite: false,
+        rtl: isRtl,
+        centerMode: false,
         slidesToShow: 1.5,
         slidesToScroll: 1
     });
@@ -47,95 +50,277 @@ rtl:  true,
 
 
 // ============================================================
-// #4 | Months Popup EN (ID: 42339 | type: js)
+// #4+#5 | Months Popup (unified EN/HE — AJAX on full calendar)
 // ============================================================
 
 $(document).ready(function() {
-    var currentDate = new Date();
-    var currentYear = currentDate.getFullYear();
-    var currentMonth = currentDate.getMonth() + 1;
+    // Detach popup to body + fixed position so cells under it cannot steal clicks
+    var popupCloseTimer = null;
 
-    var months = [
+    function resetDetachedPopup($popup) {
+        if (!$popup || !$popup.length) {
+            return;
+        }
+        var $home = $popup.data('home-day');
+        $popup.removeClass('is-fixed-open').removeAttr('style');
+        if ($home && $home.length) {
+            $home.append($popup);
+        }
+        $popup.removeData('home-day');
+    }
+
+    function closeCalendarPopups($scope) {
+        clearTimeout(popupCloseTimer);
+        popupCloseTimer = null;
+        var $cal = $scope && $scope.length ? $scope : $('.calendar-full');
+        $cal.removeClass('popup-open');
+        $cal.find('.loop-day.popup-active').removeClass('popup-active');
+        $('body > .calendar-hint-popup.is-fixed-open').each(function() {
+            resetDetachedPopup($(this));
+        });
+    }
+
+    function positionFixedPopup($popup, $day) {
+        var rect = $day[0].getBoundingClientRect();
+        var index = $day.index();
+        var col = index % 7;
+        var flipCol = col <= 3; // nth-child(7n+1..4)
+        var lang = ($('html').attr('lang') || '').toLowerCase();
+        var isEn = lang.indexOf('en') === 0;
+        // HE default opens right; flip cols open left. EN is inverted.
+        var openRight = isEn ? flipCol : !flipCol;
+        var popupWidth = $popup.outerWidth() || 520;
+        var popupHeight = $popup.outerHeight() || 240;
+        var earlyRow = index < 14;
+        var top = earlyRow ? (rect.top - 20) : (rect.bottom - popupHeight + 40);
+        top = Math.max(8, Math.min(top, window.innerHeight - popupHeight - 8));
+        var left = openRight ? (rect.right - 12) : (rect.left - popupWidth + 12);
+        left = Math.max(8, Math.min(left, window.innerWidth - popupWidth - 8));
+
+        $popup.css({
+            position: 'fixed',
+            top: top + 'px',
+            left: left + 'px',
+            right: 'auto',
+            bottom: 'auto',
+            transform: 'none',
+            zIndex: 100000,
+            opacity: 1,
+            pointerEvents: 'auto',
+            margin: 0
+        });
+    }
+
+    function openCalendarPopup($day) {
+        var $cal = $day.closest('.calendar-full');
+        if (!$cal.length || !$day.hasClass('has-events')) {
+            return;
+        }
+
+        clearTimeout(popupCloseTimer);
+        popupCloseTimer = null;
+
+        $cal.find('.loop-day.popup-active').not($day).removeClass('popup-active');
+        $('body > .calendar-hint-popup.is-fixed-open').each(function() {
+            var $p = $(this);
+            var $home = $p.data('home-day');
+            if (!$home || $home[0] !== $day[0]) {
+                resetDetachedPopup($p);
+            }
+        });
+
+        var $popup = $day.children('.calendar-hint-popup').first();
+        if (!$popup.length) {
+            $popup = $('body > .calendar-hint-popup.is-fixed-open').filter(function() {
+                var $home = $(this).data('home-day');
+                return $home && $home[0] === $day[0];
+            }).first();
+        }
+        if (!$popup.length) {
+            return;
+        }
+
+        $day.addClass('popup-active');
+        $cal.addClass('popup-open');
+
+        if (!$popup.hasClass('is-fixed-open')) {
+            $popup.data('home-day', $day);
+            $('body').append($popup);
+            $popup.addClass('is-fixed-open');
+        }
+
+        positionFixedPopup($popup, $day);
+    }
+
+    function scheduleClosePopup($day) {
+        clearTimeout(popupCloseTimer);
+        popupCloseTimer = setTimeout(function() {
+            var $cal = $day.closest('.calendar-full');
+            var $floating = $('body > .calendar-hint-popup.is-fixed-open').filter(function() {
+                var $home = $(this).data('home-day');
+                return $home && $home[0] === $day[0];
+            });
+            $day.removeClass('popup-active');
+            resetDetachedPopup($floating);
+            if ($cal.length && !$cal.find('.loop-day.popup-active').length) {
+                $cal.removeClass('popup-open');
+            }
+        }, 180);
+    }
+
+    $(document).on('mouseenter focusin', '.calendar-full .loop-day.has-events', function() {
+        openCalendarPopup($(this));
+    });
+
+    $(document).on('mouseleave', '.calendar-full .loop-day.has-events', function(e) {
+        var $day = $(this);
+        var related = e.relatedTarget;
+        if (related && $(related).closest('.calendar-hint-popup.is-fixed-open').length) {
+            return;
+        }
+        scheduleClosePopup($day);
+    });
+
+    $(document).on('mouseenter', 'body > .calendar-hint-popup.is-fixed-open', function() {
+        clearTimeout(popupCloseTimer);
+        popupCloseTimer = null;
+        var $home = $(this).data('home-day');
+        if ($home && $home.length) {
+            $home.addClass('popup-active');
+            $home.closest('.calendar-full').addClass('popup-open');
+        }
+    });
+
+    $(document).on('mouseleave', 'body > .calendar-hint-popup.is-fixed-open', function(e) {
+        var $home = $(this).data('home-day');
+        var related = e.relatedTarget;
+        if ($home && $home.length && related && $.contains($home[0], related)) {
+            return;
+        }
+        if ($home && $home.length) {
+            scheduleClosePopup($home);
+        } else {
+            resetDetachedPopup($(this));
+        }
+    });
+
+    $(document).on('click', '.calendar-hint-popup a[href]:not([href="#"])', function(e) {
+        e.stopPropagation();
+    });
+
+    $(window).on('scroll.calendarPopup resize.calendarPopup', function() {
+        var $popup = $('body > .calendar-hint-popup.is-fixed-open').first();
+        if (!$popup.length) {
+            return;
+        }
+        var $home = $popup.data('home-day');
+        if ($home && $home.length) {
+            positionFixedPopup($popup, $home);
+        }
+    });
+
+    window.closeCalendarPopups = closeCalendarPopups;
+
+    var monthsHe = [
+        'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
+        'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'
+    ];
+    var monthsEn = [
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ];
 
-    function renderMonthsList() {
+    function isHebrewLang() {
+        var lang = ($('html').attr('lang') || '').toLowerCase();
+        return lang === 'he' || lang === 'he-il' || lang.indexOf('he') === 0;
+    }
+
+    function getMonthNames() {
+        return isHebrewLang() ? monthsHe : monthsEn;
+    }
+
+    function getCalendarNavBase() {
+        var $date = $('.calendar-full .rendered-date').first();
+        if ($date.length) {
+            var month = parseInt($date.attr('data-month'), 10);
+            var year = parseInt($date.attr('data-year'), 10);
+            if (month && year) {
+                return { month: month, year: year };
+            }
+        }
+        var now = new Date();
+        return { month: now.getMonth() + 1, year: now.getFullYear() };
+    }
+
+    function renderMonthsList($popup, baseMonth, baseYear) {
+        var months = getMonthNames();
         var monthsList = '<ul>';
-        for(var offset = 0; offset < 12; offset++) {
-            var monthIndex = (currentMonth - 1 + offset) % 12;
+        for (var offset = 0; offset < 12; offset++) {
+            var monthIndex = (baseMonth - 1 + offset) % 12;
             var displayMonth = monthIndex + 1;
-            var displayYear = (monthIndex < currentMonth - 1) ? currentYear + 1 : currentYear;
-            var currentClass = (monthIndex + 1 === currentMonth) ? ' class="current-month"' : '';
+            var displayYear = (monthIndex < baseMonth - 1) ? baseYear + 1 : baseYear;
+            var currentClass = (monthIndex + 1 === baseMonth && displayYear === baseYear) ? ' class="current-month"' : '';
             monthsList += '<li data-month="' + displayMonth + '" data-year="' + displayYear + '"' + currentClass + '>' + months[monthIndex] + '</li>';
         }
         monthsList += '</ul>';
-        $("#monthsPopup").html(monthsList);
-        $("#monthsPopup").css("display", "block");
+        $popup.html(monthsList);
+        $popup.css('display', 'block');
     }
 
-    $(".rendered-date").on("click", function() {
-        renderMonthsList();
+    $(document).on('click', '.rendered-date', function(e) {
+        // Only handle month popup on calendar UI (full calendar or homepage month trigger)
+        if (!$(this).closest('.calendar-full, .ajax-get-month-trigger').length) {
+            return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+
+        var $el = $(this);
+        var baseMonth = parseInt($el.attr('data-month'), 10);
+        var baseYear = parseInt($el.attr('data-year'), 10);
+        if (!baseMonth || !baseYear) {
+            var nav = getCalendarNavBase();
+            baseMonth = nav.month;
+            baseYear = nav.year;
+        }
+
+        var $popup = $el.siblings('#monthsPopup');
+        if (!$popup.length) {
+            $popup = $el.parent().find('#monthsPopup').first();
+        }
+        if (!$popup.length) {
+            $popup = $('#monthsPopup').first();
+        }
+        renderMonthsList($popup, baseMonth, baseYear);
     });
 
-    $(document).on("click", function(event) {
+    $(document).on('click', function(event) {
         if (!$(event.target).closest('.rendered-date').length && !$(event.target).closest('#monthsPopup').length) {
-            $("#monthsPopup").css("display", "none");
+            $('#monthsPopup').css('display', 'none');
         }
     });
 
-    $(document).on("click", "#monthsPopup li", function() {
-        var month = $(this).data("month");
-        var year = $(this).data("year");
-        window.location.href = "/en/calendar/?month=" + month + "&y=" + year;
-    });
+    $(document).on('click', '#monthsPopup li', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
 
-});
+        var month = $(this).data('month');
+        var year = $(this).data('year');
+        $('#monthsPopup').css('display', 'none');
 
+        // Full calendar: navigate via AJAX when available
+        if ($('.ipo-calendar.calendar-full').length && typeof window.request_calendar_events === 'function') {
+            window.request_calendar_events(month, year);
+            return;
+        }
 
-// ============================================================
-// #5 | Months Popup (ID: 41346 | type: js)
-// ============================================================
-
-$(document).ready(function() {
-    var currentDate = new Date();
-    var currentYear = currentDate.getFullYear();
-    var currentMonth = currentDate.getMonth() + 1;
-
-    var months = [
-        'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
-        'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'
-    ];
-
-    $(".rendered-date").on("click", function() {
-        renderMonthsList();
-    });
-
-    $(document).on("click", function(event) {
-        if(!$(event.target).closest('.rendered-date').length && !$(event.target).closest('#monthsPopup').length) {
-            $("#monthsPopup").css("display", "none");
+        // Homepage / other: go to full calendar page for the selected month
+        if (isHebrewLang()) {
+            window.location.href = '/לוח-שנה/?month=' + month + '&y=' + year;
+        } else {
+            window.location.href = '/en/calendar/?month=' + month + '&y=' + year;
         }
     });
-
-    $(document).on("click", "#monthsPopup li", function() {
-        var month = $(this).data("month");
-        var year = $(this).data("year");
-        window.location.href = "/לוח-שנה/?month=" + month + "&y=" + year;
-    });
-
-    function renderMonthsList() {
-        var monthsList = '<ul>';
-        for(var offset = 0; offset < 12; offset++) {
-            var monthIndex = (currentMonth - 1 + offset) % 12;
-            var displayMonth = monthIndex + 1;
-            var displayYear = (monthIndex < currentMonth - 1) ? currentYear + 1 : currentYear;
-            var currentClass = (monthIndex + 1 === currentMonth) ? ' class="current-month"' : '';
-            monthsList += '<li data-month="' + displayMonth + '" data-year="' + displayYear + '"' + currentClass + '>' + months[monthIndex] + '</li>';
-        }
-        monthsList += '</ul>';
-        $("#monthsPopup").html(monthsList);
-        $("#monthsPopup").css("display", "block");
-    }
 
 });
 
@@ -333,11 +518,15 @@ window.addEventListener('load', function () {
 
 // wordpress jquery wrap
 jQuery(document).ready(function($){
-    // If .additionalDates is clicked, show the all .additional-date items and hide the .additionalDates button
+    // Expand in-page additional dates only when sibling .additional-date items exist
+    // (artist plan cards). Otherwise allow normal navigation (program cards → #time_zone).
     $('.additionalDates').click(function(e){
-		e.preventDefault();
-        $(this).parent().find('.additional-date').fadeIn(300).css("display","flex");
-		$(this).parent().find('.additionalDates').fadeOut(300);
+		var $parent = $(this).parent();
+		if ($parent.find('.additional-date').length) {
+			e.preventDefault();
+			$parent.find('.additional-date').fadeIn(300).css("display","flex");
+			$parent.find('.additionalDates').fadeOut(300);
+		}
     });
 });
 
@@ -389,6 +578,14 @@ jQuery(document).ready(function( $ ){
 			}, 100);
 		});
 	}
+
+	// Expand hidden program dates (mobile + desktop).
+	$(document).on('click', '.js-more-dates, .timeZone_area .moreevent .readmore', function (e) {
+		e.preventDefault();
+		$('.time_zone').addClass('active');
+		$('.order_area').removeClass('sticky');
+		$('.moreevent').addClass('active');
+	});
 	
 });
 

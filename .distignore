@@ -1,0 +1,13 @@
+.git
+.gitignore
+.gitattributes
+.github
+.gitmodules
+node_modules
+*.log
+log_events.txt
+debug.log
+desktop.ini
+Thumbs.db
+.DS_Store
+scripts

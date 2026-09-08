@@ -260,12 +260,12 @@ if(ICL_LANGUAGE_CODE == 'en'){
             <?php endif; ?>
         <!-- =============== video area end =============== -->
 
-      
+            <!-- women of jazz banner end -->
 
- 
-		      <!-- =============== Recommended series =============== -->
-            <?php $theme->the_part('Recommended-series'); ?>
+      <!-- =============== upcoming area start =============== -->
+            <?php $theme->the_part('section-upcoming'); ?>
         <!-- =============== upcoming area end =============== -->
+
 		
         
      <!-- women of jazz banner start -->
@@ -344,12 +344,11 @@ echo '</a>';
 <?php endif; ?>
      
 
-        <!-- women of jazz banner end -->
-
-      <!-- =============== upcoming area start =============== -->
-            <?php $theme->the_part('section-upcoming'); ?>
+  
+ 
+		      <!-- =============== Recommended series =============== -->
+            <?php $theme->the_part('Recommended-series'); ?>
         <!-- =============== upcoming area end =============== -->
-
 
 
 <section class="banners_2_section" style="
@@ -538,6 +537,29 @@ jQuery(function ($) {
 
         setTimeout(revealSlider, 1000);
     });
+
+    // Mobile: destroy Owl so native horizontal scroll works (no nested overflow / touch conflict).
+    function enableUpcomingNativeScroll() {
+        if (window.innerWidth > 768) {
+            return;
+        }
+
+        var $slider = $('.upcoming_area .owl-carousel.upcoming-slider');
+        if (!$slider.length) {
+            return;
+        }
+
+        if ($slider.hasClass('owl-loaded')) {
+            $slider.trigger('destroy.owl.carousel');
+        }
+
+        $slider
+            .removeClass('owl-carousel owl-theme owl-loaded owl-drag owl-grab owl-rtl')
+            .addClass('upcoming-native-scroll');
+    }
+
+    enableUpcomingNativeScroll();
+    setTimeout(enableUpcomingNativeScroll, 300);
 });
 </script>
 
@@ -675,11 +697,11 @@ display: none!important;
     margin-right: 0 !important;
   }
 
-body.page-template-lobby-new-season-v2 .upcoming_area {
-    overflow-x: visible !important;
+body.page-template-Lobby-New-season-v2 .upcoming_area {
+    overflow: visible !important;
 }
 
-body.page-template-lobby-new-season-v2 .upcoming_area > .container {
+body.page-template-Lobby-New-season-v2 .upcoming_area > .container {
     margin-right: 0 !important;
     margin-left: 0 !important;
     width: 100% !important;
@@ -687,9 +709,13 @@ body.page-template-lobby-new-season-v2 .upcoming_area > .container {
     box-sizing: border-box;
 }
 
-body.page-template-lobby-new-season-v2 .upcoming_area .container_upcaming {
+/* Single scroll container — ~1.5 cards visible */
+body.page-template-Lobby-New-season-v2 .upcoming_area .container_upcaming {
     overflow-x: auto;
+    overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
     scrollbar-width: none;
     width: 100%;
     max-width: 100%;
@@ -700,58 +726,60 @@ body.page-template-lobby-new-season-v2 .upcoming_area .container_upcaming {
     margin-right: 0 !important;
 }
 
-body.page-template-lobby-new-season-v2 .upcoming_area .container_upcaming::-webkit-scrollbar {
+body.page-template-Lobby-New-season-v2 .upcoming_area .container_upcaming::-webkit-scrollbar {
     display: none;
 }
 
-body.page-template-lobby-new-season-v2 .upcoming_area .upcoming-slider,
-body.page-template-lobby-new-season-v2 .upcoming_area .upcoming-slider.owl-carousel,
-body.page-template-lobby-new-season-v2 .upcoming_area .upcoming-scroll-mobile .upcoming-slider {
+body.page-template-Lobby-New-season-v2 .upcoming_area .upcoming-slider,
+body.page-template-Lobby-New-season-v2 .upcoming_area .upcoming-slider.upcoming-native-scroll {
     display: flex !important;
     flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0;
     overflow: visible !important;
-    width: max-content;
+    width: max-content !important;
+    max-width: none !important;
     margin: 0 !important;
     transform: none !important;
 }
 
-body.page-template-lobby-new-season-v2 .upcoming_area .upcoming-slider .loop-program.item,
-body.page-template-lobby-new-season-v2 .upcoming_area .upcoming-slider .owl-item,
-body.page-template-lobby-new-season-v2:not(.home) .upcoming_area .owl-carousel.owl-drag .owl-item {
-    min-width: 240px !important;
-    max-width: 240px !important;
-    width: 240px !important;
-    margin-right: 15px;
-    flex-shrink: 0;
+body.page-template-Lobby-New-season-v2 .upcoming_area .upcoming-slider > .loop-program.item,
+body.page-template-Lobby-New-season-v2 .upcoming_area .upcoming-slider .owl-item {
+    flex: 0 0 auto !important;
+    width: calc((100vw - 45px) / 1.5) !important;
+    min-width: 220px !important;
+    max-width: 280px !important;
+    margin-right: 15px !important;
     margin-left: 0 !important;
+    float: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
-body.page-template-lobby-new-season-v2 .upcoming_area .upcoming-slider .owl-stage-outer,
-body.page-template-lobby-new-season-v2 .upcoming_area .upcoming-slider .owl-stage {
-    display: flex !important;
-    overflow: visible !important;
-    transform: none !important;
-    width: auto !important;
+body.page-template-Lobby-New-season-v2 .upcoming_area .upcoming-slider .owl-stage-outer,
+body.page-template-Lobby-New-season-v2 .upcoming_area .upcoming-slider .owl-stage {
+    display: contents !important;
 }
 
-body.page-template-lobby-new-season-v2 .upcoming_area .owl-nav {
+body.page-template-Lobby-New-season-v2 .upcoming_area .owl-nav,
+body.page-template-Lobby-New-season-v2 .upcoming_area .owl-dots {
     display: none !important;
 }
 
-body.page-template-lobby-new-season-v2 .upcoming_area .img_box {
+body.page-template-Lobby-New-season-v2 .upcoming_area .img_box {
     height: auto !important;
     display: grid;
-    width: 240px !important;
-    max-width: 240px !important;
+    width: 100% !important;
+    max-width: 100% !important;
     margin-top: 0 !important;
 }
 
-body.page-template-lobby-new-season-v2 .upcoming_area .img_box .additionalDates {
+body.page-template-Lobby-New-season-v2 .upcoming_area .img_box .additionalDates {
     float: none !important;
     position: relative !important;
 }
 
-body.page-template-lobby-new-season-v2 .upcoming_area .title.style-1.pb-75,
+body.page-template-Lobby-New-season-v2 .upcoming_area .title.style-1.pb-75,
 .upcoming_area .title.style-1.pb-75 {
     padding-bottom: 25px !important;
 }
@@ -859,8 +887,8 @@ letter-spacing: 0!important;
     width: calc(100% + 25px) !important;
 }
 
-body.page-template-lobby-new-season-v2[lang="en-US"] .upcoming_area > .container,
-html[lang="en-US"] body.page-template-lobby-new-season-v2 .upcoming_area > .container {
+body.page-template-Lobby-New-season-v2[lang="en-US"] .upcoming_area > .container,
+html[lang="en-US"] body.page-template-Lobby-New-season-v2 .upcoming_area > .container {
     margin-right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -875,8 +903,8 @@ html[lang="en-US"] body.page-template-lobby-new-season-v2 .upcoming_area > .cont
     width: calc(100% + 25px) !important;
 }
 
-body.page-template-lobby-new-season-v2[lang="he-IL"] .upcoming_area > .container,
-html[lang="he-IL"] body.page-template-lobby-new-season-v2 .upcoming_area > .container {
+body.page-template-Lobby-New-season-v2[lang="he-IL"] .upcoming_area > .container,
+html[lang="he-IL"] body.page-template-Lobby-New-season-v2 .upcoming_area > .container {
     margin-left: 0 !important;
     width: 100% !important;
     max-width: 100% !important;

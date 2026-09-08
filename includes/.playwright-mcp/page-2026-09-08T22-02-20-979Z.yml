@@ -1,0 +1,287 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e5]:
+        - generic [ref=e7]:
+          - generic [ref=e8]:
+            - list [ref=e9]:
+              - listitem [ref=e10]:
+                - link "ראשי" [ref=e11] [cursor=pointer]:
+                  - /url: /
+              - listitem [ref=e12]:
+                - link "קונצרטים" [ref=e13] [cursor=pointer]:
+                  - /url: https://www.ipo.co.il/%D7%9C%D7%95%D7%97-%D7%A9%D7%A0%D7%94/
+                - generic:
+                  - listitem:
+                    - link "הקונצרטים שלנו":
+                      - /url: "#"
+                    - list:
+                      - listitem:
+                        - list:
+                          - listitem:
+                            - link "לוח הקונצרטים":
+                              - /url: https://www.ipo.co.il/%D7%9C%D7%95%D7%97-%D7%A9%D7%A0%D7%94/
+                          - listitem:
+                            - link "קונצרטים קאמריים":
+                              - /url: https://www.ipo.co.il/chamber-concerts/
+                          - listitem:
+                            - link "קונצרטים מיוחדים":
+                              - /url: https://www.ipo.co.il/serie/apecial-concerts/
+                          - listitem:
+                            - link "קונצרטים לילדים":
+                              - /url: https://www.ipo.co.il/%d7%99%d7%9c%d7%93%d7%99%d7%9d/
+                          - listitem:
+                            - link "צעירים בפילהרמונית":
+                              - /url: https://www.ipo.co.il/%d7%a6%d7%a2%d7%99%d7%a8%d7%99%d7%9d/
+              - listitem [ref=e16]:
+                - link "סדרות ומנויים" [ref=e17] [cursor=pointer]:
+                  - /url: https://www.ipo.co.il/90-sereis/
+              - listitem [ref=e18]:
+                - link "ילדים" [ref=e19] [cursor=pointer]:
+                  - /url: https://www.ipo.co.il/%d7%99%d7%9c%d7%93%d7%99%d7%9d/
+              - listitem [ref=e20]:
+                - link "חינוך" [ref=e21] [cursor=pointer]:
+                  - /url: https://www.ipo.co.il/education/
+              - listitem [ref=e22]:
+                - link "להקשיב מהבית" [ref=e23] [cursor=pointer]:
+                  - /url: https://www.ipo.co.il/%d7%94%d7%a4%d7%99%d7%9c%d7%94%d7%a8%d7%9e%d7%95%d7%a0%d7%99%d7%aa-%d7%a2%d7%93-%d7%94%d7%91%d7%99%d7%aa/
+              - listitem [ref=e25]:
+                - link "מחירים ומידע":
+                  - /url: "#"
+                - generic:
+                  - listitem
+                  - listitem:
+                    - link "מחירים":
+                      - /url: "#"
+                    - list:
+                      - listitem:
+                        - list:
+                          - listitem:
+                            - link "הנחות ברכישת כרטיסים":
+                              - /url: https://www.ipo.co.il/%d7%94%d7%a0%d7%97%d7%95%d7%aa-%d7%91%d7%a8%d7%9b%d7%99%d7%a9%d7%aa-%d7%9b%d7%a8%d7%98%d7%99%d7%a1%d7%99%d7%9d/
+                          - listitem:
+                            - link "קבוצות ועסקים":
+                              - /url: https://www.ipo.co.il/%d7%a7%d7%91%d7%95%d7%a6%d7%95%d7%aa-%d7%95%d7%a2%d7%a1%d7%a7%d7%99%d7%9d/
+                          - listitem:
+                            - link "מועדון העתודה – קלאסי חופשי":
+                              - /url: https://www.ipo.co.il/%d7%9e%d7%95%d7%a2%d7%93%d7%95%d7%9f-%d7%94%d7%a2%d7%aa%d7%95%d7%93%d7%94-%d7%a7%d7%9c%d7%90%d7%a1%d7%99-%d7%97%d7%95%d7%a4%d7%a9%d7%99/
+                          - listitem:
+                            - link "מתנה קלאסית":
+                              - /url: https://www.ipo.co.il/%d7%9e%d7%aa%d7%a0%d7%94-%d7%a7%d7%9c%d7%90%d7%a1%d7%99%d7%aa/
+              - listitem [ref=e26]:
+                - link "עלינו" [ref=e27] [cursor=pointer]:
+                  - /url: https://www.ipo.co.il/%d7%a2%d7%9c%d7%99%d7%a0%d7%95/
+                - generic:
+                  - listitem:
+                    - generic: קבוצת קרן יער
+                  - listitem:
+                    - link "על התזמורת":
+                      - /url: "#"
+                    - list:
+                      - listitem:
+                        - list:
+                          - listitem:
+                            - link "ההיסטוריה של הפילהרמונית":
+                              - /url: https://www.ipo.co.il/history/
+                          - listitem:
+                            - link "חברי התזמורת":
+                              - /url: https://www.ipo.co.il/%d7%97%d7%91%d7%a8%d7%99-%d7%94%d7%aa%d7%96%d7%9e%d7%95%d7%a8%d7%aa-2/
+                          - listitem:
+                            - link "מנהל מוזיקלי אמריטוס":
+                              - /url: https://www.ipo.co.il/%d7%9e%d7%a0%d7%94%d7%9c-%d7%9e%d7%95%d7%96%d7%99%d7%a7%d7%9c%d7%99-%d7%90%d7%9e%d7%a8%d7%99%d7%98%d7%95%d7%a1/
+                          - listitem:
+                            - link "מנהל מוזיקלי":
+                              - /url: https://www.ipo.co.il/%d7%9c%d7%94%d7%91-%d7%a9%d7%a0%d7%99-%d7%9e%d7%a0%d7%94%d7%9c-%d7%9e%d7%95%d7%96%d7%99%d7%a7%d7%9c%d7%99/
+                          - listitem:
+                            - link "אקדמי":
+                              - /url: https://www.ipo.co.il/%d7%94%d7%90%d7%a7%d7%93%d7%9e%d7%99%d7%94/
+                      - listitem:
+                        - list:
+                          - listitem:
+                            - link "הנהלה":
+                              - /url: https://www.ipo.co.il/%d7%94%d7%a0%d7%94%d7%9c%d7%94/
+                          - listitem:
+                            - link "מטה":
+                              - /url: https://www.ipo.co.il/%d7%9e%d7%a0%d7%94%d7%9c%d7%94/
+                          - listitem:
+                            - link "ארכיון התזמורת":
+                              - /url: https://www.ipo.co.il/%d7%90%d7%a8%d7%9b%d7%99%d7%95%d7%9f-%d7%94%d7%aa%d7%96%d7%9e%d7%95%d7%a8%d7%aa/
+                          - listitem:
+                            - link "קטלוג הקלטות התזמורת":
+                              - /url: https://www.ipo.co.il/%d7%94%d7%9c%d7%99%d7%a7%d7%95%d7%9f-%d7%a7%d7%9c%d7%90%d7%a1%d7%99%d7%a7%d7%a1-%d7%a7%d7%98%d7%9c%d7%95%d7%92-%d7%94%d7%a7%d7%9c%d7%98%d7%95%d7%aa-%d7%94%d7%aa%d7%96%d7%9e%d7%95%d7%a8%d7%aa/
+                          - listitem:
+                            - link "אודיציות":
+                              - /url: https://www.ipo.co.il/auditions/
+                          - listitem:
+                            - link "דרושים":
+                              - /url: https://www.ipo.co.il/?page_id=28605
+                  - listitem:
+                    - link "קרן הפילהרמונית הישראלית":
+                      - /url: https://donate.ipo.co.il/
+                    - list:
+                      - listitem:
+                        - list:
+                          - listitem:
+                            - link "תמיכה בתזמורת":
+                              - /url: https://donate.ipo.co.il/donate/
+                          - listitem:
+                            - link "החברים שלנו":
+                              - /url: https://donate.ipo.co.il/friends/
+                          - listitem:
+                            - link "חינוך מוזיקלי":
+                              - /url: https://donate.ipo.co.il/education/
+                          - listitem:
+                            - link "הוקרה והנצחה":
+                              - /url: https://donate.ipo.co.il/recognition/
+                          - listitem:
+                            - link "AFIPO":
+                              - /url: https://afipo.org/
+                          - listitem:
+                            - link "Israel Philharmonic Foundation UK":
+                              - /url: https://www.ipofoundationuk.com/
+              - listitem [ref=e29]:
+                - link "מידע שימושי":
+                  - /url: "#"
+                - generic:
+                  - listitem
+                  - listitem:
+                    - link "מידע שימושי":
+                      - /url: "#"
+                    - list:
+                      - listitem:
+                        - list:
+                          - listitem:
+                            - link "אולמות":
+                              - /url: https://www.ipo.co.il/%d7%90%d7%95%d7%9c%d7%9e%d7%95%d7%aa/
+                          - listitem:
+                            - link "חניה":
+                              - /url: https://www.ipo.co.il/%d7%97%d7%a0%d7%99%d7%94/
+                          - listitem:
+                            - link "קבלת קהל, טלפונים ודרכי התקשרות":
+                              - /url: https://www.ipo.co.il/%d7%a7%d7%91%d7%9c%d7%aa-%d7%a7%d7%94%d7%9c-%d7%98%d7%9c%d7%a4%d7%95%d7%a0%d7%99%d7%9d-%d7%95%d7%93%d7%a8%d7%9b%d7%99-%d7%94%d7%aa%d7%a7%d7%a9%d7%a8%d7%95%d7%aa/
+                          - listitem:
+                            - link "יצירת קשר":
+                              - /url: https://www.ipo.co.il/%d7%99%d7%a6%d7%99%d7%a8%d7%aa-%d7%a7%d7%a9%d7%a8/
+                          - listitem:
+                            - link "פעם ראשונה בקונצרט? כל מה שחשוב לדעת":
+                              - /url: https://www.ipo.co.il/%d7%a4%d7%a2%d7%9d-%d7%a8%d7%90%d7%a9%d7%95%d7%a0%d7%94-%d7%91%d7%a7%d7%95%d7%a0%d7%a6%d7%a8%d7%98-%d7%a9%d7%90%d7%9c%d7%95%d7%aa-%d7%95%d7%aa%d7%a9%d7%95%d7%91%d7%95%d7%aa/
+                          - listitem:
+                            - link "הצהרת נגישות":
+                              - /url: https://www.ipo.co.il/%d7%94%d7%a6%d7%94%d7%a8%d7%aa-%d7%a0%d7%92%d7%99%d7%a9%d7%95%d7%aa/
+                          - listitem:
+                            - link "מדיניות הפרטיות":
+                              - /url: https://www.ipo.co.il/privacy-policy/
+                          - listitem:
+                            - link "תקנון":
+                              - /url: https://www.ipo.co.il/%d7%aa%d7%a7%d7%a0%d7%95%d7%9f/
+                          - listitem:
+                            - link "אתר היכל התרבות":
+                              - /url: https://www.hatarbut.co.il/
+            - generic [ref=e34]:
+              - generic:
+                - search "Search form":
+                  - searchbox "Search input"
+              - button "Search magnifier button" [ref=e35] [cursor=pointer]
+              - generic [ref=e37] [cursor=pointer]
+          - list [ref=e43]:
+            - listitem [ref=e44]:
+              - link "עב" [ref=e45] [cursor=pointer]:
+                - /url: https://www.ipo.co.il
+            - listitem [ref=e46]:
+              - link "EN" [ref=e47] [cursor=pointer]:
+                - /url: https://www.ipo.co.il/en/
+        - generic [ref=e48]:
+          - link:
+            - /url: https://www.ipo.co.il
+            - generic [ref=e49] [cursor=pointer]
+    - main [ref=e102]:
+      - generic [ref=e108]:
+        - heading "404" [level=1] [ref=e109]
+        - paragraph [ref=e110]: Page not found
+        - link "Home" [ref=e111] [cursor=pointer]:
+          - /url: /
+    - contentinfo [ref=e112]:
+      - generic [ref=e115]:
+        - generic [ref=e117]:
+          - generic [ref=e118]:
+            - heading "רח’ הוברמן 1, תל אביב" [level=5] [ref=e119]
+            - paragraph [ref=e120]: "קבלת קהל: א’-ה’ 9:00-18:00, יום ו’ עד 13:00"
+          - generic [ref=e121]:
+            - heading "3766* או 03-6211777" [level=5] [ref=e122]
+            - paragraph [ref=e123]: א’-ה’ 9:00-18:00, יום ו’ עד 13:00
+          - generic [ref=e124]:
+            - heading [level=5] [ref=e125]:
+              - link "info@ipo.co.il" [ref=e126] [cursor=pointer]:
+                - /url: mailto:info@ipo.co.il
+            - heading [level=5] [ref=e127]:
+              - text: "בפקס:"
+              - link "1533-5253695" [ref=e128] [cursor=pointer]:
+                - /url: tel:1533-5253695
+            - heading [level=5] [ref=e129]:
+              - text: "במסרון:"
+              - link "055-7000-232" [ref=e130] [cursor=pointer]:
+                - /url: tel:055-7000-232
+        - generic [ref=e133]:
+          - heading "רוצה לשמוע מאיתנו?" [level=3] [ref=e135]
+          - generic [ref=e137]:
+            - generic:
+              - paragraph
+            - generic [ref=e138]:
+              - generic [ref=e140]:
+                - generic [ref=e141]:
+                  - generic [ref=e142]: שם פרטי
+                  - textbox "שם פרטי" [ref=e144]
+                - generic [ref=e145]:
+                  - generic [ref=e146]: שם משפחה
+                  - textbox "שם משפחה" [ref=e148]
+                - generic [ref=e149]:
+                  - generic [ref=e150]:
+                    - text: כתובת מייל
+                    - generic [ref=e151]: (חובה)
+                  - textbox "כתובת מייל (חובה)" [ref=e154]:
+                    - /placeholder: כתובת מייל
+                - paragraph [ref=e156]: פרטים אלו ישמשו את התזמורת לצורך מתן הודעות אינפורמטיביות ומידע פרסומי
+              - button "שלחו לי דברים מעניינים" [ref=e158] [cursor=pointer]
+    - generic [ref=e161]:
+      - link "חזרה לראש העמוד" [ref=e163] [cursor=pointer]:
+        - /url: "#"
+      - list [ref=e165]:
+        - listitem [ref=e166]:
+          - link [ref=e167] [cursor=pointer]:
+            - /url: https://www.facebook.com/israel.philharmonic
+        - listitem [ref=e169]:
+          - link [ref=e170] [cursor=pointer]:
+            - /url: https://www.instagram.com/israel_philharmonic/
+        - listitem [ref=e172]:
+          - link [ref=e173] [cursor=pointer]:
+            - /url: https://open.spotify.com/artist/4RkU7dxppCNi2078hPMUI4?si=ozqjSyDVTY-eA0XWv8hDFQ
+        - listitem [ref=e175]:
+          - link [ref=e176] [cursor=pointer]:
+            - /url: https://www.youtube.com/c/IsraelPhilharmonicOrchestra
+      - generic [ref=e178]:
+        - link [ref=e179] [cursor=pointer]:
+          - /url: https://tabuzzco.com/
+        - link:
+          - /url: https://www.uxpert.com/
+        - generic [ref=e181]:
+          - link:
+            - /url: https://www.uxpert.com/
+          - link [ref=e182] [cursor=pointer]:
+            - /url: " https://www.uxpert.com/ "
+        - generic [ref=e183]:
+          - link [ref=e184] [cursor=pointer]:
+            - /url: ""
+          - link [ref=e186] [cursor=pointer]:
+            - /url: ""
+          - link [ref=e188] [cursor=pointer]:
+            - /url: ""
+          - link [ref=e190] [cursor=pointer]:
+            - /url: ""
+  - generic [ref=e193]:
+    - generic [ref=e194]: עדכנו את מדיניות הפרטיות שלנו. שימוש מתמשך בשירות מהווה הסכמה לתנאים החדשים.
+    - link "תקנות האתר ומדיניות פרטיות" [ref=e195] [cursor=pointer]:
+      - /url: https://www.ipo.co.il/privacy-policy/
+    - button "מאשר" [ref=e196] [cursor=pointer]
+  - link [ref=e197] [cursor=pointer]:
+    - /url: https://wa.me/972557000232
+    - img "WhatsApp" [ref=e198]

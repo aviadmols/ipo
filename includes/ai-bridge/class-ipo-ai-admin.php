@@ -15,6 +15,7 @@ class IPO_AI_Admin {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_post_ipo_ai_create_token', array( __CLASS__, 'handle_create' ) );
 		add_action( 'admin_post_ipo_ai_revoke_token', array( __CLASS__, 'handle_revoke' ) );
+		add_action( 'admin_post_ipo_ai_toggle_write', array( __CLASS__, 'handle_toggle_write' ) );
 		add_action( 'admin_notices', array( __CLASS__, 'maybe_show_new_token' ) );
 	}
 
@@ -82,6 +83,45 @@ class IPO_AI_Admin {
 				array(
 					'page'       => self::PAGE_SLUG,
 					'ai_revoked' => '1',
+				),
+				admin_url( 'tools.php' )
+			)
+		);
+		exit;
+	}
+
+	/**
+	 * Grant or take away write access for a single token.
+	 *
+	 * Kept separate from token creation on purpose: write access is a decision
+	 * made per token, after the fact, and can be taken back without revoking it.
+	 */
+	public static function handle_toggle_write() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( 'Forbidden' );
+		}
+		check_admin_referer( 'ipo_ai_toggle_write' );
+
+		$id      = isset( $_POST['token_id'] ) ? sanitize_text_field( wp_unslash( $_POST['token_id'] ) ) : '';
+		$enable  = ! empty( $_POST['enable'] );
+		$current = get_option( IPO_AI_REST::WRITE_TOKENS_OPTION, array() );
+		$current = is_array( $current ) ? $current : array();
+
+		if ( $enable ) {
+			if ( $id && ! in_array( $id, $current, true ) ) {
+				$current[] = $id;
+			}
+		} else {
+			$current = array_values( array_diff( $current, array( $id ) ) );
+		}
+
+		update_option( IPO_AI_REST::WRITE_TOKENS_OPTION, $current, false );
+
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'page'      => self::PAGE_SLUG,
+					'ai_write'  => $enable ? 'on' : 'off',
 				),
 				admin_url( 'tools.php' )
 			)
@@ -191,16 +231,35 @@ class IPO_AI_Admin {
 								<th>קידומת</th>
 								<th>נוצר</th>
 								<th>שימוש אחרון</th>
+								<th>כתיבה</th>
 								<th></th>
 							</tr>
 						</thead>
 						<tbody>
+						<?php
+						$write_ids = get_option( IPO_AI_REST::WRITE_TOKENS_OPTION, array() );
+						$write_ids = is_array( $write_ids ) ? $write_ids : array();
+						?>
 						<?php foreach ( $tokens as $t ) : ?>
+							<?php $can_write = ! empty( $t['id'] ) && in_array( $t['id'], $write_ids, true ); ?>
 							<tr>
 								<td><?php echo esc_html( isset( $t['label'] ) ? $t['label'] : '' ); ?></td>
 								<td><code><?php echo esc_html( isset( $t['prefix'] ) ? $t['prefix'] . '…' : '' ); ?></code></td>
 								<td><?php echo esc_html( isset( $t['created'] ) ? gmdate( 'Y-m-d H:i', (int) $t['created'] ) . ' UTC' : '' ); ?></td>
 								<td><?php echo ! empty( $t['last_used'] ) ? esc_html( gmdate( 'Y-m-d H:i', (int) $t['last_used'] ) . ' UTC' ) : '—'; ?></td>
+								<td>
+									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;">
+										<?php wp_nonce_field( 'ipo_ai_toggle_write' ); ?>
+										<input type="hidden" name="action" value="ipo_ai_toggle_write" />
+										<input type="hidden" name="token_id" value="<?php echo esc_attr( $t['id'] ); ?>" />
+										<input type="hidden" name="enable" value="<?php echo $can_write ? '' : '1'; ?>" />
+										<?php if ( $can_write ) : ?>
+											<button type="submit" class="button button-small" style="color:#b32d2e;">✔ מופעלת — לבטל</button>
+										<?php else : ?>
+											<button type="submit" class="button button-small">קריאה בלבד — לאפשר</button>
+										<?php endif; ?>
+									</form>
+								</td>
 								<td>
 									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;" onsubmit="return confirm('לבטל את הטוקן?');">
 										<?php wp_nonce_field( 'ipo_ai_revoke_token' ); ?>

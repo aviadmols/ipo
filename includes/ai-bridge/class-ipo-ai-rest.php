@@ -13,6 +13,15 @@ class IPO_AI_REST {
 
 	const NS = 'ipo-ai/v1';
 
+	/** Token IDs that are allowed to write. Managed on the AI Bridge admin page. */
+	const WRITE_TOKENS_OPTION = 'ipo_ai_bridge_write_tokens';
+
+	/** Only these extensions may be written. Everything else is refused. */
+	const WRITABLE_EXTENSIONS = array( 'css', 'js', 'php', 'json', 'txt', 'md', 'svg', 'html' );
+
+	/** Largest file this endpoint will accept, in bytes. */
+	const MAX_WRITE_BYTES = 2097152;
+
 	public static function init() {
 		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
 	}
@@ -115,6 +124,47 @@ class IPO_AI_REST {
 				),
 			)
 		);
+
+		// --- Theme file access. Reading needs any token; writing needs one that was
+		// --- explicitly granted write access on the AI Bridge admin page.
+		$write_auth = array( __CLASS__, 'write_permission_check' );
+
+		register_rest_route(
+			self::NS,
+			'/files',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( __CLASS__, 'list_files' ),
+				'permission_callback' => $auth,
+			)
+		);
+
+		register_rest_route(
+			self::NS,
+			'/file',
+			array(
+				array(
+					'methods'             => 'GET',
+					'callback'            => array( __CLASS__, 'read_file' ),
+					'permission_callback' => $auth,
+				),
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( __CLASS__, 'write_file' ),
+					'permission_callback' => $write_auth,
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NS,
+			'/file/revert',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( __CLASS__, 'revert_file' ),
+				'permission_callback' => $write_auth,
+			)
+		);
 	}
 
 	/**
@@ -135,6 +185,359 @@ class IPO_AI_REST {
 
 		$request->set_param( '_ipo_ai_token', $auth );
 		return true;
+	}
+
+	/**
+	 * Same as permission_check, plus the token must be on the write list.
+	 *
+	 * Write access is off for every token until it is granted one by one on the
+	 * admin page, so a leaked read token cannot be used to change files.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return bool|WP_Error
+	 */
+	public static function write_permission_check( $request ) {
+		$allowed = self::permission_check( $request );
+
+		if ( is_wp_error( $allowed ) ) {
+			return $allowed;
+		}
+
+		$token      = $request->get_param( '_ipo_ai_token' );
+		$write_ids  = get_option( self::WRITE_TOKENS_OPTION, array() );
+		$write_ids  = is_array( $write_ids ) ? $write_ids : array();
+
+		if ( empty( $token['id'] ) || ! in_array( $token['id'], $write_ids, true ) ) {
+			return new WP_Error(
+				'ipo_ai_read_only',
+				'This token is read-only. Grant it write access under Tools -> AI Bridge.',
+				array( 'status' => 403 )
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Resolve a theme-relative path to a real one inside the child theme.
+	 *
+	 * Everything hangs off this: the path is resolved against the real theme
+	 * directory and then checked to still be inside it, so '../', symlinks and
+	 * absolute paths cannot reach anything else on the server.
+	 *
+	 * @param string $relative Path relative to the child theme root.
+	 * @param bool   $must_exist Whether the file has to exist already.
+	 * @return string|WP_Error Absolute path.
+	 */
+	protected static function resolve_theme_path( $relative, $must_exist = true ) {
+		$relative = is_string( $relative ) ? trim( $relative ) : '';
+		$relative = ltrim( str_replace( '\\', '/', $relative ), '/' );
+
+		if ( '' === $relative ) {
+			return new WP_Error( 'ipo_ai_bad_path', 'A path is required.', array( 'status' => 400 ) );
+		}
+
+		$root = realpath( get_stylesheet_directory() );
+		if ( ! $root ) {
+			return new WP_Error( 'ipo_ai_no_theme', 'Cannot resolve the theme directory.', array( 'status' => 500 ) );
+		}
+
+		$target = $root . '/' . $relative;
+		$real   = realpath( $target );
+
+		if ( $must_exist ) {
+			if ( ! $real || ! is_file( $real ) ) {
+				return new WP_Error( 'ipo_ai_not_found', 'No such file: ' . $relative, array( 'status' => 404 ) );
+			}
+		} else {
+			// A new file has no realpath yet, so verify its parent directory instead.
+			$parent = realpath( dirname( $target ) );
+			if ( ! $parent ) {
+				return new WP_Error( 'ipo_ai_no_dir', 'Directory does not exist for: ' . $relative, array( 'status' => 400 ) );
+			}
+			if ( 0 !== strpos( $parent . '/', $root . '/' ) && $parent !== $root ) {
+				return new WP_Error( 'ipo_ai_outside', 'Path escapes the theme directory.', array( 'status' => 403 ) );
+			}
+			return $parent . '/' . basename( $target );
+		}
+
+		if ( 0 !== strpos( $real, $root . DIRECTORY_SEPARATOR ) && $real !== $root ) {
+			return new WP_Error( 'ipo_ai_outside', 'Path escapes the theme directory.', array( 'status' => 403 ) );
+		}
+
+		return $real;
+	}
+
+	/**
+	 * @param string $path Absolute path.
+	 * @return bool
+	 */
+	protected static function is_writable_extension( $path ) {
+		$ext = strtolower( pathinfo( $path, PATHINFO_EXTENSION ) );
+		return in_array( $ext, self::WRITABLE_EXTENSIONS, true );
+	}
+
+	/**
+	 * Copy the current contents aside before overwriting.
+	 *
+	 * Backups live in uploads so a bad write can always be undone, and they are
+	 * what /file/revert restores from.
+	 *
+	 * @param string $path Absolute path of the file about to change.
+	 * @return string|false Backup path, or false when there was nothing to back up.
+	 */
+	protected static function backup_file( $path ) {
+		if ( ! file_exists( $path ) ) {
+			return false;
+		}
+
+		$uploads = wp_upload_dir();
+		$dir     = trailingslashit( $uploads['basedir'] ) . 'ipo-ai-backups';
+
+		if ( ! wp_mkdir_p( $dir ) ) {
+			return false;
+		}
+
+		// Keep the folder from being browsable.
+		if ( ! file_exists( $dir . '/index.php' ) ) {
+			file_put_contents( $dir . '/index.php', "<?php\n// Silence is golden.\n" );
+		}
+
+		$name   = str_replace( '/', '__', ltrim( str_replace( realpath( get_stylesheet_directory() ), '', $path ), '/\\' ) );
+		$backup = $dir . '/' . $name . '.' . gmdate( 'Ymd-His' ) . '.bak';
+
+		return copy( $path, $backup ) ? $backup : false;
+	}
+
+	/**
+	 * Reject PHP that would fatal the site before it ever reaches disk.
+	 *
+	 * token_get_all() with TOKEN_PARSE runs the real parser, so a syntax error
+	 * surfaces here as a ParseError instead of as a white screen.
+	 *
+	 * @param string $content File contents.
+	 * @return true|WP_Error
+	 */
+	protected static function validate_php_syntax( $content ) {
+		try {
+			token_get_all( $content, TOKEN_PARSE );
+		} catch ( ParseError $e ) {
+			return new WP_Error(
+				'ipo_ai_php_parse_error',
+				'Refused: PHP syntax error - ' . $e->getMessage(),
+				array( 'status' => 422 )
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * GET /files?dir=assets/styles — list files in a theme directory.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function list_files( $request ) {
+		$dir  = (string) $request->get_param( 'dir' );
+		$root = realpath( get_stylesheet_directory() );
+
+		if ( '' === trim( $dir ) ) {
+			$target = $root;
+		} else {
+			$target = realpath( $root . '/' . ltrim( str_replace( '\\', '/', $dir ), '/' ) );
+			if ( ! $target || ! is_dir( $target ) ) {
+				return new WP_Error( 'ipo_ai_not_found', 'No such directory: ' . $dir, array( 'status' => 404 ) );
+			}
+			if ( 0 !== strpos( $target, $root . DIRECTORY_SEPARATOR ) && $target !== $root ) {
+				return new WP_Error( 'ipo_ai_outside', 'Path escapes the theme directory.', array( 'status' => 403 ) );
+			}
+		}
+
+		$entries = array();
+
+		foreach ( (array) scandir( $target ) as $entry ) {
+			if ( '.' === $entry || '..' === $entry ) {
+				continue;
+			}
+
+			$full = $target . '/' . $entry;
+
+			$entries[] = array(
+				'name'     => $entry,
+				'type'     => is_dir( $full ) ? 'dir' : 'file',
+				'size'     => is_file( $full ) ? filesize( $full ) : null,
+				'modified' => gmdate( 'Y-m-d H:i:s', (int) filemtime( $full ) ) . ' UTC',
+				'writable' => is_file( $full ) ? ( is_writable( $full ) && self::is_writable_extension( $full ) ) : null,
+			);
+		}
+
+		return rest_ensure_response(
+			array(
+				'dir'     => '' === trim( $dir ) ? '/' : $dir,
+				'count'   => count( $entries ),
+				'entries' => $entries,
+			)
+		);
+	}
+
+	/**
+	 * GET /file?path=assets/styles/ipo-custom.css
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function read_file( $request ) {
+		$relative = (string) $request->get_param( 'path' );
+		$path     = self::resolve_theme_path( $relative, true );
+
+		if ( is_wp_error( $path ) ) {
+			return $path;
+		}
+
+		$content = file_get_contents( $path );
+
+		if ( false === $content ) {
+			return new WP_Error( 'ipo_ai_read_failed', 'Could not read: ' . $relative, array( 'status' => 500 ) );
+		}
+
+		return rest_ensure_response(
+			array(
+				'path'     => $relative,
+				'bytes'    => strlen( $content ),
+				'sha1'     => sha1( $content ),
+				'modified' => gmdate( 'Y-m-d H:i:s', (int) filemtime( $path ) ) . ' UTC',
+				'content'  => $content,
+			)
+		);
+	}
+
+	/**
+	 * POST /file  { path, content, expect_sha1? }
+	 *
+	 * Pass expect_sha1 to make the write conditional on the file still holding
+	 * what you last read — that way two writers cannot silently clobber each other.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function write_file( $request ) {
+		$relative = (string) $request->get_param( 'path' );
+		$content  = $request->get_param( 'content' );
+		$create   = (bool) $request->get_param( 'create' );
+
+		if ( ! is_string( $content ) ) {
+			return new WP_Error( 'ipo_ai_bad_content', 'content must be a string.', array( 'status' => 400 ) );
+		}
+
+		if ( strlen( $content ) > self::MAX_WRITE_BYTES ) {
+			return new WP_Error(
+				'ipo_ai_too_large',
+				sprintf( 'Refused: %d bytes exceeds the %d byte limit.', strlen( $content ), self::MAX_WRITE_BYTES ),
+				array( 'status' => 413 )
+			);
+		}
+
+		$path = self::resolve_theme_path( $relative, ! $create );
+
+		if ( is_wp_error( $path ) ) {
+			return $path;
+		}
+
+		if ( ! self::is_writable_extension( $path ) ) {
+			return new WP_Error(
+				'ipo_ai_bad_extension',
+				'Refused: only these extensions may be written - ' . implode( ', ', self::WRITABLE_EXTENSIONS ),
+				array( 'status' => 403 )
+			);
+		}
+
+		if ( 'php' === strtolower( pathinfo( $path, PATHINFO_EXTENSION ) ) ) {
+			$valid = self::validate_php_syntax( $content );
+			if ( is_wp_error( $valid ) ) {
+				return $valid;
+			}
+		}
+
+		$existed = file_exists( $path );
+
+		if ( $existed && ! is_writable( $path ) ) {
+			return new WP_Error( 'ipo_ai_not_writable', 'File is not writable: ' . $relative, array( 'status' => 403 ) );
+		}
+
+		$expect = $request->get_param( 'expect_sha1' );
+
+		if ( $expect && $existed ) {
+			$current = sha1( (string) file_get_contents( $path ) );
+			if ( $current !== $expect ) {
+				return new WP_Error(
+					'ipo_ai_conflict',
+					'Refused: the file changed since you read it (now ' . $current . ').',
+					array( 'status' => 409 )
+				);
+			}
+		}
+
+		$backup  = self::backup_file( $path );
+		$written = file_put_contents( $path, $content );
+
+		if ( false === $written ) {
+			return new WP_Error( 'ipo_ai_write_failed', 'Could not write: ' . $relative, array( 'status' => 500 ) );
+		}
+
+		clearstatcache( true, $path );
+
+		return rest_ensure_response(
+			array(
+				'ok'      => true,
+				'path'    => $relative,
+				'created' => ! $existed,
+				'bytes'   => $written,
+				'sha1'    => sha1( $content ),
+				'backup'  => $backup ? basename( $backup ) : null,
+			)
+		);
+	}
+
+	/**
+	 * POST /file/revert  { path }
+	 *
+	 * Restores the most recent backup taken for that file.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public static function revert_file( $request ) {
+		$relative = (string) $request->get_param( 'path' );
+		$path     = self::resolve_theme_path( $relative, true );
+
+		if ( is_wp_error( $path ) ) {
+			return $path;
+		}
+
+		$uploads = wp_upload_dir();
+		$dir     = trailingslashit( $uploads['basedir'] ) . 'ipo-ai-backups';
+		$name    = str_replace( '/', '__', ltrim( str_replace( realpath( get_stylesheet_directory() ), '', $path ), '/\\' ) );
+		$matches = glob( $dir . '/' . $name . '.*.bak' );
+
+		if ( empty( $matches ) ) {
+			return new WP_Error( 'ipo_ai_no_backup', 'No backup found for: ' . $relative, array( 'status' => 404 ) );
+		}
+
+		sort( $matches );
+		$latest = end( $matches );
+
+		if ( ! copy( $latest, $path ) ) {
+			return new WP_Error( 'ipo_ai_revert_failed', 'Could not restore: ' . $relative, array( 'status' => 500 ) );
+		}
+
+		return rest_ensure_response(
+			array(
+				'ok'       => true,
+				'path'     => $relative,
+				'restored' => basename( $latest ),
+			)
+		);
 	}
 
 	/**
@@ -538,6 +941,52 @@ class IPO_AI_REST {
 					),
 				),
 			),
+			array(
+				'name'        => 'fs_list',
+				'description' => 'List files in a child-theme directory.',
+				'inputSchema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'dir' => array( 'type' => 'string', 'description' => 'Theme-relative directory, e.g. assets/styles' ),
+					),
+				),
+			),
+			array(
+				'name'        => 'fs_read',
+				'description' => 'Read a child-theme file.',
+				'inputSchema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'path' => array( 'type' => 'string', 'description' => 'Theme-relative path, e.g. assets/styles/ipo-custom.css' ),
+					),
+					'required'   => array( 'path' ),
+				),
+			),
+			array(
+				'name'        => 'fs_write',
+				'description' => 'Write a child-theme file. Needs a token with write access. Backs up the previous version and refuses PHP that does not parse.',
+				'inputSchema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'path'        => array( 'type' => 'string', 'description' => 'Theme-relative path' ),
+						'content'     => array( 'type' => 'string', 'description' => 'Full new contents of the file' ),
+						'expect_sha1' => array( 'type' => 'string', 'description' => 'Optional: only write if the file still has this sha1' ),
+						'create'      => array( 'type' => 'boolean', 'description' => 'Allow creating a file that does not exist yet' ),
+					),
+					'required'   => array( 'path', 'content' ),
+				),
+			),
+			array(
+				'name'        => 'fs_revert',
+				'description' => 'Restore the most recent backup of a child-theme file.',
+				'inputSchema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'path' => array( 'type' => 'string', 'description' => 'Theme-relative path' ),
+					),
+					'required'   => array( 'path' ),
+				),
+			),
 		);
 	}
 
@@ -578,6 +1027,39 @@ class IPO_AI_REST {
 
 			case 'wp_query':
 				return wp_json_encode( self::run_wp_query( $args ), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE );
+
+			case 'fs_list':
+			case 'fs_read':
+			case 'fs_write':
+			case 'fs_revert':
+				$req = new WP_REST_Request( 'fs_list' === $name || 'fs_read' === $name ? 'GET' : 'POST' );
+
+				foreach ( $args as $key => $value ) {
+					$req->set_param( $key, $value );
+				}
+
+				// tools/call carries the same Bearer token the MCP request was
+				// authenticated with, so re-run the permission check for writes.
+				if ( 'fs_write' === $name || 'fs_revert' === $name ) {
+					$allowed = self::write_permission_check( $req );
+					if ( is_wp_error( $allowed ) ) {
+						throw new Exception( $allowed->get_error_message() );
+					}
+				}
+
+				$map    = array(
+					'fs_list'   => 'list_files',
+					'fs_read'   => 'read_file',
+					'fs_write'  => 'write_file',
+					'fs_revert' => 'revert_file',
+				);
+				$result = call_user_func( array( __CLASS__, $map[ $name ] ), $req );
+
+				if ( is_wp_error( $result ) ) {
+					throw new Exception( $result->get_error_message() );
+				}
+
+				return wp_json_encode( $result->get_data(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE );
 
 			default:
 				throw new Exception( 'Unknown tool: ' . $name );

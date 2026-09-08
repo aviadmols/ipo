@@ -7976,22 +7976,24 @@ header.sticky .desktop-menu .menu > li > .sub-menu:after{
 /* ============================================================
    #40 | Mega-menu open state — white bar + black links (desktop)
    ============================================================
-   While a top-level mega-menu is open the dropdown below the bar is
-   white, but the bar itself stayed transparent over the hero — so the
-   white top-level links were unreadable (e.g. #menu-item-32471).
+   While a top-level mega-menu is open the dropdown below the bar is white,
+   but the bar itself stayed transparent over the hero — so the white
+   top-level links were unreadable (e.g. #menu-item-32471).
 
-   Here the whole bar turns solid white and everything inside it turns
-   black, mirroring the existing `header.sticky` treatment.
+   Here the whole bar turns solid white and everything inside it turns black,
+   mirroring the existing `header.sticky` treatment.
 
-   The trigger is the exact same condition that reveals the panel:
-   `li:hover` (native) or `li.hover` (added by ipo-custom.js #10, which
-   keeps the panel open for 1s after mouse-out) — so bar and panel are
-   always in the same state.
+   The hook is the `.mega-open` class that ipo-custom.js #26 puts on .menu-pc
+   and on the header. The `:has()` selector next to it is a fallback so the
+   styling still works if that JS has not loaded yet; it matches the exact
+   condition that reveals the panel — `li:hover`, or the `li.hover` class #10
+   adds to keep the panel open for 1s after mouse-out.
    ============================================================ */
 
 @media (min-width: 992px) {
 
 	/* --- the bar itself --- */
+	header.header.mega-open,
 	header.header:has(.desktop-menu .menu-pc > .menu > .menu-item-has-children:is(:hover, .hover)) {
 		background: #fff !important;
 		background-image: none !important;
@@ -8001,6 +8003,14 @@ header.sticky .desktop-menu .menu > li > .sub-menu:after{
 	}
 
 	/* --- every link / label in the bar --- */
+	header.header.mega-open :is(
+		.desktop-menu .menu-pc > .menu > .menu-item > a,
+		.desktop-menu .menu-pc > .menu > .menu-item > a .title-text,
+		.lang a,
+		.calltous,
+		.calltous *,
+		.probox *
+	),
 	header.header:has(.desktop-menu .menu-pc > .menu > .menu-item-has-children:is(:hover, .hover)) :is(
 		.desktop-menu .menu-pc > .menu > .menu-item > a,
 		.desktop-menu .menu-pc > .menu > .menu-item > a .title-text,
@@ -8014,15 +8024,14 @@ header.sticky .desktop-menu .menu > li > .sub-menu:after{
 	}
 
 	/* language switcher separator */
+	header.header.mega-open .lang .wpml-ls-last-item,
 	header.header:has(.desktop-menu .menu-pc > .menu > .menu-item-has-children:is(:hover, .hover)) .lang .wpml-ls-last-item {
 		border-right-color: #000 !important;
 	}
 
 	/* --- CTA buttons (same look as header.sticky) --- */
-	html body header.header:has(.desktop-menu .menu-pc > .menu > .menu-item-has-children:is(:hover, .hover)) :is(
-		.cta-menu ul a,
-		ul#menu-cta-menu a
-	) {
+	html body header.header.mega-open :is(.cta-menu ul a, ul#menu-cta-menu a),
+	html body header.header:has(.desktop-menu .menu-pc > .menu > .menu-item-has-children:is(:hover, .hover)) :is(.cta-menu ul a, ul#menu-cta-menu a) {
 		background-color: rgba(0, 0, 0, 0.1) !important;
 		color: #000 !important;
 		-webkit-text-fill-color: #000 !important;
@@ -8031,23 +8040,28 @@ header.sticky .desktop-menu .menu > li > .sub-menu:after{
 	}
 
 	/* --- search icon: force black, cancel any inherited invert --- */
+	header.header.mega-open .promagnifier,
 	header.header:has(.desktop-menu .menu-pc > .menu > .menu-item-has-children:is(:hover, .hover)) .promagnifier {
 		filter: none !important;
 	}
 
+	header.header.mega-open .promagnifier .innericon,
 	header.header:has(.desktop-menu .menu-pc > .menu > .menu-item-has-children:is(:hover, .hover)) .promagnifier .innericon {
 		filter: brightness(0) !important;
 	}
 
 	/* --- logo: swap to the dark variant, exactly like header.sticky --- */
+	header.header.mega-open .logo div:nth-child(1),
 	header.header:has(.desktop-menu .menu-pc > .menu > .menu-item-has-children:is(:hover, .hover)) .logo div:nth-child(1) {
 		display: none;
 	}
 
+	header.header.mega-open .logo div:nth-child(2),
 	header.header:has(.desktop-menu .menu-pc > .menu > .menu-item-has-children:is(:hover, .hover)) .logo div:nth-child(2) {
 		display: block;
 	}
 
+	header.header.mega-open .logo-lottie,
 	header.header:has(.desktop-menu .menu-pc > .menu > .menu-item-has-children:is(:hover, .hover)) .logo-lottie {
 		display: none !important;
 	}

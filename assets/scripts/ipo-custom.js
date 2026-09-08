@@ -1074,3 +1074,42 @@ jQuery(document).ready(function($) {
 });
 
 
+
+// ============================================================
+// #26 | Mega-menu open flag
+// ============================================================
+// Marks .menu-pc (and the header, which CSS needs for the bar background —
+// it is an ancestor, so a class on .menu-pc alone could not paint it) while a
+// top-level mega-menu is open, giving CSS a plain class to hook onto instead
+// of :has().
+//
+// The 1s delay mirrors #10, which keeps the panel visible for a second after
+// mouse-out, so the bar and the panel are never in different states.
+
+jQuery(document).ready(function($) {
+
+	var $items = $('.desktop-menu .menu-pc > .menu > .menu-item-has-children');
+
+	if (!$items.length) {
+		return;
+	}
+
+	var $targets = $('.desktop-menu .menu-pc').add('header.header');
+
+	function set_mega_open(is_open) {
+		$targets.toggleClass('mega-open', is_open);
+	}
+
+	$items.on('mouseenter', function() {
+		set_mega_open(true);
+	});
+
+	$items.on('mouseleave', function() {
+		setTimeout(function() {
+			// Still inside one of them (moved between items, or into the panel)? Stay open.
+			if (!$items.filter(':hover').length) {
+				set_mega_open(false);
+			}
+		}, 1000);
+	});
+});

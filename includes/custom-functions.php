@@ -137,3 +137,137 @@ function wpml_make_post_duplicate_language( $master_post_id, $lang_to ) {
     }
   }
   add_action( 'wpml_make_post_duplicate_lang', 'wpml_make_post_duplicate_language', 10, 2 );
+
+/* ==========================================================================
+   Upcoming programs — ordering by the nearest date
+   ========================================================================== */
+
+/**
+ * Turn an ACF post reference into a post ID.
+ *
+ * ACF relationship fields hand back IDs, numeric strings or WP_Post objects
+ * depending on how the field is configured, so normalize before using it.
+ *
+ * @param mixed $value
+ * @return int Post ID, or 0 when the value is not a post reference.
+ */
+if ( ! function_exists( 'ipo_normalize_post_id' ) ) {
+	function ipo_normalize_post_id( $value ) {
+
+		if ( is_numeric( $value ) ) {
+			return (int) $value;
+		}
+
+		if ( $value instanceof WP_Post ) {
+			return (int) $value->ID;
+		}
+
+		if ( is_array( $value ) && isset( $value['ID'] ) ) {
+			return (int) $value['ID'];
+		}
+
+		return 0;
+	}
+}
+
+/**
+ * The earliest event in a list that has not happened yet.
+ *
+ * Uses time() so it agrees with ipo_event::is_passed() and with the date
+ * filtering inside parts/loop-program.php — all three read the naive
+ * 'Y-m-d H:i:s' ACF value through strtotime() in the same timezone.
+ *
+ * @param array $event_ids
+ * @return int|false Unix timestamp, or false when every event is in the past.
+ */
+if ( ! function_exists( 'ipo_get_next_event_timestamp' ) ) {
+	function ipo_get_next_event_timestamp( $event_ids ) {
+
+		$now  = time();
+		$next = false;
+
+		foreach ( (array) $event_ids as $event_id ) {
+
+			$event_date_time = get_field( 'event_date_time', $event_id );
+			if ( ! $event_date_time ) {
+				continue;
+			}
+
+			$timestamp = strtotime( $event_date_time );
+			if ( ! $timestamp || $timestamp < $now ) {
+				continue;
+			}
+
+			if ( false === $next || $timestamp < $next ) {
+				$next = $timestamp;
+			}
+		}
+
+		return $next;
+	}
+}
+
+/**
+ * Order programs by their nearest upcoming date, dropping the ones that are over.
+ *
+ * A program that runs on several dates is placed by its FIRST date that is still
+ * ahead — so once that date passes the program falls back to its next one and the
+ * list re-orders itself, with no editing needed.
+ *
+ * Events are read through get_related_event_ids(), the same source
+ * parts/loop-program.php renders from, so a card's position in the list and the
+ * first date printed on the card can never disagree.
+ *
+ * @param array $programs Program IDs or ACF post references.
+ * @return array Program IDs, nearest date first.
+ */
+if ( ! function_exists( 'ipo_sort_programs_by_next_event' ) ) {
+	function ipo_sort_programs_by_next_event( $programs ) {
+
+		$dated    = array();
+		$undated  = array();
+		$position = 0;
+
+		foreach ( (array) $programs as $program ) {
+
+			$program_id = ipo_normalize_post_id( $program );
+			if ( ! $program_id ) {
+				continue;
+			}
+
+			$event_ids = get_related_event_ids( $program_id );
+
+			// No events at all (an artist_plan, for instance) — there is nothing to
+			// sort it by, so keep it and let it sit after everything that has a date.
+			if ( empty( $event_ids ) ) {
+				$undated[] = $program_id;
+				continue;
+			}
+
+			$next = ipo_get_next_event_timestamp( $event_ids );
+
+			// It has dates, but all of them are behind us — this is the one case we drop.
+			if ( false === $next ) {
+				continue;
+			}
+
+			$dated[] = array(
+				'id'    => $program_id,
+				'next'  => $next,
+				'order' => $position++, // keeps the original order for same-date programs
+			);
+		}
+
+		usort(
+			$dated,
+			function( $a, $b ) {
+				if ( $a['next'] === $b['next'] ) {
+					return $a['order'] <=> $b['order'];
+				}
+				return $a['next'] <=> $b['next'];
+			}
+		);
+
+		return array_merge( array_column( $dated, 'id' ), $undated );
+	}
+}

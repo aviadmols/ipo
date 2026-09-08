@@ -45,6 +45,13 @@ if (!$selected_programs) {
 // Remove duplicates if $selected_programs contains duplicates
 $programs = array_unique($programs);
 
+// Always order by the nearest date that is still ahead, and drop whatever is over.
+// This runs on the hand-picked list too, so a selection made in ACF re-orders itself
+// as dates go by instead of staying frozen in the order it was saved:
+// a program running on both 01.02 and 20.02 sits before one on 15.02 until 01.02
+// passes, and from then on it is placed by 20.02 — behind the 15.02 one.
+$programs = ipo_sort_programs_by_next_event($programs);
+
 $count = count($programs);
 $e_class = '';
 

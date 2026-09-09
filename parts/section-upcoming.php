@@ -2,11 +2,23 @@
 
 global $theme;
 
-$selected_programs = get_field('upcoming_selected_programs');
+/* האזור "דף הבית" במסך "תוכניות מקושרות" שתחת תפריט Event Table.
+   כשהאזור מוגדר לכבד את הבחירה הידנית בדף והשדה מלא — הוא קובע את הרשימה,
+   והחוקיות רק ממיינת ומסננת. אחרת החוקיות שבפאנל קובעת לבדה.
 
-if (!$selected_programs) {
-    // Get posts of type 'event' where the 'event_date_time' field is greater than today's date. Sort the results by the closest date.
-    $amount = 20;
+   המיון תמיד לפי האירוע הקרוב שטרם עבר, כך שגם בחירה ידנית מסדרת את עצמה
+   מחדש עם הזמן: תוכנית שרצה ב-01.02 וב-20.02 יושבת לפני אחת של 15.02 עד
+   שה-01.02 עובר, ומאותו רגע ממוקמת לפי 20.02 — אחרי זו של 15.02. */
+$programs = function_exists( 'ipo_related_programs_get_ids' )
+    ? ipo_related_programs_get_ids(
+        'home_upcoming',
+        array( 'manual_pick' => get_field( 'upcoming_selected_programs' ) )
+    )
+    : array();
+
+if ( empty( $programs ) ) {
+    // No rule produced anything — fall back to the nearest events on the site,
+    // which is what this module did before it had settings.
     $events = get_posts(array(
         'post_type' => 'event',
         'meta_key' => 'event_date_time',
@@ -15,7 +27,7 @@ if (!$selected_programs) {
         'orderby' => 'meta_value',
         'order' => 'ASC',
         'fields' => 'ids',
-        'posts_per_page' => $amount,
+        'posts_per_page' => 20,
         'suppress_filters' => false
     ));
 
@@ -35,22 +47,8 @@ if (!$selected_programs) {
         $programs[] = $program;
     }
 
-    // Remove duplicates
-    $programs = array_unique($programs);
-
-} else {
-    $programs = $selected_programs;
+    $programs = ipo_sort_programs_by_next_event( array_unique( $programs ) );
 }
-
-// Remove duplicates if $selected_programs contains duplicates
-$programs = array_unique($programs);
-
-// Always order by the nearest date that is still ahead, and drop whatever is over.
-// This runs on the hand-picked list too, so a selection made in ACF re-orders itself
-// as dates go by instead of staying frozen in the order it was saved:
-// a program running on both 01.02 and 20.02 sits before one on 15.02 until 01.02
-// passes, and from then on it is placed by 20.02 — behind the 15.02 one.
-$programs = ipo_sort_programs_by_next_event($programs);
 
 $count = count($programs);
 $e_class = '';

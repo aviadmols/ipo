@@ -12,11 +12,21 @@ $part->data['e_class_container'][] = '';
 global $theme;
 $part->build_opening_tag();
 
-$selected_programs = $part->gf('upcoming_selected_programs');
+/* האזור "עמודי לובי" במסך "תוכניות מקושרות" שתחת תפריט Event Table. */
+$programs = function_exists( 'ipo_related_programs_get_ids' )
+    ? ipo_related_programs_get_ids(
+        'lobby_upcoming',
+        array(
+            'post_id'     => get_the_ID(),
+            'manual_pick' => $part->gf('upcoming_selected_programs'),
+        )
+    )
+    : array();
 
-if(!$selected_programs){
+if ( empty( $programs ) ) {
 
-    // Get posts of type 'event' where the 'event_date_time' field is greater than today's date. Sort the results by the closest date.
+    // No rule produced anything — fall back to the nearest events on the site,
+    // which is what this module did before it had settings.
     $amount = $part->gf('upcoming_events_num');
     $events = get_posts(array(
         'post_type' => 'event',
@@ -36,14 +46,10 @@ if(!$selected_programs){
         if ( ! ipo_event_has_program( $event->get_id() ) ) {
             continue;
         }
-        $program = $event->get_program();
-        $programs[] = $program;;
+        $programs[] = $event->get_program();
     }
 
-    $programs = array_unique($programs);
-
-} else {
-    $programs = $selected_programs;
+    $programs = ipo_sort_programs_by_next_event( array_unique( $programs ) );
 }
 
 

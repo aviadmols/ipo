@@ -130,9 +130,18 @@ iframe{
 
  <?php 
 
-           $program_related_programsnew = get_field('program_related_programs');
+        /* האזור "עמוד Simple" במסך "תוכניות מקושרות" שתחת תפריט Event Table. */
+        $related_ids = function_exists( 'ipo_related_programs_get_ids' )
+            ? ipo_related_programs_get_ids(
+                'simple_page',
+                array(
+                    'post_id'     => get_the_ID(),
+                    'manual_pick' => get_field( 'program_related_programs' ),
+                )
+            )
+            : array();
 
-        if(!empty($program_related_programsnew)):
+        if ( ! empty( $related_ids ) ) :
         ?>
 
         <section class="moreConcerts container max-1200 pb-100">
@@ -151,21 +160,11 @@ iframe{
          <div class="splide moreConcerts-splide" aria-label="<?php echo esc_attr( get_field('title_programs', $post_id) ?: 'לרכישת כרטיסים' ); ?>">
             <div class="splide__track">
                 <ul class="splide__list">
-            <?php 
-        
-                foreach($program_related_programsnew as $related_program_id){ 
-
-                    $ipo_created_events = get_related_event_ids($related_program_id);
-
-                    if($ipo_created_events){
-                        echo '<li class="splide__slide"><div class="item">';
-                        $theme->the_part('loop-program', $related_program_id);
-                        echo '</div></li>';
-                    }
-                    
-
-                }
-            ?>
+            <?php foreach ( $related_ids as $related_program_id ) : ?>
+                <li class="splide__slide"><div class="item">
+                    <?php $theme->the_part('loop-program', $related_program_id); ?>
+                </div></li>
+            <?php endforeach; ?>
                 </ul>
             </div>
            </div>

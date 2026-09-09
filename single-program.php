@@ -327,15 +327,21 @@ if(ICL_LANGUAGE_CODE == 'en'){
         <!-- =============== More concerts area start =============== -->
 
         <?php
-        /* המודול כולו נשלט מהמסך "תוכניות מקושרות" שתחת תפריט Event Table.
-           ipo_related_programs_get_items() מחזיר את הרשימה מסוננת וממוינת כבר:
-           חוקיות המקור, תוכניות שנוספו ידנית, מוחרגות, מקודמות בראש, ומיון לפי
-           האירוע העתידי הקרוב ביותר של כל תוכנית. */
-        $related_items = function_exists( 'ipo_related_programs_get_items' )
-            ? ipo_related_programs_get_items( $post_id )
+        /* האזור "עמוד תוכנית" במסך "תוכניות מקושרות" שתחת תפריט Event Table.
+           הרשימה חוזרת מסוננת וממוינת כבר: חוקיות המקור (כולל חוקיות נפרדת לפי
+           הקטגוריה של התוכנית המוצגת), תוכניות ידניות, מוחרגות, מקודמות בראש,
+           ומיון לפי האירוע העתידי הקרוב ביותר. */
+        $related_ids = function_exists( 'ipo_related_programs_get_ids' )
+            ? ipo_related_programs_get_ids(
+                'single_program',
+                array(
+                    'post_id'     => $post_id,
+                    'manual_pick' => get_field( 'program_related_programs', $post_id ),
+                )
+            )
             : array();
 
-        if ( ! empty( $related_items ) ) :
+        if ( ! empty( $related_ids ) ) :
         ?>
 
         <section class="moreConcerts container max-1440 upcoming_area">
@@ -359,15 +365,9 @@ if (ICL_LANGUAGE_CODE == 'he') {
     <div class="splide__track">
         <ul class="splide__list">
 
-    <?php foreach ( $related_items as $related_item ) :
-        $related_id = $related_item['id'];
-    ?>
+    <?php foreach ( $related_ids as $related_id ) : ?>
         <li class="splide__slide">
-        <div class="item <?php
-            $program = new ipo_program($related_id);
-            echo $related_item['post_type'];
-            echo $related_id;
-        ?>">
+        <div class="item <?php echo esc_attr( get_post_type( $related_id ) . $related_id ); ?>">
             <?php $theme->the_part('loop-program', $related_id); ?>
         </div>
         </li>

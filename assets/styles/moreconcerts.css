@@ -55,7 +55,18 @@
 }
 .moreConcerts-splide .splide__arrow img { width: 20px; height: auto; display: block; }
 
-/* Positions mirror the previous owl arrows (style.css:3993/4000): prev on the
-   right, next on the left — kept identical for he/en, as the live site did. */
-.moreConcerts-splide .splide__arrow--prev { right: -50px; left: auto; }
-.moreConcerts-splide .splide__arrow--next { left: -50px; right: auto; }
+/* "prev" sits on the side the track starts from, so the pair swaps with the
+   reading direction: right/left in Hebrew, left/right in English. Splide puts
+   splide--rtl or splide--ltr on the root, which is set from <html lang> in
+   sliders-splide.js. This used to be one rule for both, which left English
+   with the Hebrew arrangement — the arrow on the left moved you forwards. */
+.moreConcerts-splide.splide--rtl .splide__arrow--prev { right: -50px; left: auto; }
+.moreConcerts-splide.splide--rtl .splide__arrow--next { left: -50px; right: auto; }
+
+.moreConcerts-splide.splide--ltr .splide__arrow--prev { left: -50px; right: auto; }
+.moreConcerts-splide.splide--ltr .splide__arrow--next { right: -50px; left: auto; }
+
+/* Splide disables an arrow once there is nothing further that way (type is
+   'slide', so the track does not loop). Its own stylesheet only fades one to
+   0.7; hide it instead, and with it both arrows when everything already fits. */
+.moreConcerts-splide .splide__arrow:disabled { display: none; }

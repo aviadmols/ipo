@@ -22,9 +22,16 @@
             ? { left: '25px', right: '20%' }
             : { right: '25px', left: '20%' };
 
-        // Reuse the same arrow SVGs the old owl nav used.
-        var arrowPrev = '<img src="/wp-content/uploads/2023/02/small_icons_arrow_copy_6.svg" alt="">';
-        var arrowNext = '<img src="/wp-content/uploads/2023/02/small_icons_arrow_copy_7.svg" alt="">';
+        // The same arrow SVGs the old owl nav used. copy_7 is the raw polygon,
+        // tip on the left; copy_6 is that polygon under scale(-1, 1), so it
+        // points right. Which of the two is "prev" follows the reading
+        // direction — hard-coding it left English with a left-hand arrow that
+        // moved the track forwards.
+        var arrowLeft  = '<img src="/wp-content/uploads/2023/02/small_icons_arrow_copy_7.svg" alt="">';
+        var arrowRight = '<img src="/wp-content/uploads/2023/02/small_icons_arrow_copy_6.svg" alt="">';
+
+        var arrowPrev = isEn ? arrowLeft : arrowRight;
+        var arrowNext = isEn ? arrowRight : arrowLeft;
 
         var sliders = document.querySelectorAll('.moreConcerts-splide');
         for (var i = 0; i < sliders.length; i++) {

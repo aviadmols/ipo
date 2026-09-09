@@ -64,6 +64,13 @@ class IPO_Search_Index {
 	 * @return array<string, mixed> Report.
 	 */
 	public static function build_all() {
+		// A build walks a few thousand posts. Give it room rather than letting it
+		// die halfway through and take the request down with a critical error.
+		if ( function_exists( 'set_time_limit' ) ) {
+			@set_time_limit( 300 );
+		}
+		wp_raise_memory_limit( 'admin' );
+
 		$started = microtime( true );
 		$files   = array();
 		$counts  = array();
@@ -208,8 +215,10 @@ class IPO_Search_Index {
 		}
 
 		update_meta_cache( 'post', $ids );
+		self::prime_attachments( $ids );
 
-		$now = time();
+		$venues = self::venues_by_program();
+		$now    = time();
 
 		foreach ( $ids as $id ) {
 
@@ -238,12 +247,12 @@ class IPO_Search_Index {
 				$title,
 				self::relative_link( $id, $data['home'] ),
 				self::relative_image( $id, $data['up'] ),
-				(string) get_field( 'program_subtitle', $id ),
+				(string) get_post_meta( $id, 'program_subtitle', true ),
 			);
 
 			if ( $upcoming ) {
 				$row[] = $upcoming;
-				$row[] = self::venues( $id );
+				$row[] = isset( $venues[ $id ] ) ? $venues[ $id ] : '';
 				$data['pr'][] = $row;
 			} else {
 				// Nothing ahead: keep it for the "past concerts" toggle, but only
@@ -286,6 +295,13 @@ class IPO_Search_Index {
 				'suppress_filters' => false,
 			)
 		);
+
+		if ( empty( $ids ) ) {
+			return;
+		}
+
+		update_meta_cache( 'post', $ids );
+		self::prime_attachments( $ids );
 
 		foreach ( (array) $ids as $id ) {
 			$title = get_the_title( $id );
@@ -333,26 +349,74 @@ class IPO_Search_Index {
 	}
 
 	/**
-	 * Distinct venue names for a program, as one short string.
+	 * Venue names for every program at once.
 	 *
-	 * @param int $program_id Program.
-	 * @return string
+	 * The first version of this ran get_related_event_ids() plus a term lookup
+	 * per program: roughly 3,000 queries across ~700 programs and ~2,000 events,
+	 * which ran the build straight into the PHP time limit and took the site
+	 * down with a critical error. One join does the same work.
+	 *
+	 * @return array<int, string> program id => "venue, venue"
 	 */
-	protected static function venues( $program_id ) {
-		$events = function_exists( 'get_related_event_ids' ) ? get_related_event_ids( $program_id ) : array();
-		$names  = array();
+	protected static function venues_by_program() {
+		global $wpdb;
 
-		foreach ( (array) $events as $event_id ) {
-			$terms = wp_get_post_terms( $event_id, 'location', array( 'fields' => 'names' ) );
-			if ( is_wp_error( $terms ) ) {
+		$rows = $wpdb->get_results(
+			"SELECT rel.meta_value AS program_id, t.name AS venue
+			 FROM {$wpdb->postmeta} rel
+			 INNER JOIN {$wpdb->posts} e
+			         ON e.ID = rel.post_id AND e.post_type = 'event' AND e.post_status = 'publish'
+			 INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = e.ID
+			 INNER JOIN {$wpdb->term_taxonomy} tt
+			         ON tt.term_taxonomy_id = tr.term_taxonomy_id AND tt.taxonomy = 'location'
+			 INNER JOIN {$wpdb->terms} t ON t.term_id = tt.term_id
+			 WHERE rel.meta_key = 'related_to_program'
+			 GROUP BY rel.meta_value, t.name",
+			ARRAY_A
+		);
+
+		$names = array();
+
+		foreach ( (array) $rows as $row ) {
+			$program_id = (int) $row['program_id'];
+			if ( ! $program_id ) {
 				continue;
 			}
-			foreach ( $terms as $name ) {
-				$names[ $name ] = true;
+			$names[ $program_id ][] = $row['venue'];
+		}
+
+		foreach ( $names as $program_id => $list ) {
+			$names[ $program_id ] = implode( ', ', $list );
+		}
+
+		return $names;
+	}
+
+	/**
+	 * Load the attachments a set of posts point at, in one go.
+	 *
+	 * Without this every relative_image() call fetches its own attachment row,
+	 * which is the other half of what made the build time out.
+	 *
+	 * @param array $ids Post IDs whose images are about to be read.
+	 */
+	protected static function prime_attachments( $ids ) {
+		$attachments = array();
+
+		foreach ( (array) $ids as $id ) {
+			foreach ( array( 'program_banner_image', '_thumbnail_id' ) as $key ) {
+				$value = get_post_meta( $id, $key, true );
+				if ( $value && is_numeric( $value ) ) {
+					$attachments[] = (int) $value;
+				}
 			}
 		}
 
-		return implode( ', ', array_keys( $names ) );
+		$attachments = array_unique( array_filter( $attachments ) );
+
+		if ( $attachments ) {
+			_prime_post_caches( $attachments, false, true );
+		}
 	}
 
 	/**
@@ -377,16 +441,16 @@ class IPO_Search_Index {
 	protected static function relative_image( $id, $up ) {
 		$image = '';
 
-		$banner = get_field( 'program_banner_image', $id );
-		if ( is_array( $banner ) && ! empty( $banner['sizes']['medium'] ) ) {
-			$image = $banner['sizes']['medium'];
-		} elseif ( is_array( $banner ) && ! empty( $banner['url'] ) ) {
-			$image = $banner['url'];
+		// Raw meta rather than get_field(): ACF stores the attachment ID here, and
+		// asking it for the formatted array rebuilds every size on every call.
+		$banner = get_post_meta( $id, 'program_banner_image', true );
+
+		if ( $banner && is_numeric( $banner ) ) {
+			$image = wp_get_attachment_image_url( (int) $banner, 'medium' );
 		}
 
 		if ( ! $image ) {
-			$thumb = get_the_post_thumbnail_url( $id, 'medium' );
-			$image = $thumb ? $thumb : '';
+			$image = get_the_post_thumbnail_url( $id, 'medium' );
 		}
 
 		if ( ! $image ) {

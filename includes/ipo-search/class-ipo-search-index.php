@@ -286,8 +286,8 @@ class IPO_Search_Index {
 
 				foreach ( $ids as $id ) {
 
-					$title = get_the_title( $id );
-					if ( '' === trim( $title ) ) {
+					$title = self::text( get_the_title( $id ) );
+					if ( "" === $title ) {
 						continue;
 					}
 
@@ -311,7 +311,7 @@ class IPO_Search_Index {
 						$title,
 						self::relative_link( $id, $data['home'] ),
 						self::relative_image( $id, $data['up'] ),
-						(string) get_post_meta( $id, 'program_subtitle', true ),
+						self::text( get_post_meta( $id, "program_subtitle", true ) ),
 					);
 
 					if ( $upcoming ) {
@@ -356,8 +356,8 @@ class IPO_Search_Index {
 			'artist',
 			function ( $ids ) use ( &$data ) {
 				foreach ( $ids as $id ) {
-					$title = get_the_title( $id );
-					if ( '' === trim( $title ) ) {
+					$title = self::text( get_the_title( $id ) );
+					if ( "" === $title ) {
 						continue;
 					}
 
@@ -383,8 +383,8 @@ class IPO_Search_Index {
 			$type,
 			function ( $ids ) use ( &$data, $key ) {
 				foreach ( $ids as $id ) {
-					$title = get_the_title( $id );
-					if ( '' === trim( $title ) ) {
+					$title = self::text( get_the_title( $id ) );
+					if ( "" === $title ) {
 						continue;
 					}
 
@@ -431,7 +431,7 @@ class IPO_Search_Index {
 			if ( ! $program_id ) {
 				continue;
 			}
-			$names[ $program_id ][] = $row['venue'];
+			$names[ $program_id ][] = self::text( $row["venue"] );
 		}
 
 		foreach ( $names as $program_id => $list ) {
@@ -531,6 +531,29 @@ class IPO_Search_Index {
 		if ( $attachments ) {
 			_prime_post_caches( $attachments, false, true );
 		}
+	}
+
+	/**
+	 * Plain text, ready to be stored in the index.
+	 *
+	 * WordPress hands titles back with HTML entities still in them — &quot; for a
+	 * quote, &#8211; for an en dash. The search UI escapes everything it renders,
+	 * so an entity left in here gets escaped a second time and the visitor reads
+	 * a literal "&quot;" on screen. Decoding once, here, means the index holds
+	 * real characters and the escaping on the way out stays correct.
+	 *
+	 * Also collapses runs of whitespace, non-breaking spaces included, which is
+	 * where the odd gaps mid-title were coming from.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	protected static function text( $value ) {
+		$value = wp_strip_all_tags( (string) $value );
+		$value = html_entity_decode( $value, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		$value = preg_replace( '/[\s\x{00A0}]+/u', ' ', $value );
+
+		return trim( (string) $value );
 	}
 
 	/**

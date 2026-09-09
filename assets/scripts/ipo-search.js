@@ -180,6 +180,18 @@
 			return;
 		}
 
+		// Typing can start before the index has finished downloading — open the
+		// box and type straight away on a slow connection and this runs with
+		// nothing to search. Wait for it and come back rather than throwing.
+		if (!index) {
+			loadIndex()
+				.then(function () {
+					render(panel, term);
+				})
+				.catch(function () {});
+			return;
+		}
+
 		var programs = match(index.pr || [], needle, LIMIT_PROGRAMS);
 		var past = showPast ? match(index.pp || [], needle, LIMIT_PROGRAMS) : [];
 		var artists = match(index.ar || [], needle, LIMIT_SIDE);
@@ -280,13 +292,37 @@
 				return;
 			}
 			event.preventDefault();
+
+			// Rendering replaces the panel's contents, which detaches this button
+			// before the click finishes bubbling. The outside-click handler on
+			// document would then find the target no longer inside the box and
+			// close the whole thing. Stop it here.
+			event.stopPropagation();
+
 			showPast = !showPast;
 			render(panel, input.value);
 		});
 
+		// On narrow screens the panel is fixed to the viewport rather than hung off
+		// the box, so it needs to be told where the header ends. That edge moves
+		// between pages and between the sticky and resting states, so read it at
+		// the moment of opening instead of guessing a constant.
+		function positionPanel() {
+			if (getComputedStyle(panel).position !== 'fixed') {
+				panel.style.top = '';
+				return;
+			}
+
+			var header = root.closest('header') || document.querySelector('header.header');
+			var bottom = header ? header.getBoundingClientRect().bottom : 0;
+
+			panel.style.top = Math.max(0, Math.round(bottom) + 12) + 'px';
+		}
+
 		function open() {
 			root.classList.add('is-open');
 			toggle.setAttribute('aria-expanded', 'true');
+			positionPanel();
 			loadIndex().then(function () {
 				input.focus();
 				if (input.value) {
@@ -294,6 +330,12 @@
 				}
 			});
 		}
+
+		window.addEventListener('resize', function () {
+			if (root.classList.contains('is-open')) {
+				positionPanel();
+			}
+		});
 
 		function close() {
 			root.classList.remove('is-open');
@@ -317,7 +359,19 @@
 		});
 
 		document.addEventListener('click', function (event) {
-			if (root.classList.contains('is-open') && !root.contains(event.target)) {
+			if (!root.classList.contains('is-open')) {
+				return;
+			}
+
+			// A target that is no longer in the document was almost certainly
+			// removed by our own re-render, not clicked outside the box. Treating
+			// it as an outside click is what used to close the panel on any
+			// button inside it that redraws.
+			if (!document.contains(event.target)) {
+				return;
+			}
+
+			if (!root.contains(event.target)) {
 				close();
 			}
 		});

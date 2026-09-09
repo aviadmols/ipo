@@ -133,7 +133,15 @@ function ipo_related_programs_get_settings() {
 				continue;
 			}
 
-			$settings[ $zone_key ]['by_category'][ $term_id ] = ipo_related_programs_sanitize_ruleset( $ruleset );
+			$rule = ipo_related_programs_sanitize_ruleset( $ruleset );
+
+			// A category rule is a mapping — "for a programme in this category,
+			// show these categories" — so the source mode is not a choice. It
+			// used to be, and leaving the radio on its "same category" default
+			// made a filled-in category list do nothing at all.
+			$rule['mode'] = 'categories';
+
+			$settings[ $zone_key ]['by_category'][ $term_id ] = $rule;
 		}
 	}
 
@@ -208,22 +216,12 @@ function ipo_related_programs_resolve_ruleset( $zone_key, $zone_settings, $post_
 		return $zone_settings['default'];
 	}
 
+	// category_program is not registered with WPML — there are five terms and
+	// both languages share them, so an English programme carries the same term
+	// ids a Hebrew one does and the stored rule matches directly.
 	foreach ( $terms as $term_id ) {
-		// Overrides are stored against whichever language the admin was in.
-		foreach ( array( (int) $term_id, (int) apply_filters( 'wpml_object_id', $term_id, 'category_program', true ) ) as $candidate ) {
-			if ( $candidate && isset( $zone_settings['by_category'][ $candidate ] ) ) {
-				return $zone_settings['by_category'][ $candidate ];
-			}
-		}
-
-		// The override may equally have been saved against a translation of
-		// this term, so try mapping the stored keys forward as well.
-		foreach ( $zone_settings['by_category'] as $stored_term => $ruleset ) {
-			$mapped = apply_filters( 'wpml_object_id', $stored_term, 'category_program', true );
-
-			if ( $mapped && (int) $mapped === (int) $term_id ) {
-				return $ruleset;
-			}
+		if ( isset( $zone_settings['by_category'][ (int) $term_id ] ) ) {
+			return $zone_settings['by_category'][ (int) $term_id ];
 		}
 	}
 
@@ -240,7 +238,8 @@ function ipo_related_programs_build_pool( $ruleset, $post_id ) {
 		$terms = wp_get_post_terms( $post_id, 'category_program', array( 'fields' => 'ids' ) );
 		$terms = is_wp_error( $terms ) ? array() : $terms;
 	} elseif ( $ruleset['mode'] === 'categories' ) {
-		$terms = ipo_related_programs_translate_ids( $ruleset['categories'], 'category_program' );
+		// Shared across languages — see ipo_related_programs_resolve_ruleset().
+		$terms = array_map( 'intval', $ruleset['categories'] );
 	} else {
 		$terms = array();
 	}

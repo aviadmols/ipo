@@ -105,10 +105,20 @@ function ipo_related_programs_admin_picker( $name, $selected, $description ) {
 /**
  * The rule fields, shared by a zone default and by every category override.
  *
- * @param string $prefix Input name prefix, e.g. zones[single_program][default].
+ * A category override is a mapping — "for a programme in this category, show
+ * these categories" — so it hides the source radio and forces the categories
+ * mode. The radio used to show there too, and leaving it on its "same
+ * category" default made a filled-in category list do nothing at all.
+ *
+ * @param string $prefix      Input name prefix, e.g. zones[single_program][default].
+ * @param bool   $show_source Whether the source rule is the editor's to choose.
  */
 function ipo_related_programs_admin_ruleset_fields( $prefix, $ruleset, $show_source = true ) {
 	$categories = ipo_related_programs_admin_categories();
+
+	if ( ! $show_source ) {
+		echo '<input type="hidden" name="' . esc_attr( $prefix ) . '[mode]" value="categories">';
+	}
 	?>
 	<table class="form-table" role="presentation">
 		<?php if ( $show_source ) : ?>
@@ -131,7 +141,7 @@ function ipo_related_programs_admin_ruleset_fields( $prefix, $ruleset, $show_sou
 			</tr>
 		<?php endif; ?>
 		<tr>
-			<th scope="row">קטגוריות</th>
+			<th scope="row"><?php echo $show_source ? 'קטגוריות' : 'הקטגוריות שיוצגו'; ?></th>
 			<td>
 				<?php if ( empty( $categories ) ) : ?>
 					<p class="description">לא נמצאו קטגוריות תוכנית.</p>
@@ -146,10 +156,24 @@ function ipo_related_programs_admin_ruleset_fields( $prefix, $ruleset, $show_sou
 							<span class="description">(<?php echo (int) $category->count; ?>)</span>
 						</label>
 					<?php endforeach; ?>
-					<p class="description">פעיל כשנבחר &laquo;הקטגוריות שסומנו כאן&raquo;.</p>
+					<p class="description">
+						<?php echo $show_source
+							? 'פעיל כשנבחר &laquo;הקטגוריות שסומנו כאן&raquo;.'
+							: 'התוכניות יישלפו מהקטגוריות האלה. הקטגוריות משותפות לעברית ולאנגלית, והשליפה תמיד בשפת העמוד.'; ?>
+					</p>
 				<?php endif; ?>
 			</td>
 		</tr>
+	</table>
+
+	<?php // Everything below is the same for both, and folded away on a
+		// category rule so the mapping itself stays the visible part. ?>
+	<?php if ( ! $show_source ) : ?>
+		<details style="margin:4px 0 12px;">
+		<summary style="cursor:pointer;">הגדרות מתקדמות לקטגוריה זו</summary>
+	<?php endif; ?>
+
+	<table class="form-table" role="presentation">
 		<tr>
 			<th scope="row">הוספה ידנית</th>
 			<td><?php ipo_related_programs_admin_picker( $prefix . '[manual_ids]', $ruleset['manual_ids'], 'תוכניות שיצטרפו גם אם חוקיות הקטגוריה לא מביאה אותן.' ); ?></td>
@@ -189,6 +213,10 @@ function ipo_related_programs_admin_ruleset_fields( $prefix, $ruleset, $show_sou
 			</td>
 		</tr>
 	</table>
+
+	<?php if ( ! $show_source ) : ?>
+		</details>
+	<?php endif; ?>
 	<?php
 }
 
@@ -300,11 +328,17 @@ function ipo_related_programs_admin_page() {
 					<?php ipo_related_programs_admin_ruleset_fields( 'zones[' . $zone_key . '][default]', $zone_settings['default'] ); ?>
 
 					<?php if ( ! empty( $zone['category_rules'] ) && ! empty( $categories ) ) : ?>
-						<h3>חוקיות לפי קטגוריה</h3>
+						<h3>מיפוי לפי קטגוריה</h3>
 						<p class="description" style="max-width:760px;">
-							כשהתוכנית המוצגת שייכת לקטגוריה שסומנה כאן, החוקיות שלה מחליפה את ברירת המחדל.
-							למשל: בקטגוריית ילדים אפשר לבחור &laquo;הקטגוריות שסומנו כאן&raquo; ולסמן גם ילדים וגם קאמרי.
-							אם התוכנית שייכת לכמה קטגוריות, הראשונה עם חוקיות פעילה היא שקובעת.
+							לכל קטגוריה אפשר לקבוע מאילו קטגוריות יישלפו התוכניות שיוצגו לצידה.
+							למשל: בתוכניות <strong>קלאסי</strong> לסמן קלאסי ומיוחדים, ובתוכניות
+							<strong>ילדים</strong> לסמן ילדים וסרטים. קטגוריה שלא סומנה כאן ממשיכה
+							לפי חוקיות ברירת המחדל שלמעלה. אם תוכנית שייכת לכמה קטגוריות — הראשונה
+							עם מיפוי פעיל היא שקובעת.
+						</p>
+						<p class="description" style="max-width:760px;">
+							הקטגוריות משותפות לעברית ולאנגלית, ולכן המיפוי חל על שתי השפות.
+							השליפה עצמה תמיד בשפת העמוד — עמוד אנגלי יציג תוכניות אנגליות בלבד.
 						</p>
 
 						<?php foreach ( $categories as $category ) : ?>
@@ -324,11 +358,11 @@ function ipo_related_programs_admin_page() {
 											   value="1"
 											   <?php checked( $enabled ); ?>>
 										<?php echo esc_html( $category->name ); ?>
-										<span class="description">— חוקיות נפרדת</span>
+										<span class="description">— מיפוי נפרד</span>
 									</label>
 								</h4>
 								<div class="ipo-category-body" <?php echo $enabled ? '' : 'hidden'; ?>>
-									<?php ipo_related_programs_admin_ruleset_fields( $prefix, $category_rule ); ?>
+									<?php ipo_related_programs_admin_ruleset_fields( $prefix, $category_rule, false ); ?>
 								</div>
 							</div>
 						<?php endforeach; ?>

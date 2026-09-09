@@ -1,0 +1,304 @@
+/**
+ * IPO Search — header search box and results panel.
+ *
+ * Deliberately self-contained: no variables or mixins from the theme sheets, so
+ * this file can be dropped in or pulled out without touching anything else.
+ * Colours follow the header's own black-on-white treatment.
+ */
+
+.ipo-search {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+/* --- the magnifier button --- */
+
+.ipo-search__toggle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+	transition: opacity 0.2s;
+}
+
+.ipo-search__toggle:hover {
+	opacity: 0.65;
+}
+
+/* --- the field, which slides open next to the button --- */
+
+.ipo-search__form {
+	width: 0;
+	overflow: hidden;
+	transition: width 0.3s ease;
+}
+
+.ipo-search.is-open .ipo-search__form {
+	width: 220px;
+}
+
+.ipo-search__input {
+	width: 100%;
+	padding: 4px 8px;
+	border: 0;
+	border-bottom: 1px solid currentColor;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-size: 16px;
+	outline: none;
+	border-radius: 0;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.ipo-search__input::placeholder {
+	color: inherit;
+	opacity: 0.55;
+}
+
+/* Safari draws its own clear button on type=search. */
+.ipo-search__input::-webkit-search-decoration,
+.ipo-search__input::-webkit-search-cancel-button {
+	-webkit-appearance: none;
+}
+
+/* --- results panel --- */
+
+.ipo-search__panel {
+	position: absolute;
+	top: calc(100% + 12px);
+	inset-inline-end: 0;
+	z-index: 1200;
+	display: none;
+	width: min(860px, calc(100vw - 40px));
+	max-height: min(70vh, 620px);
+	overflow-y: auto;
+	padding: 20px 24px;
+	background: #fff;
+	color: #000;
+	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
+	text-align: start;
+}
+
+.ipo-search__panel.is-open {
+	display: block;
+}
+
+.ipo-search__layout {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 8px 32px;
+}
+
+@media (min-width: 760px) {
+	.ipo-search__layout:has(.ipo-search__side) {
+		grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+	}
+}
+
+.ipo-search__side {
+	border-top: 1px solid #e6e6e6;
+	padding-top: 12px;
+}
+
+@media (min-width: 760px) {
+	.ipo-search__side {
+		border-top: 0;
+		border-inline-start: 1px solid #e6e6e6;
+		padding-top: 0;
+		padding-inline-start: 28px;
+	}
+}
+
+.ipo-search__group + .ipo-search__group {
+	margin-top: 18px;
+}
+
+.ipo-search__heading {
+	margin-bottom: 8px;
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: #8a8a8a;
+}
+
+/* --- a program result --- */
+
+.ipo-search__hit {
+	display: flex;
+	gap: 14px;
+	align-items: flex-start;
+	padding: 10px 8px;
+	margin-inline: -8px;
+	color: inherit;
+	text-decoration: none;
+	border-radius: 4px;
+	transition: background 0.15s;
+}
+
+.ipo-search__hit:hover,
+.ipo-search__hit:focus-visible {
+	background: #f4f4f4;
+	color: inherit;
+}
+
+.ipo-search__thumb {
+	flex: 0 0 76px;
+	width: 76px;
+	height: 54px;
+	overflow: hidden;
+	border-radius: 3px;
+	background: #ececec;
+}
+
+.ipo-search__thumb img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.ipo-search__body {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+}
+
+.ipo-search__title {
+	font-size: 17px;
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+.ipo-search__subtitle {
+	font-size: 14px;
+	color: #666;
+	line-height: 1.3;
+}
+
+/* --- the dates, all of them on one row --- */
+
+.ipo-search__dates {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 3px;
+}
+
+.ipo-search__date {
+	padding: 2px 8px;
+	border: 1px solid #d8d8d8;
+	border-radius: 999px;
+	font-size: 12.5px;
+	line-height: 1.5;
+	white-space: nowrap;
+}
+
+.ipo-search__date--more {
+	border-style: dashed;
+	color: #666;
+}
+
+.ipo-search__date--past {
+	border-color: #e6e6e6;
+	color: #888;
+}
+
+.ipo-search__venue {
+	margin-top: 2px;
+	font-size: 12.5px;
+	color: #888;
+}
+
+/* --- side column results --- */
+
+.ipo-search__side-hit {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	padding: 7px 8px;
+	margin-inline: -8px;
+	color: inherit;
+	text-decoration: none;
+	font-size: 15px;
+	border-radius: 4px;
+	transition: background 0.15s;
+}
+
+.ipo-search__side-hit:hover,
+.ipo-search__side-hit:focus-visible {
+	background: #f4f4f4;
+	color: inherit;
+}
+
+.ipo-search__side-thumb {
+	flex: 0 0 34px;
+	width: 34px;
+	height: 34px;
+	overflow: hidden;
+	border-radius: 50%;
+	background: #ececec;
+}
+
+.ipo-search__side-thumb img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+/* --- past-concerts toggle --- */
+
+.ipo-search__past-toggle {
+	margin-top: 16px;
+	padding: 8px 16px;
+	border: 1px solid #cfcfcf;
+	background: transparent;
+	color: #333;
+	font: inherit;
+	font-size: 14px;
+	cursor: pointer;
+	transition: border-color 0.2s, color 0.2s;
+}
+
+.ipo-search__past-toggle:hover {
+	border-color: #000;
+	color: #000;
+}
+
+.ipo-search__empty {
+	padding: 12px 4px;
+	color: #666;
+	font-size: 15px;
+}
+
+/* --- mobile: full width under the header --- */
+
+@media (max-width: 991px) {
+	.ipo-search.is-open .ipo-search__form {
+		width: 160px;
+	}
+
+	.ipo-search__panel {
+		position: fixed;
+		inset-inline: 12px;
+		top: auto;
+		width: auto;
+		max-height: 65vh;
+		padding: 16px;
+	}
+
+	.ipo-search__title {
+		font-size: 16px;
+	}
+}

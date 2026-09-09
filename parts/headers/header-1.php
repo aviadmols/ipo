@@ -14,6 +14,11 @@ if( defined( 'ICL_LANGUAGE_CODE' ) && ICL_LANGUAGE_CODE == 'en' ){
 }
 
 
+
+// The new search takes over only once its index has been built; until then the
+// Ajax Search Pro widget stays, so there is never a moment without a search box.
+$use_new_search = class_exists( 'IPO_Search_Index' ) && IPO_Search_Index::url();
+
 ?>
 <!-- =============== Header area start =============== -->
 <header class="header">
@@ -43,7 +48,11 @@ if( defined( 'ICL_LANGUAGE_CODE' ) && ICL_LANGUAGE_CODE == 'en' ){
 						?>
                         
   <div class="search_input">
-  <div class="search-field-container"><?php echo do_shortcode($search_shortcode); ?></div>
+  <div class="search-field-container"><?php
+	echo $use_new_search
+		? do_shortcode( '[ipo_search]' )
+		: do_shortcode( $search_shortcode );
+  ?></div>
   <!--
                         <img src="/wp-content/uploads/2022/06/search-i1.png" alt="">
                         <img src="/wp-content/uploads/2022/06/search-i2.png" alt=""> -->

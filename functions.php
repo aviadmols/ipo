@@ -45,6 +45,9 @@ require_once(get_template_directory().'/functions.php');
     // AI Bridge: token + read-only DB access for Cursor / Claude
     require_once get_stylesheet_directory() . '/includes/ai-bridge/bootstrap.php';
 
+    // Search: a static JSON index instead of live admin-ajax queries
+    require_once get_stylesheet_directory() . '/includes/ipo-search/bootstrap.php';
+
 
 
 

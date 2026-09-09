@@ -223,6 +223,16 @@ class IPO_Search_Index {
 		self::stage( "pages" );
 		self::collect_simple( $data, 'pg', 'page' );
 
+		// The CMS holds the same artist, series and page under several posts, so
+		// collapse them before they reach the file rather than showing a visitor
+		// the same name four times over.
+		self::stage( 'dedupe' );
+		$data['pr'] = self::dedupe_programs( $data['pr'] );
+		$data['pp'] = self::dedupe( $data['pp'] );
+		$data['ar'] = self::dedupe( $data['ar'], true );
+		$data['se'] = self::dedupe( $data['se'] );
+		$data['pg'] = self::dedupe( $data['pg'] );
+
 		return $data;
 	}
 
@@ -364,7 +374,7 @@ class IPO_Search_Index {
 					$data['ar'][] = array(
 						$title,
 						self::relative_link( $id, $data['home'] ),
-						self::relative_image( $id, $data['up'] ),
+						self::relative_image( $id, $data["up"], array( "image" ) ),
 					);
 				}
 			}
@@ -518,7 +528,7 @@ class IPO_Search_Index {
 		$attachments = array();
 
 		foreach ( (array) $ids as $id ) {
-			foreach ( array( 'program_banner_image', '_thumbnail_id' ) as $key ) {
+			foreach ( array( "program_banner_image", "image", "_thumbnail_id" ) as $key ) {
 				$value = get_post_meta( $id, $key, true );
 				if ( $value && is_numeric( $value ) ) {
 					$attachments[] = (int) $value;
@@ -531,6 +541,104 @@ class IPO_Search_Index {
 		if ( $attachments ) {
 			_prime_post_caches( $attachments, false, true );
 		}
+	}
+
+	/**
+	 * Key two rows are considered the same by.
+	 *
+	 * @param string $title Row title.
+	 * @return string
+	 */
+	protected static function dedupe_key( $title ) {
+		return function_exists( 'mb_strtolower' ) ? mb_strtolower( $title, 'UTF-8' ) : strtolower( $title );
+	}
+
+	/**
+	 * Collapse rows that share a title.
+	 *
+	 * The same person or series exists several times over in the CMS, entered
+	 * once per role or re-imported over the years — "להב שני" alone is four
+	 * artist posts with four different slugs. They are indistinguishable to
+	 * someone searching, so showing four identical lines is just noise.
+	 *
+	 * Which one survives is decided rather than left to chance: the one that has
+	 * a picture wins, and between two equals the shorter URL, which on this site
+	 * is reliably the original rather than the "-2" copy.
+	 *
+	 * Order is preserved, so lists that arrive sorted by date stay sorted.
+	 *
+	 * @param array $rows      Rows to collapse.
+	 * @param bool  $has_image Whether row[2] holds an image.
+	 * @return array
+	 */
+	protected static function dedupe( $rows, $has_image = false ) {
+		$kept = array();
+
+		foreach ( $rows as $row ) {
+			$key = self::dedupe_key( $row[0] );
+
+			if ( ! isset( $kept[ $key ] ) ) {
+				$kept[ $key ] = $row;
+				continue;
+			}
+
+			$current = $kept[ $key ];
+
+			if ( $has_image ) {
+				$row_has     = ! empty( $row[2] );
+				$current_has = ! empty( $current[2] );
+
+				if ( $row_has !== $current_has ) {
+					if ( $row_has ) {
+						$kept[ $key ] = $row;
+					}
+					continue;
+				}
+			}
+
+			if ( strlen( $row[1] ) < strlen( $current[1] ) ) {
+				$kept[ $key ] = $row;
+			}
+		}
+
+		return array_values( $kept );
+	}
+
+	/**
+	 * Collapse duplicate upcoming programs, pooling their dates.
+	 *
+	 * Same idea as dedupe(), but throwing away a duplicate here would throw away
+	 * its dates with it — and those are the whole point of the row. The dates are
+	 * merged instead, so a concert entered twice shows once with every date it
+	 * actually runs on.
+	 *
+	 * @param array $rows Upcoming program rows.
+	 * @return array
+	 */
+	protected static function dedupe_programs( $rows ) {
+		$kept = array();
+
+		foreach ( $rows as $row ) {
+			$key = self::dedupe_key( $row[0] );
+
+			if ( ! isset( $kept[ $key ] ) ) {
+				$kept[ $key ] = $row;
+				continue;
+			}
+
+			$kept[ $key ][4] = array_values( array_unique( array_merge( $kept[ $key ][4], $row[4] ) ) );
+			sort( $kept[ $key ][4] );
+
+			if ( empty( $kept[ $key ][2] ) && ! empty( $row[2] ) ) {
+				$kept[ $key ][2] = $row[2];
+			}
+
+			if ( empty( $kept[ $key ][5] ) && ! empty( $row[5] ) ) {
+				$kept[ $key ][5] = $row[5];
+			}
+		}
+
+		return array_values( $kept );
 	}
 
 	/**
@@ -601,15 +709,21 @@ class IPO_Search_Index {
 	 * @param string $up Uploads URL with trailing slash.
 	 * @return string
 	 */
-	protected static function relative_image( $id, $up ) {
+	protected static function relative_image( $id, $up, $keys = array( 'program_banner_image' ) ) {
 		$image = '';
 
 		// Raw meta rather than get_field(): ACF stores the attachment ID here, and
 		// asking it for the formatted array rebuilds every size on every call.
-		$banner = get_post_meta( $id, 'program_banner_image', true );
+		foreach ( (array) $keys as $key ) {
+			$value = get_post_meta( $id, $key, true );
 
-		if ( $banner && is_numeric( $banner ) ) {
-			$image = self::smallest_size( (int) $banner );
+			if ( $value && is_numeric( $value ) ) {
+				$image = self::smallest_size( (int) $value );
+			}
+
+			if ( $image ) {
+				break;
+			}
 		}
 
 		if ( ! $image ) {

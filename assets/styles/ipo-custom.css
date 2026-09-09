@@ -8050,19 +8050,14 @@ header.sticky .desktop-menu .menu > li > .sub-menu:after{
 		filter: brightness(0) !important;
 	}
 
-	/* --- logo: swap to the dark variant, exactly like header.sticky --- */
-	header.header.mega-open .logo div:nth-child(1),
-	header.header:has(.desktop-menu .menu-pc > .menu > .menu-item-has-children:is(:hover, .hover)) .logo div:nth-child(1) {
-		display: none;
-	}
-
-	header.header.mega-open .logo div:nth-child(2),
-	header.header:has(.desktop-menu .menu-pc > .menu > .menu-item-has-children:is(:hover, .hover)) .logo div:nth-child(2) {
-		display: block;
-	}
-
+	/* --- logo: just drop the invert, do not swap variants --- */
+	/* The dark <img> variant is a lazy-load placeholder that never loads while it
+	   is display:none, so swapping to it left no logo at all. The lottie defaults
+	   to filter: invert(100%) (white on the hero); clearing that gives a dark logo
+	   on the white bar with nothing to load. */
 	header.header.mega-open .logo-lottie,
 	header.header:has(.desktop-menu .menu-pc > .menu > .menu-item-has-children:is(:hover, .hover)) .logo-lottie {
-		display: none !important;
+		-webkit-filter: none !important;
+		filter: none !important;
 	}
 }

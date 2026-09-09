@@ -1097,7 +1097,16 @@ jQuery(document).ready(function($) {
 	var $targets = $('.desktop-menu .menu-pc').add('header.header');
 
 	function set_mega_open(is_open) {
-		$targets.toggleClass('mega-open', is_open);
+		$targets.toggleClass("mega-open", is_open);
+	}
+
+	// Native matches(), not $items.filter(":hover"): jQuery 3.6 dropped :hover from
+	// Sizzle and throws "unsupported pseudo: hover", which would kill the timeout
+	// below and leave the bar stuck white.
+	function any_item_hovered() {
+		return $items.toArray().some(function(el) {
+			return el.matches(":hover");
+		});
 	}
 
 	$items.on('mouseenter', function() {
@@ -1107,7 +1116,7 @@ jQuery(document).ready(function($) {
 	$items.on('mouseleave', function() {
 		setTimeout(function() {
 			// Still inside one of them (moved between items, or into the panel)? Stay open.
-			if (!$items.filter(':hover').length) {
+			if (!any_item_hovered()) {
 				set_mega_open(false);
 			}
 		}, 1000);

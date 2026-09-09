@@ -21,19 +21,91 @@ class IPO_Search {
 
 	const HANDLE = 'ipo-search';
 
+	/** Hour of the day (site time, 0-23) the nightly build runs at. */
+	const OPTION_HOUR = 'ipo_search_build_hour';
+
+	/** Default build hour: the quietest part of the night. */
+	const DEFAULT_HOUR = 4;
+
 	public static function init() {
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'assets' ) );
 		add_shortcode( 'ipo_search', array( __CLASS__, 'shortcode' ) );
 
-		// Rebuild triggers.
+		// The build is deliberately NOT tied to saving a post. Editors publish in
+		// bursts, and rebuilding the whole index on each one would mean walking a
+		// few thousand posts over and over for no benefit. It runs once a night,
+		// or on demand from the button.
 		add_action( IPO_Search_Index::CRON_HOOK, array( 'IPO_Search_Index', 'build_all' ) );
-		add_action( 'save_post', array( __CLASS__, 'schedule_rebuild_on_save' ), 10, 2 );
 		add_action( 'admin_post_ipo_search_rebuild', array( __CLASS__, 'handle_manual_rebuild' ) );
+		add_action( 'admin_post_ipo_search_save_hour', array( __CLASS__, 'handle_save_hour' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 
-		if ( ! wp_next_scheduled( IPO_Search_Index::CRON_HOOK ) ) {
-			wp_schedule_event( time() + HOUR_IN_SECONDS, 'twicedaily', IPO_Search_Index::CRON_HOOK );
+		self::ensure_schedule();
+	}
+
+	/**
+	 * @return int Hour of day, 0-23.
+	 */
+	public static function build_hour() {
+		$hour = get_option( self::OPTION_HOUR, self::DEFAULT_HOUR );
+		$hour = is_numeric( $hour ) ? (int) $hour : self::DEFAULT_HOUR;
+		return max( 0, min( 23, $hour ) );
+	}
+
+	/**
+	 * Next time the given hour comes round, in the site's own timezone.
+	 *
+	 * wp_schedule_event() wants a UTC timestamp, but the hour the user picked is
+	 * the hour they see on the clock — so the conversion has to go through
+	 * wp_timezone() rather than assuming the server runs on local time.
+	 *
+	 * @param int $hour Hour of day, 0-23.
+	 * @return int Unix timestamp.
+	 */
+	protected static function next_run( $hour ) {
+		$timezone = wp_timezone();
+		$now      = new DateTime( 'now', $timezone );
+		$next     = new DateTime( 'today ' . sprintf( '%02d:00:00', $hour ), $timezone );
+
+		if ( $next <= $now ) {
+			$next->modify( '+1 day' );
 		}
+
+		return $next->getTimestamp();
+	}
+
+	/**
+	 * Make sure a daily build is queued for the configured hour.
+	 *
+	 * @param bool $force Reschedule even if one is already queued.
+	 */
+	public static function ensure_schedule( $force = false ) {
+		$existing = wp_next_scheduled( IPO_Search_Index::CRON_HOOK );
+
+		if ( $existing && ! $force ) {
+			return;
+		}
+
+		if ( $existing ) {
+			wp_unschedule_event( $existing, IPO_Search_Index::CRON_HOOK );
+		}
+
+		wp_schedule_event( self::next_run( self::build_hour() ), 'daily', IPO_Search_Index::CRON_HOOK );
+	}
+
+	public static function handle_save_hour() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( 'Forbidden' );
+		}
+		check_admin_referer( 'ipo_search_save_hour' );
+
+		$hour = isset( $_POST['build_hour'] ) ? (int) $_POST['build_hour'] : self::DEFAULT_HOUR;
+		update_option( self::OPTION_HOUR, max( 0, min( 23, $hour ) ), false );
+
+		self::ensure_schedule( true );
+
+		wp_safe_redirect( add_query_arg( array( 'page' => 'ipo-search', 'saved' => '1' ), admin_url( 'tools.php' ) ) );
+		exit;
 	}
 
 	public static function assets() {
@@ -126,32 +198,6 @@ class IPO_Search {
 		return trim( ob_get_clean() );
 	}
 
-	/**
-	 * Queue a rebuild after content that the index covers is edited.
-	 *
-	 * Debounced through a single cron event rather than rebuilt inline: saving
-	 * a program should not make the editor wait for ~700 programs to be walked.
-	 *
-	 * @param int     $post_id Post.
-	 * @param WP_Post $post    Post object.
-	 */
-	public static function schedule_rebuild_on_save( $post_id, $post ) {
-		if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
-			return;
-		}
-
-		if ( ! $post || ! in_array( $post->post_type, array( 'program', 'event', 'artist', 'serie', 'page' ), true ) ) {
-			return;
-		}
-
-		if ( wp_next_scheduled( IPO_Search_Index::CRON_HOOK ) ) {
-			// Already queued; let that one pick the change up.
-			return;
-		}
-
-		wp_schedule_single_event( time() + 5 * MINUTE_IN_SECONDS, IPO_Search_Index::CRON_HOOK );
-	}
-
 	public static function menu() {
 		add_management_page(
 			'IPO Search index',
@@ -179,7 +225,10 @@ class IPO_Search {
 			wp_die( 'Forbidden' );
 		}
 
-		$report = IPO_Search_Index::report();
+		$report    = IPO_Search_Index::report();
+		$error     = IPO_Search_Index::last_error();
+		$next      = wp_next_scheduled( IPO_Search_Index::CRON_HOOK );
+		$hour      = self::build_hour();
 		?>
 		<div class="wrap" dir="rtl">
 			<h1>אינדקס החיפוש</h1>
@@ -187,6 +236,53 @@ class IPO_Search {
 			<?php if ( ! empty( $_GET['rebuilt'] ) ) : ?>
 				<div class="notice notice-success is-dismissible"><p>האינדקס נבנה מחדש.</p></div>
 			<?php endif; ?>
+
+			<?php if ( ! empty( $_GET['saved'] ) ) : ?>
+				<div class="notice notice-success is-dismissible"><p>שעת הבנייה נשמרה.</p></div>
+			<?php endif; ?>
+
+			<?php if ( $error ) : ?>
+				<div class="notice notice-error">
+					<p><strong>הבנייה האחרונה נכשלה</strong> (<?php echo esc_html( gmdate( 'Y-m-d H:i', (int) $error['when'] ) . ' UTC' ); ?>)</p>
+					<p>
+						שלב: <code><?php echo esc_html( $error['stage'] ); ?></code><br />
+						<?php echo esc_html( $error['message'] ); ?><br />
+						<code><?php echo esc_html( $error['file'] . ':' . $error['line'] ); ?></code><br />
+						שיא זיכרון: <?php echo esc_html( $error['peak_memory'] ); ?>
+						מתוך <?php echo esc_html( $error['limit'] ); ?>
+					</p>
+				</div>
+			<?php endif; ?>
+
+			<div class="card" style="max-width:720px;padding:16px 20px;margin-bottom:16px;">
+				<h2 style="margin-top:0;">שעת בנייה יומית</h2>
+				<p>
+					האינדקס נבנה פעם ביום בשעה שתבחר. הוא <strong>לא</strong> נבנה בכל פרסום —
+					בנייה סורקת את כל הפוסטים באתר, ואין טעם לעשות זאת שוב אחרי כל עריכה.
+				</p>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+					<?php wp_nonce_field( 'ipo_search_save_hour' ); ?>
+					<input type="hidden" name="action" value="ipo_search_save_hour" />
+					<label for="build_hour"><strong>שעה</strong></label>
+					<select name="build_hour" id="build_hour">
+						<?php for ( $h = 0; $h < 24; $h++ ) : ?>
+							<option value="<?php echo (int) $h; ?>" <?php selected( $h, $hour ); ?>>
+								<?php echo esc_html( sprintf( '%02d:00', $h ) ); ?>
+							</option>
+						<?php endfor; ?>
+					</select>
+					<?php submit_button( 'שמירה', 'secondary', 'submit', false ); ?>
+				</form>
+				<p style="color:#646970;margin-bottom:0;">
+					<?php if ( $next ) : ?>
+						הבנייה הבאה:
+						<strong><?php echo esc_html( wp_date( 'Y-m-d H:i', $next ) ); ?></strong>
+						(שעון האתר)
+					<?php else : ?>
+						אין בנייה מתוזמנת כרגע.
+					<?php endif; ?>
+				</p>
+			</div>
 
 			<div class="card" style="max-width:720px;padding:16px 20px;">
 				<?php if ( empty( $report ) ) : ?>
@@ -223,7 +319,8 @@ class IPO_Search {
 				</form>
 
 				<p style="color:#646970;margin-top:12px;">
-					נבנה מחדש אוטומטית פעמיים ביום, וגם כ־5 דקות אחרי עריכה של תוכנית, אירוע, אמן, סדרה או עמוד.
+					הבנייה עובדת במנות ומשחררת זיכרון בין מנה למנה, כדי שגם אתר עם הרבה מאוד
+					פוסטים יבנה 2014 לאט, אבל בלי ליפול.
 				</p>
 			</div>
 		</div>

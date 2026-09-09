@@ -33,6 +33,57 @@ class IPO_Search_Index {
 	/** Option holding the last build report. */
 	const OPTION_REPORT = 'ipo_search_index_report';
 
+	/** Option holding whatever killed the last build. */
+	const OPTION_ERROR = 'ipo_search_index_error';
+
+	/**
+	 * Where the build currently is.
+	 *
+	 * A fatal takes the whole request down before anything can be returned, so
+	 * the only way to learn where it happened is to leave a trail behind as we
+	 * go and read it back afterwards.
+	 *
+	 * @var string
+	 */
+	protected static $stage = '';
+
+	/**
+	 * @param string $name Stage name.
+	 */
+	protected static function stage( $name ) {
+		self::$stage = $name;
+	}
+
+	/**
+	 * Record a fatal that PHP will not let us catch.
+	 *
+	 * Registered as a shutdown function for the duration of a build. The
+	 * database connection is still alive at this point, so the option write
+	 * goes through even though the request is dying.
+	 */
+	public static function capture_fatal() {
+		$error = error_get_last();
+
+		if ( ! $error || ! in_array( $error['type'], array( E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR ), true ) ) {
+			return;
+		}
+
+		update_option(
+			self::OPTION_ERROR,
+			array(
+				'when'        => time(),
+				'stage'       => self::$stage,
+				'kind'        => 'fatal',
+				'message'     => $error['message'],
+				'file'        => $error['file'],
+				'line'        => $error['line'],
+				'peak_memory' => size_format( memory_get_peak_usage( true ) ),
+				'limit'       => ini_get( 'memory_limit' ),
+			),
+			false
+		);
+	}
+
 	/** Folder under uploads. */
 	const DIR = 'ipo-search';
 
@@ -71,6 +122,9 @@ class IPO_Search_Index {
 		}
 		wp_raise_memory_limit( 'admin' );
 
+		register_shutdown_function( array( __CLASS__, 'capture_fatal' ) );
+		self::stage( 'start' );
+
 		$started = microtime( true );
 		$files   = array();
 		$counts  = array();
@@ -80,10 +134,13 @@ class IPO_Search_Index {
 		foreach ( self::languages() as $lang ) {
 
 			if ( $lang && function_exists( 'do_action' ) ) {
+				self::stage( 'switch-language:' . $lang );
 				do_action( 'wpml_switch_language', $lang );
 			}
 
 			$data = self::collect( $lang );
+
+			self::stage( 'write:' . $lang );
 			$file = self::write( $data, $lang );
 
 			if ( $file ) {
@@ -119,7 +176,19 @@ class IPO_Search_Index {
 
 		update_option( self::OPTION_REPORT, $report, false );
 
+		// Got here, so nothing exploded: clear whatever the last failure was.
+		delete_option( self::OPTION_ERROR );
+		self::stage( 'done' );
+
 		return $report;
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	public static function last_error() {
+		$error = get_option( self::OPTION_ERROR, array() );
+		return is_array( $error ) ? $error : array();
 	}
 
 	/**
@@ -129,6 +198,7 @@ class IPO_Search_Index {
 	 * @return array<string, mixed>
 	 */
 	protected static function collect( $lang ) {
+		self::stage( "event-dates" );
 		$dates = self::event_dates_by_program();
 
 		$data = array(
@@ -144,9 +214,13 @@ class IPO_Search_Index {
 			'pg'    => array(),
 		);
 
+		self::stage( "programs" );
 		self::collect_programs( $data, $dates );
+		self::stage( "artists" );
 		self::collect_artists( $data );
+		self::stage( "series" );
 		self::collect_simple( $data, 'se', 'serie' );
+		self::stage( "pages" );
 		self::collect_simple( $data, 'pg', 'page' );
 
 		return $data;
@@ -200,71 +274,63 @@ class IPO_Search_Index {
 	 * @param array $dates Dates keyed by program id.
 	 */
 	protected static function collect_programs( &$data, $dates ) {
-		$ids = get_posts(
-			array(
-				'post_type'        => 'program',
-				'post_status'      => 'publish',
-				'posts_per_page'   => -1,
-				'fields'           => 'ids',
-				'suppress_filters' => false,
-			)
-		);
-
-		if ( empty( $ids ) ) {
-			return;
-		}
-
-		update_meta_cache( 'post', $ids );
-		self::prime_attachments( $ids );
-
+		self::stage( 'programs:venues' );
 		$venues = self::venues_by_program();
-		$now    = time();
 
-		foreach ( $ids as $id ) {
+		self::stage( 'programs:batches' );
+		$now = time();
 
-			$title = get_the_title( $id );
-			if ( '' === trim( $title ) ) {
-				continue;
-			}
+		self::each_batch(
+			'program',
+			function ( $ids ) use ( &$data, $dates, $venues, $now ) {
 
-			$program_dates = isset( $dates[ $id ] ) ? $dates[ $id ] : array();
-			$upcoming      = array();
-			$last_past     = '';
+				foreach ( $ids as $id ) {
 
-			foreach ( $program_dates as $date ) {
-				$stamp = strtotime( $date );
-				if ( ! $stamp ) {
-					continue;
+					$title = get_the_title( $id );
+					if ( '' === trim( $title ) ) {
+						continue;
+					}
+
+					$program_dates = isset( $dates[ $id ] ) ? $dates[ $id ] : array();
+					$upcoming      = array();
+					$last_past     = '';
+
+					foreach ( $program_dates as $date ) {
+						$stamp = strtotime( $date );
+						if ( ! $stamp ) {
+							continue;
+						}
+						if ( $stamp >= $now ) {
+							$upcoming[] = gmdate( 'Y-m-d H:i', $stamp );
+						} else {
+							$last_past = gmdate( 'Y-m-d H:i', $stamp );
+						}
+					}
+
+					$row = array(
+						$title,
+						self::relative_link( $id, $data['home'] ),
+						self::relative_image( $id, $data['up'] ),
+						(string) get_post_meta( $id, 'program_subtitle', true ),
+					);
+
+					if ( $upcoming ) {
+						$row[] = $upcoming;
+						$row[] = isset( $venues[ $id ] ) ? $venues[ $id ] : '';
+						$data['pr'][] = $row;
+					} else {
+						// Nothing ahead: keep it for the "past concerts" toggle, but
+						// only if it ever actually happened. Programs with no dates at
+						// all are drafts in spirit and would just be noise.
+						if ( '' === $last_past ) {
+							continue;
+						}
+						$row[] = $last_past;
+						$data['pp'][] = $row;
+					}
 				}
-				if ( $stamp >= $now ) {
-					$upcoming[] = gmdate( 'Y-m-d H:i', $stamp );
-				} else {
-					$last_past = gmdate( 'Y-m-d H:i', $stamp );
-				}
 			}
-
-			$row = array(
-				$title,
-				self::relative_link( $id, $data['home'] ),
-				self::relative_image( $id, $data['up'] ),
-				(string) get_post_meta( $id, 'program_subtitle', true ),
-			);
-
-			if ( $upcoming ) {
-				$row[] = $upcoming;
-				$row[] = isset( $venues[ $id ] ) ? $venues[ $id ] : '';
-				$data['pr'][] = $row;
-			} else {
-				// Nothing ahead: keep it for the "past concerts" toggle, but only
-				// if it ever actually happened. Programs with no dates at all are
-				// drafts in spirit and would just be noise in the results.
-				if ( '' === $last_past ) {
-					continue;
-				}
-				$row[] = $last_past;
-				$data['pp'][] = $row;
-			}
-		}
+		);
 
 		// Nearest first for upcoming, most recent first for past.
 		usort(
@@ -286,35 +352,23 @@ class IPO_Search_Index {
 	 * @param array $data Index being built, by reference.
 	 */
 	protected static function collect_artists( &$data ) {
-		$ids = get_posts(
-			array(
-				'post_type'        => 'artist',
-				'post_status'      => 'publish',
-				'posts_per_page'   => -1,
-				'fields'           => 'ids',
-				'suppress_filters' => false,
-			)
-		);
+		self::each_batch(
+			'artist',
+			function ( $ids ) use ( &$data ) {
+				foreach ( $ids as $id ) {
+					$title = get_the_title( $id );
+					if ( '' === trim( $title ) ) {
+						continue;
+					}
 
-		if ( empty( $ids ) ) {
-			return;
-		}
-
-		update_meta_cache( 'post', $ids );
-		self::prime_attachments( $ids );
-
-		foreach ( (array) $ids as $id ) {
-			$title = get_the_title( $id );
-			if ( '' === trim( $title ) ) {
-				continue;
+					$data['ar'][] = array(
+						$title,
+						self::relative_link( $id, $data['home'] ),
+						self::relative_image( $id, $data['up'] ),
+					);
+				}
 			}
-
-			$data['ar'][] = array(
-				$title,
-				self::relative_link( $id, $data['home'] ),
-				self::relative_image( $id, $data['up'] ),
-			);
-		}
+		);
 	}
 
 	/**
@@ -325,27 +379,22 @@ class IPO_Search_Index {
 	 * @param string $type Post type.
 	 */
 	protected static function collect_simple( &$data, $key, $type ) {
-		$ids = get_posts(
-			array(
-				'post_type'        => $type,
-				'post_status'      => 'publish',
-				'posts_per_page'   => -1,
-				'fields'           => 'ids',
-				'suppress_filters' => false,
-			)
-		);
+		self::each_batch(
+			$type,
+			function ( $ids ) use ( &$data, $key ) {
+				foreach ( $ids as $id ) {
+					$title = get_the_title( $id );
+					if ( '' === trim( $title ) ) {
+						continue;
+					}
 
-		foreach ( (array) $ids as $id ) {
-			$title = get_the_title( $id );
-			if ( '' === trim( $title ) ) {
-				continue;
+					$data[ $key ][] = array(
+						$title,
+						self::relative_link( $id, $data['home'] ),
+					);
+				}
 			}
-
-			$data[ $key ][] = array(
-				$title,
-				self::relative_link( $id, $data['home'] ),
-			);
-		}
+		);
 	}
 
 	/**
@@ -390,6 +439,71 @@ class IPO_Search_Index {
 		}
 
 		return $names;
+	}
+
+	/**
+	 * Walk a post type in batches, handing each batch to a callback.
+	 *
+	 * Loading every post of a type at once is what breaks on a large site: the
+	 * post objects and their meta pile up in the object cache until PHP runs out
+	 * of memory. Working a page at a time and dropping each page from the cache
+	 * afterwards keeps usage flat no matter how many posts there are, at the cost
+	 * of the build simply taking longer.
+	 *
+	 * Paging stays on get_posts() rather than raw SQL so WPML keeps filtering by
+	 * the language currently being built.
+	 *
+	 * @param string   $type     Post type.
+	 * @param callable $callback Receives an array of IDs, with meta and
+	 *                           attachments already primed for that batch.
+	 * @param int      $size     Batch size.
+	 */
+	protected static function each_batch( $type, $callback, $size = 200 ) {
+		$paged = 1;
+
+		do {
+			$ids = get_posts(
+				array(
+					'post_type'        => $type,
+					'post_status'      => 'publish',
+					'posts_per_page'   => $size,
+					'paged'            => $paged,
+					'fields'           => 'ids',
+					'orderby'          => 'ID',
+					'order'            => 'ASC',
+					'no_found_rows'    => true,
+					'suppress_filters' => false,
+				)
+			);
+
+			if ( empty( $ids ) ) {
+				return;
+			}
+
+			update_meta_cache( 'post', $ids );
+			self::prime_attachments( $ids );
+
+			call_user_func( $callback, $ids );
+
+			self::free_posts( $ids );
+			++$paged;
+
+		} while ( count( $ids ) === $size );
+	}
+
+	/**
+	 * Drop a batch of posts from the object cache.
+	 *
+	 * Without this the cache grows for the whole build and the memory saved by
+	 * batching is given straight back.
+	 *
+	 * @param array $ids Post IDs.
+	 */
+	protected static function free_posts( $ids ) {
+		foreach ( (array) $ids as $id ) {
+			wp_cache_delete( $id, 'posts' );
+			wp_cache_delete( $id, 'post_meta' );
+		}
 	}
 
 	/**
@@ -471,21 +585,58 @@ class IPO_Search_Index {
 	 * @return string|false Filename, or false on failure.
 	 */
 	protected static function write( $data, $lang ) {
-		$json = wp_json_encode( $data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
-
-		if ( false === $json ) {
-			return false;
-		}
-
 		$dir = self::dir_path();
 
 		if ( ! wp_mkdir_p( $dir ) ) {
 			return false;
 		}
 
-		$name = 'index-' . ( $lang ? $lang . '-' : '' ) . substr( md5( $json ), 0, 12 ) . '.json';
+		$flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
 
-		if ( false === file_put_contents( trailingslashit( $dir ) . $name, $json ) ) {
+		// Encode row by row straight to disk. Encoding the whole index in one go
+		// would hold the arrays and an equally large JSON string in memory at the
+		// same time, which is the point a big site runs out.
+		$temp   = trailingslashit( $dir ) . 'index-building-' . ( $lang ? $lang : 'x' ) . '.json';
+		$handle = fopen( $temp, 'w' );
+
+		if ( ! $handle ) {
+			return false;
+		}
+
+		$header = array(
+			'v'     => $data['v'],
+			'built' => $data['built'],
+			'lang'  => $data['lang'],
+			'home'  => $data['home'],
+			'up'    => $data['up'],
+		);
+
+		// Opening brace plus the scalar header, left unclosed so the lists can be
+		// appended after it.
+		fwrite( $handle, rtrim( wp_json_encode( $header, $flags ), '}' ) );
+
+		foreach ( array( 'pr', 'pp', 'ar', 'se', 'pg' ) as $key ) {
+			fwrite( $handle, ',"' . $key . '":[' );
+
+			$first = true;
+			foreach ( $data[ $key ] as $row ) {
+				fwrite( $handle, ( $first ? '' : ',' ) . wp_json_encode( $row, $flags ) );
+				$first = false;
+			}
+
+			fwrite( $handle, ']' );
+		}
+
+		fwrite( $handle, '}' );
+		fclose( $handle );
+
+		$name = 'index-' . ( $lang ? $lang . '-' : '' ) . substr( md5_file( $temp ), 0, 12 ) . '.json';
+		$final = trailingslashit( $dir ) . $name;
+
+		// Move into place only once the file is complete, so a build that dies
+		// halfway cannot leave a truncated index being served.
+		if ( ! rename( $temp, $final ) ) {
+			@unlink( $temp );
 			return false;
 		}
 

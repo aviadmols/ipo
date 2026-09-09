@@ -491,9 +491,20 @@ if ($video['image']){
        
 
  @media (min-width: 768px){
+/* Two across rather than three. The 10px comes off each item to leave room for
+   the 20px column gap set below, so two of them fill the row exactly.
+   flex-basis is set alongside max-width because max-width on its own lets a
+   narrow item shrink and a third slip up onto the row. */
 .recommended {
-    max-width: calc(33% - 20px);
+    flex: 0 0 calc(50% - 10px);
+    max-width: calc(50% - 10px);
    }
+
+/* .img-fluid only caps the width, so a picture narrower than its column would
+   sit at its natural size instead of filling the half. */
+.recommended .thumb img {
+    width: 100%;
+}
 
 .recommended {
     padding: 0!important;

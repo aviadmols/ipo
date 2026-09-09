@@ -697,14 +697,12 @@ jQuery(document).ready(function( $ ){
 
 
 	function set_submenu_position() {
-		// Check .site > header height
-		var headerHeight = $('.site > header').height();
-		// Check the offset of the header from the top of the page
-		var headerOffset = $('.site > header').offset().top;
-		// Calcalate the menu position
-		var menuPosition = headerHeight;
+		// outerHeight(), not height(): the header carries 50px of top padding, and
+		// height() reports only the content box. That put the panel 22px higher than
+		// the bar, so it opened over the menu items instead of underneath them.
+		var menuPosition = $(".site > header").outerHeight();
 		// Set the menu position
-		$('.desktop-menu .menu > li > .sub-menu').css('top', menuPosition);
+		$(".desktop-menu .menu > li > .sub-menu").css("top", menuPosition);
 	}
 
 	// Set the menu position on page load
@@ -712,6 +710,11 @@ jQuery(document).ready(function( $ ){
 
 	// Set the menu position on window resize with a 500ms throttle
 	$(window).resize(throttle( set_submenu_position, 500 ) );
+
+	// ...and on scroll, because the header shrinks when it goes sticky. The inline
+	// top this writes beats the `header.sticky ... { top: 84px }` rule, so without
+	// this the panel would hang below the shrunken bar with a gap under it.
+	$(window).on("scroll", throttle( set_submenu_position, 150 ));
 
 
 });

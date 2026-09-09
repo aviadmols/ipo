@@ -326,51 +326,16 @@ if(ICL_LANGUAGE_CODE == 'en'){
 
         <!-- =============== More concerts area start =============== -->
 
-        <?php 
+        <?php
+        /* המודול כולו נשלט מהמסך "תוכניות מקושרות" שתחת תפריט Event Table.
+           ipo_related_programs_get_items() מחזיר את הרשימה מסוננת וממוינת כבר:
+           חוקיות המקור, תוכניות שנוספו ידנית, מוחרגות, מקודמות בראש, ומיון לפי
+           האירוע העתידי הקרוב ביותר של כל תוכנית. */
+        $related_items = function_exists( 'ipo_related_programs_get_items' )
+            ? ipo_related_programs_get_items( $post_id )
+            : array();
 
-            // בדיקה אם יש קטגוריה למוצר הנוכחי
-            $program_related_programsnew = get_field('program_related_programs',get_the_ID());
-            $ids = array();
-
-            // אם יש program_related_programs, נשתמש בו (עדיפות ראשונה)
-            if (!empty($program_related_programsnew)) {
-                $ids = is_array($program_related_programsnew) ? $program_related_programsnew : ($program_related_programsnew ? [$program_related_programsnew] : []);
-            } else {
-                // אם אין program_related_programs, נבדוק אם יש קטגוריה
-                $current_categories = wp_get_post_terms($post_id, 'category_program', array('fields' => 'ids'));
-
-                if (!empty($current_categories) && !is_wp_error($current_categories)) {
-                    // אם יש קטגוריה, שליפת כל הפוסטים מאותה קטגוריה (חוץ מהפוסט הנוכחי)
-                    $args = array(
-                        'post_type' => 'program',
-                        'posts_per_page' => -1,
-                        'post_status' => 'publish',
-                        'post__not_in' => array($post_id),
-                        'tax_query' => array(
-                            array(
-                                'taxonomy' => 'category_program',
-                                'field'    => 'term_id',
-                                'terms'    => $current_categories,
-                            ),
-                        ),
-                    );
-                    $category_query = new WP_Query($args);
-                    if ($category_query->have_posts()) {
-                        $ids = wp_list_pluck($category_query->posts, 'ID');
-                    }
-                    wp_reset_postdata();
-                }
-
-                // אם אין קטגוריה או אין פוסטים בקטגוריה, נשתמש ב-fallback
-                if (empty($ids)) {
-                    $home_id = get_option('page_on_front');
-                    $home_id = (int) get_option('page_on_front');
-                    $fallback = get_field('upcoming_selected_programs', $home_id);
-                    $ids = is_array($fallback) ? $fallback : ($fallback ? [$fallback] : []);
-                }
-            }
-
-        if(!empty($ids)):
+        if ( ! empty( $related_items ) ) :
         ?>
 
         <section class="moreConcerts container max-1440 upcoming_area">
@@ -394,59 +359,19 @@ if (ICL_LANGUAGE_CODE == 'he') {
     <div class="splide__track">
         <ul class="splide__list">
 
-    <?php 
-  
- foreach ($ids as $rel):
-
-    $related_id = is_object($rel) ? $rel->ID : (int) $rel;
-    $related_post = get_post($related_id);
-
-    if (
-        $related_post &&
-        $related_post->post_status === 'publish' &&
-        in_array($related_post->post_type, ['program', 'artist_plan'])
-    ):
-
-        // שליפת כל האירועים המשויכים לתוכנית
-        $related_events = get_related_event_ids($related_id);
-
-        $has_future_events = false;
-
-        if (is_array($related_events) && !empty($related_events)) {
-            $now = new DateTime();
-
-            foreach ($related_events as $event_id) {
-                $event_date_time = get_field('event_date_time', $event_id);
-                if ($event_date_time) {
-                    $event_datetime = DateTime::createFromFormat('Y-m-d H:i:s', $event_date_time);
-                    if ($event_datetime && $event_datetime >= $now) {
-                        $has_future_events = true;
-                        break; // מספיק אירוע אחד עתידי
-                    }
-                }
-            }
-        }
-
-        // דילוג אם אין אירועים עתידיים (רק ל-program)
-        if ($related_post->post_type === 'program' && !$has_future_events) {
-            continue;
-        }
+    <?php foreach ( $related_items as $related_item ) :
+        $related_id = $related_item['id'];
     ?>
         <li class="splide__slide">
         <div class="item <?php
             $program = new ipo_program($related_id);
-            echo $related_post->post_type;
+            echo $related_item['post_type'];
             echo $related_id;
         ?>">
             <?php $theme->the_part('loop-program', $related_id); ?>
         </div>
         </li>
-
-    <?php 
-    endif;
-
-endforeach;
- ?>
+    <?php endforeach; ?>
         </ul>
     </div>
 </div>

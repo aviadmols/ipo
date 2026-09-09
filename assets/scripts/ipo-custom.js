@@ -716,6 +716,14 @@ jQuery(document).ready(function( $ ){
 	// this the panel would hang below the shrunken bar with a gap under it.
 	$(window).on("scroll", throttle( set_submenu_position, 150 ));
 
+	// At DOM ready the header has not reached its final height yet, so the value
+	// measured above is too small and the panel opens across the menu until
+	// something else triggers a recalculation. Measure again once everything has
+	// loaded, and again the moment a menu is actually opened - that last one is
+	// what makes the position correct no matter how the layout settled.
+	$(window).on("load", set_submenu_position);
+	$(".desktop-menu .menu-pc > .menu > .menu-item-has-children").on("mouseenter", set_submenu_position);
+
 
 });
 

@@ -12,6 +12,31 @@
 	align-items: center;
 }
 
+/* --- following the header's own light/dark states ---
+   The icon, the input text and the underline all draw from currentColor, so
+   the whole box only needs its colour set in one place.
+
+   It cannot simply inherit: the theme puts white on `.desktop-menu .menu`,
+   and .search_input is a sibling of that list rather than inside it, so the
+   box was picking up the page's default dark text and disappearing against
+   the hero. These mirror the states the menu links already use — white over
+   the hero, black once the header turns white. */
+
+header .ipo-search {
+	color: #fff;
+}
+
+header.sticky:not(.dark) .ipo-search,
+body.white-intro header:not(.sticky) .ipo-search,
+header.header.mega-open .ipo-search {
+	color: #000;
+}
+
+/* The panel is always white, so its contents stay dark whatever the bar does. */
+.ipo-search .ipo-search__panel {
+	color: #000;
+}
+
 /* --- the magnifier button --- */
 
 .ipo-search__toggle {

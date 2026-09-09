@@ -327,6 +327,24 @@
 		root.addEventListener('mouseenter', function () {
 			loadIndex().catch(function () {});
 		}, { once: true });
+
+		// The mobile header already has its own magnifier that predates this
+		// module, and it sits outside the box. Let it drive the instance in the
+		// mobile header rather than adding a second icon next to it.
+		if (root.closest('.mobile-header')) {
+			var external = document.querySelectorAll('.mobile-search-toggle');
+
+			Array.prototype.forEach.call(external, function (trigger) {
+				trigger.addEventListener('click', function (event) {
+					event.preventDefault();
+					if (root.classList.contains('is-open')) {
+						close();
+					} else {
+						open();
+					}
+				});
+			});
+		}
 	}
 
 	function start() {

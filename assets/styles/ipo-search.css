@@ -160,7 +160,19 @@
 	background: #ececec;
 }
 
-.ipo-search__thumb img {
+/* The box this renders inside is the theme's own .search_input, which carries
+   `header .search_input img { width: 2.6rem; flex-shrink: 0; cursor: pointer }`
+   for the old magnifier icons. That selector outweighed a bare
+   `.ipo-search__thumb img`, so every result thumbnail was being squashed to
+   26px inside its grey frame. Carrying the block class through puts these
+   rules ahead of it. */
+.ipo-search .ipo-search__panel img {
+	max-width: none;
+	flex-shrink: 1;
+	cursor: inherit;
+}
+
+.ipo-search .ipo-search__thumb img {
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
@@ -250,7 +262,7 @@
 	background: #ececec;
 }
 
-.ipo-search__side-thumb img {
+.ipo-search .ipo-search__side-thumb img {
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
@@ -285,6 +297,16 @@
 /* --- mobile: full width under the header --- */
 
 @media (max-width: 991px) {
+	/* The mobile header supplies its own magnifier, wired up in the JS, so this
+	   instance must not show a second one beside it. */
+	.mobile-header .ipo-search__toggle {
+		display: none;
+	}
+
+	.mobile-header .ipo-search.is-open .ipo-search__form {
+		width: 100%;
+	}
+
 	.ipo-search.is-open .ipo-search__form {
 		width: 160px;
 	}

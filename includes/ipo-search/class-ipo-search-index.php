@@ -534,6 +534,32 @@ class IPO_Search_Index {
 	}
 
 	/**
+	 * Smallest generated size of an attachment that is big enough for a thumbnail.
+	 *
+	 * wp_get_attachment_image_url() silently hands back the original when the
+	 * size asked for was never generated, which is how the first index ended up
+	 * pointing every 76px thumbnail at a 1280px source. Walking the sizes and
+	 * checking that what came back really is a resized copy avoids that.
+	 *
+	 * @param int $attachment_id Attachment.
+	 * @return string URL, empty when there is nothing usable.
+	 */
+	protected static function smallest_size( $attachment_id ) {
+		foreach ( array( 'medium', 'thumbnail', 'medium_large' ) as $size ) {
+			$image = wp_get_attachment_image_src( $attachment_id, $size );
+
+			// [3] is is_intermediate: false means this is the original file.
+			if ( $image && ! empty( $image[3] ) ) {
+				return $image[0];
+			}
+		}
+
+		$full = wp_get_attachment_image_src( $attachment_id, 'full' );
+
+		return $full ? $full[0] : '';
+	}
+
+	/**
 	 * Plain text, ready to be stored in the index.
 	 *
 	 * WordPress hands titles back with HTML entities still in them — &quot; for a
@@ -583,11 +609,14 @@ class IPO_Search_Index {
 		$banner = get_post_meta( $id, 'program_banner_image', true );
 
 		if ( $banner && is_numeric( $banner ) ) {
-			$image = wp_get_attachment_image_url( (int) $banner, 'medium' );
+			$image = self::smallest_size( (int) $banner );
 		}
 
 		if ( ! $image ) {
-			$image = get_the_post_thumbnail_url( $id, 'medium' );
+			$thumbnail = get_post_meta( $id, '_thumbnail_id', true );
+			if ( $thumbnail && is_numeric( $thumbnail ) ) {
+				$image = self::smallest_size( (int) $thumbnail );
+			}
 		}
 
 		if ( ! $image ) {

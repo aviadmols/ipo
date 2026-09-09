@@ -175,7 +175,11 @@ echo '';?>
                 <div class="width-33 t1">
 
                     <div class="search_input">
-                        <div class="search-field-container"><?php echo do_shortcode($search_shortcode); ?></div>
+                        <div class="search-field-container"><?php
+	echo $use_new_search
+		? do_shortcode( '[ipo_search]' )
+		: do_shortcode( $search_shortcode );
+                        ?></div>
                         <!--
                         <img src="/wp-content/uploads/2022/06/search-i1.png" alt="">
                         <img src="/wp-content/uploads/2022/06/search-i2.png" alt="">

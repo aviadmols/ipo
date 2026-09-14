@@ -91,7 +91,7 @@ class IPO_AI_Admin {
 	}
 
 	/**
-	 * Grant or take away write access for a single token.
+	 * Grant or take away file write or database edit access for a single token.
 	 *
 	 * Kept separate from token creation on purpose: write access is a decision
 	 * made per token, after the fact, and can be taken back without revoking it.
@@ -104,7 +104,8 @@ class IPO_AI_Admin {
 
 		$id      = isset( $_POST['token_id'] ) ? sanitize_text_field( wp_unslash( $_POST['token_id'] ) ) : '';
 		$enable  = ! empty( $_POST['enable'] );
-		$current = get_option( IPO_AI_REST::WRITE_TOKENS_OPTION, array() );
+		$option  = isset( $_POST['scope'] ) && 'db' === $_POST['scope'] ? IPO_AI_REST::DB_WRITE_TOKENS_OPTION : IPO_AI_REST::WRITE_TOKENS_OPTION;
+		$current = get_option( $option, array() );
 		$current = is_array( $current ) ? $current : array();
 
 		if ( $enable ) {
@@ -115,7 +116,7 @@ class IPO_AI_Admin {
 			$current = array_values( array_diff( $current, array( $id ) ) );
 		}
 
-		update_option( IPO_AI_REST::WRITE_TOKENS_OPTION, $current, false );
+		update_option( $option, $current, false );
 
 		wp_safe_redirect(
 			add_query_arg(
@@ -183,6 +184,31 @@ class IPO_AI_Admin {
 		echo '</div>';
 	}
 
+	/**
+	 * On/off button for one of a token's grants.
+	 *
+	 * @param string $token_id Token UUID.
+	 * @param string $scope    'files' or 'db'.
+	 * @param bool   $enabled  Whether the token has the grant now.
+	 */
+	protected static function render_grant_toggle( $token_id, $scope, $enabled ) {
+		?>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;"
+			<?php if ( ! $enabled && 'db' === $scope ) : ?>onsubmit="return confirm('לתת לטוקן הזה הרשאה לשנות נתונים באתר?');"<?php endif; ?>>
+			<?php wp_nonce_field( 'ipo_ai_toggle_write' ); ?>
+			<input type="hidden" name="action" value="ipo_ai_toggle_write" />
+			<input type="hidden" name="scope" value="<?php echo esc_attr( $scope ); ?>" />
+			<input type="hidden" name="token_id" value="<?php echo esc_attr( $token_id ); ?>" />
+			<input type="hidden" name="enable" value="<?php echo $enabled ? '' : '1'; ?>" />
+			<?php if ( $enabled ) : ?>
+				<button type="submit" class="button button-small" style="color:#b32d2e;">✔ מופעלת — לבטל</button>
+			<?php else : ?>
+				<button type="submit" class="button button-small">קריאה בלבד — לאפשר</button>
+			<?php endif; ?>
+		</form>
+		<?php
+	}
+
 	public static function render() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( 'Forbidden' );
@@ -197,6 +223,12 @@ class IPO_AI_Admin {
 			<p>
 				מנגנון זה מייצר טוקן מאובטח שמאפשר לכלי AI (Cursor / Claude) לגשת לנתוני האתר
 				<strong>לקריאה בלבד</strong> דרך REST / MCP — בלי לחשוף סיסמת MySQL.
+			</p>
+			<p>
+				אפשר לתת לטוקן בודד הרשאות נוספות בטבלה למטה, כל אחת בנפרד:
+				<strong>כתיבת קבצים</strong> (קבצי התבנית, עם גיבוי לפני כל שינוי) ו־<strong>עריכת DB</strong>
+				(ערכי post meta ו־options דרך WordPress, בלי SQL חופשי; כל שינוי נשמר ביומן וניתן לביטול).
+				הגדרות רגישות — כתובת האתר, רשימת התוספים, תפקידי משתמשים והטוקנים עצמם — חסומות לעריכה.
 			</p>
 
 			<?php if ( ! empty( $_GET['ai_revoked'] ) ) : ?>
@@ -231,35 +263,29 @@ class IPO_AI_Admin {
 								<th>קידומת</th>
 								<th>נוצר</th>
 								<th>שימוש אחרון</th>
-								<th>כתיבה</th>
+								<th>כתיבת קבצים</th>
+								<th>עריכת DB</th>
 								<th></th>
 							</tr>
 						</thead>
 						<tbody>
 						<?php
-						$write_ids = get_option( IPO_AI_REST::WRITE_TOKENS_OPTION, array() );
-						$write_ids = is_array( $write_ids ) ? $write_ids : array();
+						$write_ids    = get_option( IPO_AI_REST::WRITE_TOKENS_OPTION, array() );
+						$write_ids    = is_array( $write_ids ) ? $write_ids : array();
+						$db_write_ids = get_option( IPO_AI_REST::DB_WRITE_TOKENS_OPTION, array() );
+						$db_write_ids = is_array( $db_write_ids ) ? $db_write_ids : array();
 						?>
 						<?php foreach ( $tokens as $t ) : ?>
-							<?php $can_write = ! empty( $t['id'] ) && in_array( $t['id'], $write_ids, true ); ?>
+							<?php
+							$token_id = isset( $t['id'] ) ? $t['id'] : '';
+							?>
 							<tr>
 								<td><?php echo esc_html( isset( $t['label'] ) ? $t['label'] : '' ); ?></td>
 								<td><code><?php echo esc_html( isset( $t['prefix'] ) ? $t['prefix'] . '…' : '' ); ?></code></td>
 								<td><?php echo esc_html( isset( $t['created'] ) ? gmdate( 'Y-m-d H:i', (int) $t['created'] ) . ' UTC' : '' ); ?></td>
 								<td><?php echo ! empty( $t['last_used'] ) ? esc_html( gmdate( 'Y-m-d H:i', (int) $t['last_used'] ) . ' UTC' ) : '—'; ?></td>
-								<td>
-									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;">
-										<?php wp_nonce_field( 'ipo_ai_toggle_write' ); ?>
-										<input type="hidden" name="action" value="ipo_ai_toggle_write" />
-										<input type="hidden" name="token_id" value="<?php echo esc_attr( $t['id'] ); ?>" />
-										<input type="hidden" name="enable" value="<?php echo $can_write ? '' : '1'; ?>" />
-										<?php if ( $can_write ) : ?>
-											<button type="submit" class="button button-small" style="color:#b32d2e;">✔ מופעלת — לבטל</button>
-										<?php else : ?>
-											<button type="submit" class="button button-small">קריאה בלבד — לאפשר</button>
-										<?php endif; ?>
-									</form>
-								</td>
+								<td><?php self::render_grant_toggle( $token_id, 'files', '' !== $token_id && in_array( $token_id, $write_ids, true ) ); ?></td>
+								<td><?php self::render_grant_toggle( $token_id, 'db', '' !== $token_id && in_array( $token_id, $db_write_ids, true ) ); ?></td>
 								<td>
 									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;" onsubmit="return confirm('לבטל את הטוקן?');">
 										<?php wp_nonce_field( 'ipo_ai_revoke_token' ); ?>

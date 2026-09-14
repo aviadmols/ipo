@@ -2,7 +2,8 @@
 /**
  * REST + lightweight MCP endpoints for IPO AI Bridge.
  *
- * Read-only database access for Cursor / Claude via Bearer token.
+ * Read-only database access for Cursor / Claude via Bearer token. File writes
+ * and database edits are opt-in per token (see the AI Bridge admin page).
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,8 +14,11 @@ class IPO_AI_REST {
 
 	const NS = 'ipo-ai/v1';
 
-	/** Token IDs that are allowed to write. Managed on the AI Bridge admin page. */
+	/** Token IDs that are allowed to write theme files. Managed on the AI Bridge admin page. */
 	const WRITE_TOKENS_OPTION = 'ipo_ai_bridge_write_tokens';
+
+	/** Token IDs that are allowed to edit post meta and options. Granted separately from file writes. */
+	const DB_WRITE_TOKENS_OPTION = 'ipo_ai_bridge_db_write_tokens';
 
 	/** Only these extensions may be written. Everything else is refused. */
 	const WRITABLE_EXTENSIONS = array( 'css', 'js', 'php', 'json', 'txt', 'md', 'svg', 'html' );
@@ -165,6 +169,39 @@ class IPO_AI_REST {
 				'permission_callback' => $write_auth,
 			)
 		);
+
+		// --- Database edits. Listing changes needs any token; making or reverting
+		// --- them needs one that was granted database edit access.
+		$db_write_auth = array( __CLASS__, 'db_write_permission_check' );
+
+		register_rest_route(
+			self::NS,
+			'/db/changes',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( 'IPO_AI_DB_Writer', 'changes' ),
+				'permission_callback' => $auth,
+			)
+		);
+
+		$db_write_routes = array(
+			'/db/post-meta'        => 'update_post_meta',
+			'/db/post-meta/delete' => 'delete_post_meta',
+			'/db/option'           => 'update_option',
+			'/db/revert'           => 'revert',
+		);
+
+		foreach ( $db_write_routes as $route => $method ) {
+			register_rest_route(
+				self::NS,
+				$route,
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( 'IPO_AI_DB_Writer', $method ),
+					'permission_callback' => $db_write_auth,
+				)
+			);
+		}
 	}
 
 	/**
@@ -197,22 +234,38 @@ class IPO_AI_REST {
 	 * @return bool|WP_Error
 	 */
 	public static function write_permission_check( $request ) {
+		return self::grant_check( $request, self::WRITE_TOKENS_OPTION, 'This token cannot write files. Grant it file write access under Tools -> AI Bridge.' );
+	}
+
+	/**
+	 * Same as permission_check, plus the token must be on the database edit list.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return bool|WP_Error
+	 */
+	public static function db_write_permission_check( $request ) {
+		return self::grant_check( $request, self::DB_WRITE_TOKENS_OPTION, 'This token cannot edit the database. Grant it database edit access under Tools -> AI Bridge.' );
+	}
+
+	/**
+	 * @param WP_REST_Request $request Request.
+	 * @param string          $option  Option holding the IDs of tokens with this grant.
+	 * @param string          $refusal Message when the token lacks it.
+	 * @return bool|WP_Error
+	 */
+	protected static function grant_check( $request, $option, $refusal ) {
 		$allowed = self::permission_check( $request );
 
 		if ( is_wp_error( $allowed ) ) {
 			return $allowed;
 		}
 
-		$token      = $request->get_param( '_ipo_ai_token' );
-		$write_ids  = get_option( self::WRITE_TOKENS_OPTION, array() );
-		$write_ids  = is_array( $write_ids ) ? $write_ids : array();
+		$token   = $request->get_param( '_ipo_ai_token' );
+		$granted = get_option( $option, array() );
+		$granted = is_array( $granted ) ? $granted : array();
 
-		if ( empty( $token['id'] ) || ! in_array( $token['id'], $write_ids, true ) ) {
-			return new WP_Error(
-				'ipo_ai_read_only',
-				'This token is read-only. Grant it write access under Tools -> AI Bridge.',
-				array( 'status' => 403 )
-			);
+		if ( empty( $token['id'] ) || ! in_array( $token['id'], $granted, true ) ) {
+			return new WP_Error( 'ipo_ai_read_only', $refusal, array( 'status' => 403 ) );
 		}
 
 		return true;
@@ -987,6 +1040,69 @@ class IPO_AI_REST {
 					'required'   => array( 'path' ),
 				),
 			),
+			array(
+				'name'        => 'db_update_post_meta',
+				'description' => 'Set one post meta value (ACF fields included, by their meta key e.g. series_2_link). Needs a token with database edit access. Goes through update_post_meta, clears the post cache, and records the old value so db_revert can undo it.',
+				'inputSchema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'post_id'      => array( 'type' => 'integer' ),
+						'meta_key'     => array( 'type' => 'string' ),
+						'meta_value'   => array( 'description' => 'New value: a string, number, or an array/object (stored serialized)' ),
+						'expect_value' => array( 'description' => 'Optional: only write if the field still holds this value (null = does not exist)' ),
+					),
+					'required'   => array( 'post_id', 'meta_key', 'meta_value' ),
+				),
+			),
+			array(
+				'name'        => 'db_delete_post_meta',
+				'description' => 'Delete every row of one meta key on a post. Needs database edit access. Recorded so db_revert can restore it.',
+				'inputSchema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'post_id'      => array( 'type' => 'integer' ),
+						'meta_key'     => array( 'type' => 'string' ),
+						'expect_value' => array( 'description' => 'Optional: only delete if the field still holds this value' ),
+					),
+					'required'   => array( 'post_id', 'meta_key' ),
+				),
+			),
+			array(
+				'name'        => 'db_update_option',
+				'description' => 'Set a WordPress option, or with key just one entry inside an array option (leaving the rest untouched). Needs database edit access. Site URL, plugin list, roles and the bridge\'s own settings are refused.',
+				'inputSchema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'option'       => array( 'type' => 'string' ),
+						'value'        => array( 'description' => 'New value (or new value of the entry at key)' ),
+						'key'          => array( 'type' => array( 'string', 'integer' ), 'description' => 'Optional: top-level array key to change instead of the whole option' ),
+						'expect_value' => array( 'description' => 'Optional: only write if the option (or entry) still holds this value' ),
+					),
+					'required'   => array( 'option', 'value' ),
+				),
+			),
+			array(
+				'name'        => 'db_changes',
+				'description' => 'List recent database edits made through the bridge (newest first), or show one in full with its before/after values.',
+				'inputSchema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'change_id' => array( 'type' => 'string', 'description' => 'Optional: a change to show in full' ),
+					),
+				),
+			),
+			array(
+				'name'        => 'db_revert',
+				'description' => 'Undo one database edit made through the bridge. Refuses if the value was changed again since, unless force is set.',
+				'inputSchema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'change_id' => array( 'type' => 'string' ),
+						'force'     => array( 'type' => 'boolean' ),
+					),
+					'required'   => array( 'change_id' ),
+				),
+			),
 		);
 	}
 
@@ -1054,6 +1170,39 @@ class IPO_AI_REST {
 					'fs_revert' => 'revert_file',
 				);
 				$result = call_user_func( array( __CLASS__, $map[ $name ] ), $req );
+
+				if ( is_wp_error( $result ) ) {
+					throw new Exception( $result->get_error_message() );
+				}
+
+				return wp_json_encode( $result->get_data(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE );
+
+			case 'db_update_post_meta':
+			case 'db_delete_post_meta':
+			case 'db_update_option':
+			case 'db_changes':
+			case 'db_revert':
+				$req = new WP_REST_Request( 'db_changes' === $name ? 'GET' : 'POST' );
+
+				foreach ( $args as $key => $value ) {
+					$req->set_param( $key, $value );
+				}
+
+				if ( 'db_changes' !== $name ) {
+					$allowed = self::db_write_permission_check( $req );
+					if ( is_wp_error( $allowed ) ) {
+						throw new Exception( $allowed->get_error_message() );
+					}
+				}
+
+				$map    = array(
+					'db_update_post_meta' => 'update_post_meta',
+					'db_delete_post_meta' => 'delete_post_meta',
+					'db_update_option'    => 'update_option',
+					'db_changes'          => 'changes',
+					'db_revert'           => 'revert',
+				);
+				$result = call_user_func( array( 'IPO_AI_DB_Writer', $map[ $name ] ), $req );
 
 				if ( is_wp_error( $result ) ) {
 					throw new Exception( $result->get_error_message() );

@@ -3,7 +3,8 @@
  * IPO AI Bridge — bootstrap.
  *
  * Generates API tokens so Cursor / Claude can query the site DB (read-only)
- * via REST and a lightweight MCP JSON-RPC endpoint.
+ * via REST and a lightweight MCP JSON-RPC endpoint. File writes and database
+ * edits are granted per token on the admin page.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -12,6 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 require_once __DIR__ . '/class-ipo-ai-tokens.php';
 require_once __DIR__ . '/class-ipo-ai-rest.php';
+require_once __DIR__ . '/class-ipo-ai-db-writer.php';
 require_once __DIR__ . '/class-ipo-ai-admin.php';
 
 IPO_AI_REST::init();

@@ -4257,6 +4257,44 @@ margin-left: 15px;
 }
 
 
+/* Serie "הפילהרמונית לילדים העונה ה-90" (64114) — see single-serie.php */
+.postid-64114 .session .wpstack-bg-image {
+    height: auto;
+}
+
+.postid-64114 .session .wpstack-bg-image > .bg_set {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    aspect-ratio: 390 / 233;
+}
+
+.postid-64114 .hero_area-content .hero-mobile-image {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .postid-64114 section.hero_area-content {
+        background-image: none !important;
+        background-color: #2b888f !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        padding-top: 70px;
+    }
+
+    .postid-64114 .hero_area-content .hero-mobile-image {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+
+    .postid-64114 .hero_area-content .content {
+        padding-bottom: 0 !important;
+    }
+}
+
+
 [lang="he-IL"] .rendered-date svg{
 margin-right: 15px!important;	
 }

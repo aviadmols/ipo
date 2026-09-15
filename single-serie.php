@@ -127,6 +127,9 @@ if(defined('ICL_LANGUAGE_CODE') && ICL_LANGUAGE_CODE == 'en'){
 
 $program_banner_image_mobile  = get_field('program_banner_image',$post_id);
 
+// "הפילהרמונית לילדים העונה ה-90" only: no bottom gradient, and on mobile the
+// banner is a full-width <img> instead of a cropped background (ipo-custom.css).
+$edge_mobile_banner = (int) get_the_ID() === 64114;
 
 
 $class = '';
@@ -147,7 +150,12 @@ if (!empty($svg_pc)) {
     // אחרת, הצג את ה-HTML החלופי
     ?>
     <section class="hero_area-content" style="background-image: url(<?php echo $banner_image->get_src(); ?>); z-index: -1; position: relative; height: 30vw; max-height: 380px;">
+        <?php if ($edge_mobile_banner && $program_banner_image_mobile): ?>
+            <?php echo wp_get_attachment_image($program_banner_image_mobile, 'full', false, ['class' => 'hero-mobile-image']); ?>
+        <?php endif; ?>
+        <?php if (!$edge_mobile_banner): ?>
         <div class="gradient-bottom" style="max-height: 50%;"></div>
+        <?php endif; ?>
         <div class="gradient-top" style="max-height: 25%;"></div>
 
         <div class="container">

@@ -408,7 +408,9 @@ margin-left: 0px!important;
 
  .image_academy .grid-item img {
     width: 100%;
+    aspect-ratio: 3 / 4; /* כל התמונות באותו גודל, גם כשהמקור ביחס אחר */
     object-fit: cover; /* שמירה על הפרופורציות */
+    object-position: center top;
 }
 
  .image_academy   h4 {

@@ -2,13 +2,16 @@
 /**
  * Settings screen for the program-card zones, under the Event Table menu.
  *
- * One tab per zone. The single-program tab also carries an override per
- * program category, so a children's programme can pull from a different set of
- * categories than a classical one.
+ * The screen lists every place a zone renders in — the zone default, each
+ * program category, each page built on a template that includes the module —
+ * and edits one place at a time next to a live preview of what that place
+ * will show.
  *
- * The site has ~750 published programs. Rendering that list into every picker
- * would run to a megabyte of markup, so it is printed once into a hidden
- * template and cloned per picker in the browser.
+ * The screen is a small script app. PHP hands it the settings, the places and
+ * every published program (~750, with the next date of each worked out in one
+ * query); it saves the whole option back over AJAX, and asks the server for a
+ * preview through ipo_related_programs_compute() — the same function the
+ * modules render from — so the preview cannot drift from the site.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -18,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_action(
 	'admin_menu',
 	function () {
-		add_submenu_page(
+		$hook = add_submenu_page(
 			'event-table',
 			'מודולי תוכניות מקושרות',
 			'תוכניות מקושרות',
@@ -26,50 +29,49 @@ add_action(
 			'ipo-related-programs',
 			'ipo_related_programs_admin_page'
 		);
+
+		if ( $hook ) {
+			add_action( 'load-' . $hook, 'ipo_related_programs_admin_assets' );
+		}
 	},
 	20
 );
 
+add_action( 'wp_ajax_ipo_related_programs_save', 'ipo_related_programs_admin_ajax_save' );
+add_action( 'wp_ajax_ipo_related_programs_preview', 'ipo_related_programs_admin_ajax_preview' );
+
 /**
- * Every published program as id => label.
- *
- * Titles repeat across languages and cities, so the language code and ID go in
- * the label — a list of six "Animals and Other Animals" rows is otherwise
- * impossible to pick from.
+ * The ACF field each page zone reads its on-page pick from. The flexible
+ * lobby keeps it inside a flexible-content row, so there is nothing flat to
+ * read there.
  */
-function ipo_related_programs_admin_choices() {
-	static $choices = null;
-
-	if ( $choices !== null ) {
-		return $choices;
-	}
-
-	$programs = get_posts(
-		array(
-			'post_type'        => 'program',
-			'posts_per_page'   => -1,
-			'post_status'      => 'publish',
-			'orderby'          => 'title',
-			'order'            => 'ASC',
-			'suppress_filters' => false,
-		)
+function ipo_related_programs_admin_page_pick_field( $zone_key ) {
+	$fields = array(
+		'home_upcoming' => 'upcoming_selected_programs',
+		'simple_page'   => 'program_related_programs',
 	);
 
-	$choices = array();
+	return isset( $fields[ $zone_key ] ) ? $fields[ $zone_key ] : '';
+}
 
-	foreach ( $programs as $program ) {
-		$language = apply_filters( 'wpml_post_language_details', null, $program->ID );
-		$code     = is_array( $language ) && ! empty( $language['language_code'] ) ? $language['language_code'] : '';
+function ipo_related_programs_admin_assets() {
+	$dir = get_stylesheet_directory();
+	$uri = get_stylesheet_directory_uri();
 
-		$choices[ $program->ID ] = sprintf(
-			'%s%s (#%d)',
-			$program->post_title,
-			$code ? ' [' . $code . ']' : '',
-			$program->ID
-		);
-	}
-
-	return $choices;
+	wp_enqueue_style( 'ipo-rp-heebo', 'https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap', array(), null );
+	wp_enqueue_style(
+		'ipo-related-programs-admin',
+		$uri . '/assets/styles/ipo-related-programs-admin.css',
+		array(),
+		filemtime( $dir . '/assets/styles/ipo-related-programs-admin.css' )
+	);
+	wp_enqueue_script(
+		'ipo-related-programs-admin',
+		$uri . '/assets/scripts/ipo-related-programs-admin.js',
+		array(),
+		filemtime( $dir . '/assets/scripts/ipo-related-programs-admin.js' ),
+		true
+	);
 }
 
 function ipo_related_programs_admin_categories() {
@@ -84,140 +86,232 @@ function ipo_related_programs_admin_categories() {
 }
 
 /**
- * A program picker. The options are cloned in from the hidden master list, so
- * only the current selection travels in the markup.
+ * Language code of each post in $ids, from WPML's table in one query.
  */
-function ipo_related_programs_admin_picker( $name, $selected, $description ) {
-	$selected = array_map( 'intval', (array) $selected );
-	?>
-	<p class="description" style="margin:0 0 6px;"><?php echo esc_html( $description ); ?></p>
-	<input type="search" class="regular-text ipo-picker-filter" placeholder="סינון לפי שם או מספר…" style="margin-bottom:6px;max-width:100%;">
-	<select name="<?php echo esc_attr( $name ); ?>[]"
-			multiple
-			size="8"
-			class="ipo-program-picker"
-			data-selected="<?php echo esc_attr( implode( ',', $selected ) ); ?>"
-			style="width:100%;max-width:620px;"></select>
-	<p class="description">בחירה מרובה: Ctrl (או Cmd) + לחיצה. נבחרו <strong class="ipo-picker-count"><?php echo count( $selected ); ?></strong>.</p>
-	<?php
+function ipo_related_programs_admin_languages( $ids, $post_type ) {
+	global $wpdb;
+
+	$ids   = array_filter( array_map( 'intval', (array) $ids ) );
+	$table = $wpdb->prefix . 'icl_translations';
+
+	if ( empty( $ids ) || $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
+		return array();
+	}
+
+	$rows = $wpdb->get_results(
+		$wpdb->prepare(
+			"SELECT element_id, language_code FROM {$table} WHERE element_type = %s AND element_id IN (" . implode( ',', $ids ) . ')',
+			'post_' . $post_type
+		)
+	);
+
+	$languages = array();
+
+	foreach ( $rows as $row ) {
+		$languages[ (int) $row->element_id ] = $row->language_code;
+	}
+
+	return $languages;
 }
 
 /**
- * The rule fields, shared by a zone default and by every category override.
+ * Every published program for the pickers: title, language, categories and the
+ * next date still ahead.
  *
- * A category override is a mapping — "for a programme in this category, show
- * these categories" — so it hides the source radio and forces the categories
- * mode. The radio used to show there too, and leaving it on its "same
- * category" default made a filled-in category list do nothing at all.
- *
- * @param string $prefix      Input name prefix, e.g. zones[single_program][default].
- * @param bool   $show_source Whether the source rule is the editor's to choose.
+ * The dates come from one grouped query rather than ~750 calls to
+ * ipo_related_programs_next_event(). The comparison is on the stored string,
+ * which sorts correctly with or without seconds, against the same naive clock
+ * ipo_get_next_event_timestamp() uses.
  */
-function ipo_related_programs_admin_ruleset_fields( $prefix, $ruleset, $show_source = true ) {
-	$categories = ipo_related_programs_admin_categories();
+function ipo_related_programs_admin_programs() {
+	global $wpdb;
 
-	if ( ! $show_source ) {
-		echo '<input type="hidden" name="' . esc_attr( $prefix ) . '[mode]" value="categories">';
+	$programs = get_posts(
+		array(
+			'post_type'        => 'program',
+			'posts_per_page'   => -1,
+			'post_status'      => 'publish',
+			'orderby'          => 'title',
+			'order'            => 'ASC',
+			'suppress_filters' => true,
+		)
+	);
+
+	if ( empty( $programs ) ) {
+		return array();
 	}
-	?>
-	<table class="form-table" role="presentation">
-		<?php if ( $show_source ) : ?>
-			<tr>
-				<th scope="row">מאיפה נשלפות התוכניות</th>
-				<td>
-					<label style="display:block;margin-bottom:4px;">
-						<input type="radio" name="<?php echo esc_attr( $prefix ); ?>[mode]" value="same_category" <?php checked( $ruleset['mode'], 'same_category' ); ?>>
-						אותה קטגוריה של התוכנית המוצגת
-					</label>
-					<label style="display:block;margin-bottom:4px;">
-						<input type="radio" name="<?php echo esc_attr( $prefix ); ?>[mode]" value="categories" <?php checked( $ruleset['mode'], 'categories' ); ?>>
-						הקטגוריות שסומנו כאן
-					</label>
-					<label style="display:block;">
-						<input type="radio" name="<?php echo esc_attr( $prefix ); ?>[mode]" value="manual" <?php checked( $ruleset['mode'], 'manual' ); ?>>
-						רק התוכניות שנוספו ידנית
-					</label>
-				</td>
-			</tr>
-		<?php endif; ?>
-		<tr>
-			<th scope="row"><?php echo $show_source ? 'קטגוריות' : 'הקטגוריות שיוצגו'; ?></th>
-			<td>
-				<?php if ( empty( $categories ) ) : ?>
-					<p class="description">לא נמצאו קטגוריות תוכנית.</p>
-				<?php else : ?>
-					<?php foreach ( $categories as $category ) : ?>
-						<label style="display:inline-block;margin:0 0 6px 18px;">
-							<input type="checkbox"
-								   name="<?php echo esc_attr( $prefix ); ?>[categories][]"
-								   value="<?php echo esc_attr( $category->term_id ); ?>"
-								   <?php checked( in_array( (int) $category->term_id, $ruleset['categories'], true ) ); ?>>
-							<?php echo esc_html( $category->name ); ?>
-							<span class="description">(<?php echo (int) $category->count; ?>)</span>
-						</label>
-					<?php endforeach; ?>
-					<p class="description">
-						<?php echo $show_source
-							? 'פעיל כשנבחר &laquo;הקטגוריות שסומנו כאן&raquo;.'
-							: 'התוכניות יישלפו מהקטגוריות האלה. הקטגוריות משותפות לעברית ולאנגלית, והשליפה תמיד בשפת העמוד.'; ?>
-					</p>
-				<?php endif; ?>
-			</td>
-		</tr>
-	</table>
 
-	<?php // Everything below is the same for both, and folded away on a
-		// category rule so the mapping itself stays the visible part. ?>
-	<?php if ( ! $show_source ) : ?>
-		<details style="margin:4px 0 12px;">
-		<summary style="cursor:pointer;">הגדרות מתקדמות לקטגוריה זו</summary>
-	<?php endif; ?>
+	$ids       = wp_list_pluck( $programs, 'ID' );
+	$languages = ipo_related_programs_admin_languages( $ids, 'program' );
 
-	<table class="form-table" role="presentation">
-		<tr>
-			<th scope="row">הוספה ידנית</th>
-			<td><?php ipo_related_programs_admin_picker( $prefix . '[manual_ids]', $ruleset['manual_ids'], 'תוכניות שיצטרפו גם אם חוקיות הקטגוריה לא מביאה אותן.' ); ?></td>
-		</tr>
-		<tr>
-			<th scope="row">תוכניות מקודמות</th>
-			<td><?php ipo_related_programs_admin_picker( $prefix . '[promoted_ids]', $ruleset['promoted_ids'], 'יוצגו ראשונות — רק אם הן עומדות בחוקיות ויש להן תאריך שטרם עבר.' ); ?></td>
-		</tr>
-		<tr>
-			<th scope="row">תוכניות מוחרגות</th>
-			<td><?php ipo_related_programs_admin_picker( $prefix . '[exclude_ids]', $ruleset['exclude_ids'], 'לא יוצגו בשום מקרה.' ); ?></td>
-		</tr>
-		<tr>
-			<th scope="row">סדר</th>
-			<td>
-				<select name="<?php echo esc_attr( $prefix ); ?>[order]">
-					<option value="date_asc" <?php selected( $ruleset['order'], 'date_asc' ); ?>>לפי תאריך — מהקרוב לרחוק</option>
-					<option value="date_desc" <?php selected( $ruleset['order'], 'date_desc' ); ?>>לפי תאריך — מהרחוק לקרוב</option>
-				</select>
-				<p class="description">לפי האירוע העתידי הקרוב ביותר של כל תוכנית. מקודמות תמיד לפני השאר.</p>
-			</td>
-		</tr>
-		<tr>
-			<th scope="row">אירועים עתידיים בלבד</th>
-			<td>
-				<label>
-					<input type="checkbox" name="<?php echo esc_attr( $prefix ); ?>[require_future_event]" value="1" <?php checked( $ruleset['require_future_event'], 1 ); ?>>
-					להסתיר תוכניות שכל התאריכים שלהן עברו
-				</label>
-			</td>
-		</tr>
-		<tr>
-			<th scope="row">מספר כרטיסים מרבי</th>
-			<td>
-				<input type="number" name="<?php echo esc_attr( $prefix ); ?>[max_items]" min="0" step="1" value="<?php echo esc_attr( $ruleset['max_items'] ); ?>" class="small-text">
-				<p class="description">0 = ללא הגבלה.</p>
-			</td>
-		</tr>
-	</table>
+	$next_rows = $wpdb->get_results(
+		$wpdb->prepare(
+			"SELECT rel.meta_value AS program_id, MIN(dt.meta_value) AS next_date, COUNT(*) AS upcoming
+			 FROM {$wpdb->postmeta} rel
+			 INNER JOIN {$wpdb->postmeta} dt ON dt.post_id = rel.post_id AND dt.meta_key = 'event_date_time'
+			 INNER JOIN {$wpdb->posts} ev ON ev.ID = rel.post_id AND ev.post_type = 'event' AND ev.post_status = 'publish'
+			 WHERE rel.meta_key = 'related_to_program' AND dt.meta_value >= %s
+			 GROUP BY rel.meta_value",
+			gmdate( 'Y-m-d H:i:s' )
+		)
+	);
 
-	<?php if ( ! $show_source ) : ?>
-		</details>
-	<?php endif; ?>
-	<?php
+	$next = array();
+
+	foreach ( $next_rows as $row ) {
+		$next[ (int) $row->program_id ] = array(
+			'date'     => ipo_related_programs_admin_format_date( strtotime( $row->next_date ) ),
+			'ts'       => (int) strtotime( $row->next_date ),
+			'upcoming' => (int) $row->upcoming,
+		);
+	}
+
+	$terms = wp_get_object_terms( $ids, 'category_program', array( 'fields' => 'all_with_object_id' ) );
+	$cats  = array();
+
+	if ( ! is_wp_error( $terms ) ) {
+		foreach ( $terms as $term ) {
+			$cats[ (int) $term->object_id ][] = (int) $term->term_id;
+		}
+	}
+
+	$out = array();
+
+	foreach ( $programs as $program ) {
+		$id    = (int) $program->ID;
+		$out[] = array(
+			'id'    => $id,
+			't'     => html_entity_decode( get_the_title( $program ), ENT_QUOTES, 'UTF-8' ),
+			'l'     => isset( $languages[ $id ] ) ? $languages[ $id ] : '',
+			'c'     => isset( $cats[ $id ] ) ? $cats[ $id ] : array(),
+			'd'     => isset( $next[ $id ] ) ? $next[ $id ]['date'] : '',
+			'ts'    => isset( $next[ $id ] ) ? $next[ $id ]['ts'] : 0,
+			'n'     => isset( $next[ $id ] ) ? $next[ $id ]['upcoming'] : 0,
+		);
+	}
+
+	return $out;
+}
+
+/**
+ * Event dates are stored as naive local strings and read with strtotime(), so
+ * gmdate() prints them back as they were entered.
+ */
+function ipo_related_programs_admin_format_date( $timestamp ) {
+	return $timestamp ? gmdate( 'd.m.y · H:i', (int) $timestamp ) : '';
+}
+
+/**
+ * Every place, grouped by zone.
+ *
+ * Pages are found by the template they use, and a page and its translations
+ * are folded into one place keyed by the default-language page — see
+ * ipo_related_programs_page_key().
+ */
+function ipo_related_programs_admin_places() {
+	$zones      = ipo_related_programs_zones();
+	$categories = ipo_related_programs_admin_categories();
+	$templates  = (array) wp_get_theme()->get_page_templates(); // file => name
+	$places     = array();
+
+	foreach ( $zones as $zone_key => $zone ) {
+		$places[ $zone_key ] = array();
+
+		if ( ! empty( $zone['category_rules'] ) ) {
+			foreach ( $categories as $category ) {
+				$places[ $zone_key ][] = array(
+					'type'  => 'category',
+					'key'   => (int) $category->term_id,
+					'title' => html_entity_decode( $category->name, ENT_QUOTES, 'UTF-8' ),
+					'sub'   => sprintf( 'תוכניות בקטגוריה · %d', (int) $category->count ),
+				);
+			}
+		}
+
+		if ( empty( $zone['templates'] ) ) {
+			continue;
+		}
+
+		$pages = get_posts(
+			array(
+				'post_type'        => 'page',
+				'post_status'      => array( 'publish', 'private', 'draft', 'pending', 'future' ),
+				'posts_per_page'   => -1,
+				'suppress_filters' => true,
+				'meta_query'       => array(
+					array(
+						'key'     => '_wp_page_template',
+						'value'   => $zone['templates'],
+						'compare' => 'IN',
+					),
+				),
+			)
+		);
+
+		$languages   = ipo_related_programs_admin_languages( wp_list_pluck( $pages, 'ID' ), 'page' );
+		$pick_field  = ipo_related_programs_admin_page_pick_field( $zone_key );
+		$grouped     = array();
+		$home_ids    = array_filter( array( (int) get_option( 'page_on_front' ) ) );
+
+		foreach ( $pages as $page ) {
+			$key      = ipo_related_programs_page_key( $page->ID );
+			$template = get_post_meta( $page->ID, '_wp_page_template', true );
+			$pick     = $pick_field ? get_post_meta( $page->ID, $pick_field, true ) : array();
+
+			$grouped[ $key ][] = array(
+				'id'       => (int) $page->ID,
+				'lang'     => isset( $languages[ $page->ID ] ) ? $languages[ $page->ID ] : '',
+				'title'    => html_entity_decode( get_the_title( $page ), ENT_QUOTES, 'UTF-8' ) ?: '(ללא כותרת)',
+				'status'   => $page->post_status,
+				'template' => isset( $templates[ $template ] ) ? $templates[ $template ] : basename( $template, '.php' ),
+				'view'     => get_permalink( $page ),
+				'edit'     => get_edit_post_link( $page->ID, 'raw' ),
+				'pick'     => is_array( $pick ) ? count( array_filter( $pick ) ) : 0,
+				'is_home'  => in_array( (int) $page->ID, $home_ids, true ) || $template === 'page-templates/template-home.php',
+			);
+		}
+
+		$zone_places = array();
+
+		foreach ( $grouped as $key => $versions ) {
+			// The default-language page leads, so its title names the place.
+			usort(
+				$versions,
+				function ( $a, $b ) use ( $key ) {
+					return ( $b['id'] === $key ) <=> ( $a['id'] === $key );
+				}
+			);
+
+			$published = array_filter(
+				$versions,
+				function ( $version ) {
+					return $version['status'] === 'publish';
+				}
+			);
+
+			$zone_places[] = array(
+				'type'      => 'page',
+				'key'       => (int) $key,
+				'title'     => $versions[0]['title'],
+				'sub'       => $versions[0]['template'],
+				'versions'  => $versions,
+				'published' => ! empty( $published ),
+				'is_home'   => (bool) array_filter( wp_list_pluck( $versions, 'is_home' ) ),
+			);
+		}
+
+		// Home first, then live pages, then drafts; alphabetical within each.
+		usort(
+			$zone_places,
+			function ( $a, $b ) {
+				return array( $b['is_home'], $b['published'], $a['title'] ) <=> array( $a['is_home'], $a['published'], $b['title'] );
+			}
+		);
+
+		$places[ $zone_key ] = array_merge( $places[ $zone_key ], $zone_places );
+	}
+
+	return $places;
 }
 
 function ipo_related_programs_admin_page() {
@@ -225,243 +319,224 @@ function ipo_related_programs_admin_page() {
 		wp_die( esc_html__( 'Insufficient permissions.', 'ipo' ) );
 	}
 
-	$zones = ipo_related_programs_zones();
-	$saved = false;
+	$zones = array();
 
-	if ( isset( $_POST['ipo_related_programs_save'] ) && check_admin_referer( 'ipo_related_programs_save' ) ) {
-		$posted = isset( $_POST['zones'] ) && is_array( $_POST['zones'] ) ? wp_unslash( $_POST['zones'] ) : array();
-		$store  = array();
-
-		foreach ( $zones as $zone_key => $zone ) {
-			$zone_posted = isset( $posted[ $zone_key ] ) && is_array( $posted[ $zone_key ] ) ? $posted[ $zone_key ] : array();
-
-			$store[ $zone_key ] = array(
-				'respect_page_pick' => empty( $zone_posted['respect_page_pick'] ) ? 0 : 1,
-				'default'           => ipo_related_programs_sanitize_ruleset( isset( $zone_posted['default'] ) ? $zone_posted['default'] : array() ),
-				'by_category'       => array(),
-			);
-
-			if ( empty( $zone['category_rules'] ) || empty( $zone_posted['by_category'] ) || ! is_array( $zone_posted['by_category'] ) ) {
-				continue;
-			}
-
-			foreach ( $zone_posted['by_category'] as $term_id => $ruleset ) {
-				$term_id = (int) $term_id;
-
-				if ( ! $term_id ) {
-					continue;
-				}
-
-				// Rules are kept even when switched off, so unticking the box
-				// does not throw away a set-up that may be wanted again.
-				$store[ $zone_key ]['by_category'][ $term_id ] = array_merge(
-					ipo_related_programs_sanitize_ruleset( $ruleset ),
-					array( 'enabled' => empty( $ruleset['enabled'] ) ? 0 : 1 )
-				);
-			}
-		}
-
-		update_option( IPO_RELATED_PROGRAMS_OPTION, $store );
-		$saved = true;
+	foreach ( ipo_related_programs_zones() as $zone_key => $zone ) {
+		$zones[] = array(
+			'key'           => $zone_key,
+			'label'         => $zone['label'],
+			'short'         => $zone['short_label'],
+			'description'   => $zone['description'],
+			'pageRules'     => ! empty( $zone['templates'] ),
+			'categoryRules' => ! empty( $zone['category_rules'] ),
+			'pickLabel'     => $zone['page_pick_label'],
+			'pickDefault'   => (int) $zone['page_pick_default'],
+		);
 	}
 
-	$settings   = ipo_related_programs_get_settings();
-	$stored     = get_option( IPO_RELATED_PROGRAMS_OPTION, array() );
-	$stored     = is_array( $stored ) ? $stored : array();
-	$categories = ipo_related_programs_admin_categories();
-	$choices    = ipo_related_programs_admin_choices();
-	$active     = isset( $_GET['zone'] ) ? sanitize_key( wp_unslash( $_GET['zone'] ) ) : 'single_program';
-	$active     = isset( $zones[ $active ] ) ? $active : 'single_program';
+	$categories = array();
+
+	foreach ( ipo_related_programs_admin_categories() as $category ) {
+		$categories[] = array(
+			'id'    => (int) $category->term_id,
+			'name'  => html_entity_decode( $category->name, ENT_QUOTES, 'UTF-8' ),
+			'count' => (int) $category->count,
+		);
+	}
+
+	$languages = apply_filters( 'wpml_active_languages', null, array( 'skip_missing' => 0 ) );
+	$languages = is_array( $languages ) ? array_keys( $languages ) : array( 'he' );
+
+	$boot = array(
+		'ajax'        => admin_url( 'admin-ajax.php' ),
+		'nonce'       => wp_create_nonce( 'ipo_related_programs' ),
+		'zones'       => $zones,
+		'places'      => ipo_related_programs_admin_places(),
+		'store'       => ipo_related_programs_sanitize_store( get_option( IPO_RELATED_PROGRAMS_OPTION, array() ) ),
+		'defaults'    => ipo_related_programs_ruleset_defaults(),
+		'categories'  => $categories,
+		'programs'    => ipo_related_programs_admin_programs(),
+		'languages'   => $languages,
+		'defaultLang' => apply_filters( 'wpml_default_language', null ) ?: 'he',
+	);
 	?>
-	<div class="wrap" dir="rtl">
-		<h1>מודולי תוכניות מקושרות</h1>
-		<p class="description" style="max-width:760px;">
-			לכל אזור באתר שמציג כרטיסי תוכנית יש כאן לשונית משלו. השמירה משותפת לכל הלשוניות —
-			אפשר לערוך כמה אזורים ולשמור פעם אחת.
-		</p>
-
-		<?php if ( $saved ) : ?>
-			<div class="notice notice-success is-dismissible"><p>ההגדרות נשמרו.</p></div>
-		<?php endif; ?>
-
-		<h2 class="nav-tab-wrapper">
-			<?php foreach ( $zones as $zone_key => $zone ) : ?>
-				<?php // Tabs switch in the browser rather than reloading, so edits made
-					// across several zones all survive to the one save. ?>
-				<a href="#<?php echo esc_attr( $zone_key ); ?>"
-				   class="nav-tab ipo-zone-tab <?php echo $zone_key === $active ? 'nav-tab-active' : ''; ?>"
-				   data-zone="<?php echo esc_attr( $zone_key ); ?>">
-					<?php echo esc_html( $zone['label'] ); ?>
-				</a>
-			<?php endforeach; ?>
-		</h2>
-
-		<form method="post">
-			<?php wp_nonce_field( 'ipo_related_programs_save' ); ?>
-
-			<?php foreach ( $zones as $zone_key => $zone ) : ?>
-				<?php $zone_settings = $settings[ $zone_key ]; ?>
-				<div class="ipo-zone-panel" data-zone="<?php echo esc_attr( $zone_key ); ?>" <?php echo $zone_key === $active ? '' : 'hidden'; ?>>
-					<h2><?php echo esc_html( $zone['label'] ); ?></h2>
-					<p class="description"><?php echo esc_html( $zone['description'] ); ?></p>
-
-					<table class="form-table" role="presentation">
-						<tr>
-							<th scope="row">בחירה ידנית בעמוד</th>
-							<td>
-								<label>
-									<input type="checkbox"
-										   name="zones[<?php echo esc_attr( $zone_key ); ?>][respect_page_pick]"
-										   value="1"
-										   <?php checked( $zone_settings['respect_page_pick'], 1 ); ?>>
-									לכבד את השדה <code><?php echo esc_html( $zone['page_pick_label'] ); ?></code> כשהוא מלא
-								</label>
-								<p class="description">
-									כשמסומן, בחירה ידנית בעמוד קובעת את הרשימה, והחוקיות כאן רק ממיינת ומסננת אותה.
-									כשלא מסומן, ההגדרות כאן קובעות תמיד.
-								</p>
-							</td>
-						</tr>
-					</table>
-
-					<h3>חוקיות ברירת מחדל</h3>
-					<?php ipo_related_programs_admin_ruleset_fields( 'zones[' . $zone_key . '][default]', $zone_settings['default'] ); ?>
-
-					<?php if ( ! empty( $zone['category_rules'] ) && ! empty( $categories ) ) : ?>
-						<h3>מיפוי לפי קטגוריה</h3>
-						<p class="description" style="max-width:760px;">
-							לכל קטגוריה אפשר לקבוע מאילו קטגוריות יישלפו התוכניות שיוצגו לצידה.
-							למשל: בתוכניות <strong>קלאסי</strong> לסמן קלאסי ומיוחדים, ובתוכניות
-							<strong>ילדים</strong> לסמן ילדים וסרטים. קטגוריה שלא סומנה כאן ממשיכה
-							לפי חוקיות ברירת המחדל שלמעלה. אם תוכנית שייכת לכמה קטגוריות — הראשונה
-							עם מיפוי פעיל היא שקובעת.
-						</p>
-						<p class="description" style="max-width:760px;">
-							הקטגוריות משותפות לעברית ולאנגלית, ולכן המיפוי חל על שתי השפות.
-							השליפה עצמה תמיד בשפת העמוד — עמוד אנגלי יציג תוכניות אנגליות בלבד.
-						</p>
-
-						<?php foreach ( $categories as $category ) : ?>
-							<?php
-							$term_id       = (int) $category->term_id;
-							$stored_rule   = isset( $stored[ $zone_key ]['by_category'][ $term_id ] ) ? $stored[ $zone_key ]['by_category'][ $term_id ] : array();
-							$category_rule = ipo_related_programs_sanitize_ruleset( $stored_rule );
-							$enabled       = ! empty( $stored_rule['enabled'] );
-							$prefix        = 'zones[' . $zone_key . '][by_category][' . $term_id . ']';
-							?>
-							<div class="ipo-category-rule" style="border:1px solid #dcdcde;background:#fff;padding:8px 16px;margin-bottom:10px;">
-								<h4 style="margin:8px 0;">
-									<label>
-										<input type="checkbox"
-											   class="ipo-category-toggle"
-											   name="<?php echo esc_attr( $prefix ); ?>[enabled]"
-											   value="1"
-											   <?php checked( $enabled ); ?>>
-										<?php echo esc_html( $category->name ); ?>
-										<span class="description">— מיפוי נפרד</span>
-									</label>
-								</h4>
-								<div class="ipo-category-body" <?php echo $enabled ? '' : 'hidden'; ?>>
-									<?php ipo_related_programs_admin_ruleset_fields( $prefix, $category_rule, false ); ?>
-								</div>
-							</div>
-						<?php endforeach; ?>
-					<?php endif; ?>
-				</div>
-			<?php endforeach; ?>
-
-			<?php submit_button( 'שמירת כל האזורים', 'primary', 'ipo_related_programs_save' ); ?>
-		</form>
-
-		<select id="ipo-program-master" hidden>
-			<?php foreach ( $choices as $id => $label ) : ?>
-				<option value="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?></option>
-			<?php endforeach; ?>
-		</select>
+	<div class="wrap ipo-rp-wrap" dir="rtl">
+		<h1 class="screen-reader-text">מודולי תוכניות מקושרות</h1>
+		<div id="ipo-rp-app" class="ipo-rp" aria-live="polite">
+			<p class="ipo-rp-loading">טוען…</p>
+		</div>
+		<noscript><p>המסך הזה דורש JavaScript.</p></noscript>
 	</div>
+	<script>window.ipoRelatedPrograms = <?php echo wp_json_encode( $boot ); ?>;</script>
+	<?php
+}
 
-	<script>
-	(function () {
-		var master = document.getElementById('ipo-program-master');
+function ipo_related_programs_admin_ajax_guard() {
+	if ( ! current_user_can( 'manage_options' ) || ! check_ajax_referer( 'ipo_related_programs', 'nonce', false ) ) {
+		wp_send_json_error( array( 'message' => 'אין הרשאה, או שפג תוקף העמוד. יש לרענן.' ), 403 );
+	}
+}
 
-		if (!master) {
-			return;
+/**
+ * The posted JSON, decoded. It arrives as one field so a settings tree with
+ * dozens of places does not run into max_input_vars.
+ */
+function ipo_related_programs_admin_json( $field ) {
+	$raw = isset( $_POST[ $field ] ) ? wp_unslash( $_POST[ $field ] ) : '';
+	$raw = json_decode( is_string( $raw ) ? $raw : '', true );
+
+	return is_array( $raw ) ? $raw : array();
+}
+
+function ipo_related_programs_admin_ajax_save() {
+	ipo_related_programs_admin_ajax_guard();
+
+	$store = ipo_related_programs_sanitize_store( ipo_related_programs_admin_json( 'store' ) );
+
+	update_option( IPO_RELATED_PROGRAMS_OPTION, $store );
+
+	wp_send_json_success(
+		array(
+			'store' => $store,
+			'saved' => wp_date( 'H:i' ),
+		)
+	);
+}
+
+/**
+ * What one place would show under the rules on screen, saved or not.
+ *
+ * Runs in the requested language, in the context of that place's page (or a
+ * sample program for the program zone), and reads that page's own ACF pick —
+ * so the preview is what a visitor there would see.
+ */
+function ipo_related_programs_admin_ajax_preview() {
+	ipo_related_programs_admin_ajax_guard();
+
+	$zones    = ipo_related_programs_zones();
+	$zone_key = isset( $_POST['zone'] ) ? sanitize_key( wp_unslash( $_POST['zone'] ) ) : '';
+
+	if ( ! isset( $zones[ $zone_key ] ) ) {
+		wp_send_json_error( array( 'message' => 'אזור לא מוכר.' ) );
+	}
+
+	$zone      = $zones[ $zone_key ];
+	$lang      = isset( $_POST['lang'] ) ? sanitize_key( wp_unslash( $_POST['lang'] ) ) : 'he';
+	$type      = isset( $_POST['place_type'] ) ? sanitize_key( wp_unslash( $_POST['place_type'] ) ) : 'default';
+	$place_key = isset( $_POST['place_key'] ) ? (int) $_POST['place_key'] : 0;
+	$sample    = isset( $_POST['sample'] ) ? (int) $_POST['sample'] : 0;
+	$rule      = ipo_related_programs_admin_json( 'rule' );
+	$ruleset   = ipo_related_programs_sanitize_ruleset( $rule );
+	$respect   = ! empty( $rule['respect_page_pick'] );
+
+	do_action( 'wpml_switch_language', $lang );
+
+	$context = array(
+		'post_id' => 0,
+		'title'   => '',
+		'url'     => '',
+		'note'    => '',
+	);
+	$manual_pick = array();
+
+	if ( $type === 'page' && $place_key ) {
+		$page_id = (int) apply_filters( 'wpml_object_id', $place_key, 'page', false, $lang );
+
+		if ( ! $page_id ) {
+			wp_send_json_success(
+				array(
+					'items'   => array(),
+					'context' => array_merge( $context, array( 'note' => 'לעמוד הזה אין גרסה בשפה הזו.' ) ),
+				)
+			);
 		}
 
-		document.querySelectorAll('.ipo-program-picker').forEach(function (picker) {
-			picker.innerHTML = master.innerHTML;
+		$pick_field       = ipo_related_programs_admin_page_pick_field( $zone_key );
+		$manual_pick      = $pick_field && function_exists( 'get_field' ) ? (array) get_field( $pick_field, $page_id, false ) : array();
+		$context['post_id'] = $page_id;
+		$context['title']   = get_the_title( $page_id );
+		$context['url']     = get_permalink( $page_id );
+	} elseif ( ! empty( $zone['category_rules'] ) ) {
+		// A program page needs a program to stand on. Use the one picked, or
+		// the soonest program in the category being edited.
+		if ( $sample ) {
+			$sample = (int) apply_filters( 'wpml_object_id', $sample, 'program', true, $lang );
+		} else {
+			$args = array(
+				'post_type'        => 'program',
+				'post_status'      => 'publish',
+				'posts_per_page'   => 40,
+				'fields'           => 'ids',
+				'suppress_filters' => false,
+			);
 
-			var selected = (picker.dataset.selected || '')
-				.split(',')
-				.filter(function (value) { return value !== ''; });
-
-			selected.forEach(function (value) {
-				var option = picker.querySelector('option[value="' + value + '"]');
-
-				// A program that was picked and later unpublished is no longer
-				// in the master list; keep it so saving does not drop it.
-				if (!option) {
-					option = document.createElement('option');
-					option.value = value;
-					option.textContent = '#' + value + ' (לא פורסם / לא נמצא)';
-					picker.appendChild(option);
-				}
-
-				option.selected = true;
-			});
-
-			var counter = picker.parentNode.querySelector('.ipo-picker-count');
-
-			picker.addEventListener('change', function () {
-				if (counter) {
-					counter.textContent = picker.selectedOptions.length;
-				}
-			});
-		});
-
-		document.querySelectorAll('.ipo-picker-filter').forEach(function (input) {
-			var picker = input.parentNode.querySelector('.ipo-program-picker');
-
-			if (!picker) {
-				return;
+			if ( $type === 'category' && $place_key ) {
+				$args['tax_query'] = array(
+					array(
+						'taxonomy' => 'category_program',
+						'field'    => 'term_id',
+						'terms'    => array( $place_key ),
+					),
+				);
 			}
 
-			input.addEventListener('input', function () {
-				var needle = input.value.trim().toLowerCase();
+			$candidates = get_posts( $args );
 
-				Array.prototype.forEach.call(picker.options, function (option) {
-					// A selected option stays visible whatever the filter says,
-					// so it cannot be hidden and then lost on save.
-					option.hidden = needle !== '' && !option.selected &&
-						option.textContent.toLowerCase().indexOf(needle) === -1;
-				});
-			});
-		});
+			if ( function_exists( 'ipo_sort_programs_by_next_event' ) ) {
+				$candidates = ipo_sort_programs_by_next_event( $candidates );
+			}
 
-		document.querySelectorAll('.ipo-zone-tab').forEach(function (tab) {
-			tab.addEventListener('click', function (event) {
-				event.preventDefault();
+			$sample = $candidates ? (int) reset( $candidates ) : 0;
+		}
 
-				document.querySelectorAll('.ipo-zone-tab').forEach(function (other) {
-					other.classList.toggle('nav-tab-active', other === tab);
-				});
+		if ( $sample ) {
+			$manual_pick        = function_exists( 'get_field' ) ? (array) get_field( 'program_related_programs', $sample, false ) : array();
+			$context['post_id'] = $sample;
+			$context['title']   = get_the_title( $sample );
+			$context['url']     = get_permalink( $sample );
+		}
+	}
 
-				document.querySelectorAll('.ipo-zone-panel').forEach(function (panel) {
-					panel.hidden = panel.dataset.zone !== tab.dataset.zone;
-				});
-			});
-		});
+	$manual_pick = array_values( array_filter( array_map( 'ipo_related_programs_normalize_id', $manual_pick ) ) );
+	$items       = ipo_related_programs_compute( $ruleset, $respect, $context['post_id'], $manual_pick );
+	$out         = array();
 
-		document.querySelectorAll('.ipo-category-toggle').forEach(function (toggle) {
-			toggle.addEventListener('change', function () {
-				var body = toggle.closest('.ipo-category-rule').querySelector('.ipo-category-body');
+	// The promoted IDs are stored in whichever language they were picked in.
+	// Which stored ID lands on each card, so un-pinning from an English preview
+	// removes the Hebrew entry behind it.
+	$promoted_refs = array();
 
-				if (body) {
-					body.hidden = !toggle.checked;
-				}
-			});
-		});
-	})();
-	</script>
-	<?php
+	foreach ( $ruleset['promoted_ids'] as $stored_id ) {
+		$promoted_refs[ (int) apply_filters( 'wpml_object_id', $stored_id, 'program', true ) ][] = $stored_id;
+	}
+
+	foreach ( $items as $item ) {
+		$id       = $item['id'];
+		$language = apply_filters( 'wpml_post_language_details', null, $id );
+
+		$out[] = array(
+			'id'       => $id,
+			'title'    => html_entity_decode( get_the_title( $id ), ENT_QUOTES, 'UTF-8' ),
+			'lang'     => is_array( $language ) && ! empty( $language['language_code'] ) ? $language['language_code'] : '',
+			'date'     => ipo_related_programs_admin_format_date( $item['next_event'] ),
+			'promoted' => $item['promoted'],
+			'refs'     => isset( $promoted_refs[ $id ] ) ? $promoted_refs[ $id ] : array(),
+			'source'   => $item['source'],
+			'thumb'    => get_the_post_thumbnail_url( $id, 'thumbnail' ) ?: '',
+			'view'     => get_permalink( $id ),
+			'edit'     => get_edit_post_link( $id, 'raw' ),
+		);
+	}
+
+	$context['title']     = html_entity_decode( (string) $context['title'], ENT_QUOTES, 'UTF-8' );
+	$context['pick']      = count( $manual_pick );
+	$context['pick_used'] = $respect && ! empty( $manual_pick );
+	$context['fallback']  = empty( $out ) && $zone_key !== 'single_program';
+
+	wp_send_json_success(
+		array(
+			'items'   => $out,
+			'context' => $context,
+		)
+	);
 }

@@ -2,8 +2,10 @@
 
 global $theme;
 
-/* האזור "דף הבית" במסך "תוכניות מקושרות" שתחת תפריט Event Table.
-   כשהאזור מוגדר לכבד את הבחירה הידנית בדף והשדה מלא — הוא קובע את הרשימה,
+/* האזור "אירועים קרובים" במסך "תוכניות מקושרות" שתחת תפריט Event Table.
+   הרצועה הזו יושבת בדף הבית ובעמודי הלובי, ולכל עמוד יכולה להיות שם הגדרה
+   משלו — לכן מזהה העמוד עובר הלאה.
+   כשהמקום מוגדר לכבד את הבחירה הידנית בדף והשדה מלא — הוא קובע את הרשימה,
    והחוקיות רק ממיינת ומסננת. אחרת החוקיות שבפאנל קובעת לבדה.
 
    המיון תמיד לפי האירוע הקרוב שטרם עבר, כך שגם בחירה ידנית מסדרת את עצמה
@@ -12,7 +14,10 @@ global $theme;
 $programs = function_exists( 'ipo_related_programs_get_ids' )
     ? ipo_related_programs_get_ids(
         'home_upcoming',
-        array( 'manual_pick' => get_field( 'upcoming_selected_programs' ) )
+        array(
+            'post_id'     => get_queried_object_id(),
+            'manual_pick' => get_field( 'upcoming_selected_programs' ),
+        )
     )
     : array();
 

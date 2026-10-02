@@ -928,7 +928,7 @@ padding-left: 0px!important;
 
 [lang="en-US"] #ajaxsearchpro2_1 .probox .proinput input.orig, [lang="en-US"] #ajaxsearchpro2_2 .probox .proinput input.orig, div.asp_m.asp_m_2 .probox .proinput input.orig {
     font-weight: normal;
-    font-family: "Open Sans";
+    font-family: "Open Sans", Arial, sans-serif;
     color: #000;
 	}
 

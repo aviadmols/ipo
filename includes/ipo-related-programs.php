@@ -584,18 +584,86 @@ function ipo_related_programs_get_ids( $zone_key, $args = array() ) {
 		return array();
 	}
 
-	$post_id  = isset( $args['post_id'] ) ? (int) $args['post_id'] : 0;
+	$post_id     = isset( $args['post_id'] ) ? (int) $args['post_id'] : 0;
+	$manual_pick = isset( $args['manual_pick'] ) ? $args['manual_pick'] : array();
+
+	// Computing a zone walks every program with a future event (hundreds of
+	// queries on the home page), so the front end reuses the answer for a few
+	// minutes. Any event / program save or a settings change starts a new
+	// generation; the short lifetime covers events whose date simply passes.
+	$cache_key = '';
+
+	if ( ! is_admin() ) {
+		$cache_key = 'ipo_rp_' . md5(
+			wp_json_encode(
+				array(
+					get_option( 'ipo_related_programs_cache_gen', 0 ),
+					$zone_key,
+					$post_id,
+					$manual_pick,
+					defined( 'ICL_LANGUAGE_CODE' ) ? ICL_LANGUAGE_CODE : '',
+				)
+			)
+		);
+		$cached    = get_transient( $cache_key );
+
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+	}
+
 	$resolved = ipo_related_programs_resolve( $zone_key, $zone_settings, $post_id );
 
 	$items = ipo_related_programs_compute(
 		$resolved['ruleset'],
 		$resolved['respect_page_pick'],
 		$post_id,
-		isset( $args['manual_pick'] ) ? $args['manual_pick'] : array()
+		$manual_pick
 	);
 
-	return array_column( $items, 'id' );
+	$ids = array_column( $items, 'id' );
+
+	if ( $cache_key ) {
+		set_transient( $cache_key, $ids, 15 * MINUTE_IN_SECONDS );
+	}
+
+	return $ids;
 }
+
+/**
+ * Start a new cache generation for ipo_related_programs_get_ids().
+ */
+function ipo_related_programs_flush_cache() {
+	update_option( 'ipo_related_programs_cache_gen', time(), true );
+}
+
+add_action( 'update_option_' . IPO_RELATED_PROGRAMS_OPTION, 'ipo_related_programs_flush_cache' );
+
+add_action(
+	'save_post',
+	function ( $post_id, $post ) {
+		if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
+			return;
+		}
+
+		if ( in_array( $post->post_type, array( 'event', 'program', 'artist_plan' ), true ) ) {
+			ipo_related_programs_flush_cache();
+		}
+	},
+	10,
+	2
+);
+
+add_action(
+	'deleted_post',
+	function ( $post_id, $post ) {
+		if ( $post && in_array( $post->post_type, array( 'event', 'program', 'artist_plan' ), true ) ) {
+			ipo_related_programs_flush_cache();
+		}
+	},
+	10,
+	2
+);
 
 /**
  * Timestamp of a program's soonest event still ahead, or null.

@@ -20,7 +20,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 ?>
-<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<?php /* AOS 2.3.1 css is self-hosted: the unpkg copy opened a new connection (~900ms on mobile) on the critical render path. */ ?>
+<link href="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/styles/aos.css?ver=2.3.1' ); ?>" rel="stylesheet">
 <?php /* Guard: skip a custom-element re-definition (e.g. lottie-player loaded twice) so it
          can't throw "NotSupportedError: the name 'lottie-player' has already been used".
          Works regardless of load order/source (incl. a still-active duplicate code snippet). */ ?>

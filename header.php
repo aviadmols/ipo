@@ -13,10 +13,8 @@
 	<!--<meta name="viewport" content="width=device-width, initial-scale=1.0"/>-->
 
 
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,700;1,400&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
-	<link rel='stylesheet' id='classic-theme-styles-css' href='/wp-content/themes\wpstack-child\assets\styles\spacing.css' type='text/css' media='all' />
+	<?php // Google Fonts (Open Sans / PT Sans) removed: PT Sans was unused and Open Sans only styled the EN mobile search input, yet the request blocked render on a third-party origin. ?>
+	<link rel='stylesheet' id='classic-theme-styles-css' href='<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/styles/spacing.css' ); ?>' type='text/css' media='all' />
 	<link rel="profile" href="https://gmpg.org/xfn/11">
 	<?php if ( ! function_exists( 'has_site_icon' ) || ! has_site_icon() ) { ?>
 		<!-- Icons & Favicons -->

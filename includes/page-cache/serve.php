@@ -176,7 +176,7 @@ function ipo_pc_theme_signature() {
 	}
 	$theme = dirname( __DIR__, 2 );
 	$stamp = '';
-	foreach ( array( '.git/index', 'functions.php', 'header.php', 'footer.php', 'includes', 'parts', 'parts/headers', 'page-templates', 'assets/styles', 'assets/scripts' ) as $rel ) {
+	foreach ( array( '.git/index', 'functions.php', 'header.php', 'footer.php', 'includes', 'includes/page-cache', 'parts', 'parts/headers', 'page-templates', 'assets/styles', 'assets/scripts' ) as $rel ) {
 		$stamp .= (int) @filemtime( $theme . '/' . $rel ) . '|';
 	}
 	$sig = md5( $stamp );

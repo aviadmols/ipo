@@ -223,9 +223,10 @@ foreach (
 }
 unset( $ipo_pc_hook );
 
-// WP Rocket's own page cache never wrote a file on this host; make sure it
-// does not start keeping a second copy next to this one.
-add_filter( 'do_rocket_generate_caching_files', '__return_false' );
+// Do not filter do_rocket_generate_caching_files to stop WP Rocket's own page
+// cache: Rocket skips its whole optimisation pass (Delay JS, lazy-load) when it
+// may not write a cache file, and this cache stores the page after that pass.
+// Rocket's page cache is inert here anyway (WP_CACHE / advanced-cache not active).
 
 /* ------------------------------------------------------------------------- *
  * Warm-up after a purge

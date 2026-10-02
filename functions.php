@@ -1,4 +1,8 @@
-<?php 
+<?php
+
+// Full-page cache: answers from a stored copy before the parent theme and the
+// includes below load. Must stay first. See includes/page-cache/page-cache.php.
+require_once get_stylesheet_directory() . '/includes/page-cache/page-cache.php';
 
 // Load parent functions
 

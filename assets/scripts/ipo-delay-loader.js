@@ -16,6 +16,31 @@
 	var started = false;
 	var done = false;
 	var heldClicks = [];
+	var root = document.documentElement;
+
+	// Content that its own script would reveal stays visible until that script
+	// runs — otherwise the page is blank until the first touch:
+	// - AOS entrance animations ([data-aos] starts at opacity 0);
+	// - the hero slider's mobile "loading" state, which hides the whole slider.
+	//   Its first slide is server-rendered as the active one, so showing it
+	//   early is safe (and the plugin does not always clear that state).
+	root.classList.add('ipo-js-wait');
+	var waitCss = document.createElement('style');
+	waitCss.textContent =
+		'html.ipo-js-wait [data-aos]{opacity:1!important;transform:none!important;transition:none!important}' +
+		'.ipo-hero-slider-shell--loading .ipo-hero-slider{opacity:1!important;visibility:visible!important;transition:none!important}';
+	document.head.appendChild(waitCss);
+
+	// Hand the content back to AOS once it runs: whatever is on or above the
+	// screen keeps its "animated" state (no flicker), the rest animates in on
+	// scroll as before. If AOS never starts, everything simply stays visible.
+	function unwait() {
+		if (!window.AOS) return;
+		Array.prototype.forEach.call(document.querySelectorAll('[data-aos]'), function (el) {
+			if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add('aos-init', 'aos-animate');
+		});
+		root.classList.remove('ipo-js-wait');
+	}
 
 	function start() {
 		if (started) return;
@@ -43,6 +68,7 @@
 	function release() {
 		if (done) return;
 		done = true;
+		setTimeout(unwait, 300);
 		setTimeout(function () {
 			heldClicks.forEach(function (el) {
 				if (el && document.contains(el) && typeof el.click === 'function') el.click();

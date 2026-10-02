@@ -113,6 +113,11 @@ if ( ! function_exists( 'ipo_perf_filter_html' ) ) {
 			);
 		}
 
+		// Delay JS / lazy backgrounds / lazy iframes — includes/ipo-delay-js.php.
+		if ( function_exists( 'ipo_dj_filter_html' ) ) {
+			$buffer = ipo_dj_filter_html( $buffer );
+		}
+
 		return $buffer;
 	}
 }

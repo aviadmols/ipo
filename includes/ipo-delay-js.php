@@ -162,6 +162,57 @@ if ( ! function_exists( 'ipo_dj_lazy_backgrounds' ) ) {
 }
 
 /**
+ * Stylesheets the home page can paint without: removing any of them leaves the
+ * first screen pixel-identical on mobile (412x860) and desktop (1366x900),
+ * checked one by one on 2026-10-02. They load right after first paint instead
+ * of blocking it. Other templates show forms / carousels / galleries at the top,
+ * so this is the home page only.
+ */
+if ( ! function_exists( 'ipo_dj_home_deferred_styles' ) ) {
+	function ipo_dj_home_deferred_styles() {
+		return apply_filters(
+			'ipo_home_deferred_styles',
+			array(
+				'style-messages-parent-css',
+				'ipo-search-css',
+				'owl-carousel-min-css',
+				'magnific-popup-css',
+				'splide-min-css',
+				'animate-css',
+				'fancybox-parent-css',
+				'gform_basic-css',
+				'gform_theme_components-css',
+			)
+		);
+	}
+}
+
+if ( ! function_exists( 'ipo_dj_defer_styles' ) ) {
+	function ipo_dj_defer_styles( $html, $ids ) {
+		if ( empty( $ids ) ) {
+			return $html;
+		}
+
+		return preg_replace_callback(
+			'#<link\b[^>]*\brel\s*=\s*["\']stylesheet["\'][^>]*>#i',
+			function ( $m ) use ( $ids ) {
+				$tag = $m[0];
+
+				if ( ! preg_match( '/\sid\s*=\s*["\']([^"\']+)["\']/i', $tag, $id ) || ! in_array( $id[1], $ids, true ) ) {
+					return $tag;
+				}
+
+				$async = preg_replace( '/\smedia\s*=\s*(["\'])[^"\']*\1/i', '', $tag );
+				$async = preg_replace( '#\s*/?>$#', ' media="print" onload="this.media=\'all\';this.onload=null">', $async );
+
+				return $async . '<noscript>' . $tag . '</noscript>';
+			},
+			$html
+		);
+	}
+}
+
+/**
  * Lazy-load iframes (video embeds) that do not say otherwise.
  */
 if ( ! function_exists( 'ipo_dj_lazy_iframes' ) ) {
@@ -202,6 +253,10 @@ if ( ! function_exists( 'ipo_dj_filter_html' ) ) {
 
 		$html = ipo_dj_lazy_iframes( $html );
 		$html = ipo_dj_lazy_backgrounds( $html );
+
+		if ( is_front_page() ) {
+			$html = ipo_dj_defer_styles( $html, ipo_dj_home_deferred_styles() );
+		}
 
 		return ipo_dj_delay_scripts( $html );
 	}

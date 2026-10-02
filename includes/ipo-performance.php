@@ -59,10 +59,83 @@ if ( ! function_exists( 'ipo_perf_webp_url' ) ) {
 	}
 }
 
+/**
+ * Responsive sizes for the hero slider (IPO SLIDER plugin).
+ *
+ * The plugin prints each slide as <picture> with the full-size upload in both
+ * the mobile <source> and the desktop <img>, so a phone downloads the 1080x1920
+ * original to show it at ~720px. Each single-URL srcset / src gets WordPress'
+ * own srcset for that attachment (same aspect ratio only) with sizes="100vw",
+ * and the browser picks the smallest file that fits.
+ */
+if ( ! function_exists( 'ipo_perf_slider_srcset' ) ) {
+	function ipo_perf_slider_srcset( $buffer ) {
+		if ( stripos( $buffer, 'ipo-slide-image' ) === false ) {
+			return $buffer;
+		}
+
+		$srcset_for = function ( $url ) {
+			static $cache = array();
+
+			if ( ! isset( $cache[ $url ] ) ) {
+				$id             = attachment_url_to_postid( $url );
+				$cache[ $url ]  = $id ? (string) wp_get_attachment_image_srcset( $id, 'full' ) : '';
+			}
+
+			return $cache[ $url ];
+		};
+
+		return preg_replace_callback(
+			'#<picture\b[^>]*\bipo-slide-image\b[^>]*>[\s\S]*?</picture>#i',
+			function ( $pic ) use ( $srcset_for ) {
+				return preg_replace_callback(
+					'#<(source|img)\b[^>]*>#i',
+					function ( $m ) use ( $srcset_for ) {
+						$tag = $m[0];
+
+						if ( preg_match( '/\ssizes\s*=/i', $tag ) ) {
+							return $tag;
+						}
+
+						if ( 'source' === strtolower( $m[1] ) ) {
+							// Only a single URL with no width descriptors.
+							if ( ! preg_match( '/\ssrcset\s*=\s*(["\'])([^"\'\s,]+)\1/i', $tag, $s ) ) {
+								return $tag;
+							}
+							$srcset = $srcset_for( $s[2] );
+							if ( '' === $srcset ) {
+								return $tag;
+							}
+
+							return str_replace( $s[0], ' srcset="' . esc_attr( $srcset ) . '" sizes="100vw"', $tag );
+						}
+
+						if ( preg_match( '/\ssrcset\s*=/i', $tag ) || ! preg_match( '/\ssrc\s*=\s*(["\'])([^"\']+)\1/i', $tag, $s ) ) {
+							return $tag;
+						}
+						$srcset = $srcset_for( $s[2] );
+						if ( '' === $srcset ) {
+							return $tag;
+						}
+
+						return preg_replace( '/<img\b/i', '<img srcset="' . esc_attr( $srcset ) . '" sizes="100vw"', $tag, 1 );
+					},
+					$pic[0]
+				);
+			},
+			$buffer
+		);
+	}
+}
+
 if ( ! function_exists( 'ipo_perf_filter_html' ) ) {
 	function ipo_perf_filter_html( $buffer ) {
 		if ( ! is_string( $buffer ) || stripos( $buffer, '<html' ) === false ) {
 			return $buffer;
+		}
+
+		if ( apply_filters( 'ipo_perf_slider_srcset', true ) ) {
+			$buffer = ipo_perf_slider_srcset( $buffer );
 		}
 
 		if ( apply_filters( 'ipo_perf_serve_webp', true ) ) {

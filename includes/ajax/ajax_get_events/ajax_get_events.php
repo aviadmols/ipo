@@ -64,10 +64,10 @@ class ajax_get_events extends wpstack_ajax{
 		}
 		*/
 
-		foreach($events_by_program as $key => $events){
+		foreach($events_by_program as $key => $group){
 			$events_html .= $theme->get_part('loop-calendar-horizontal-program', array(
-				'program_id' => $events['program_id'],
-				'events' => $events['events']
+				'program_id' => $group['program_id'],
+				'events' => $group['events']
 			));
 		}
 

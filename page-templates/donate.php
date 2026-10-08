@@ -77,31 +77,31 @@ display: none!important;
 
 <p class="info_text">To donate
   to the Israel Philharmonic Foundation</p>
- <p><a href="https://donate.ipo.co.il/" target="_blank" rel="noopener">Click here</a> </p></td>
+ <p><a href="<?php echo ipo_donate_link( 'donate_link_israel' ); ?>" target="_blank" rel="noopener">Click here</a> </p></td>
 <td style="text-align: center;"><img class="alignnone wp-image-19883" src="https://www.ipo.co.il/wp-content/uploads/2023/10/flag-150x150-1.png" alt="" width="50" height="50" />
 
 <p class="info_text">To donate
 to the American Friends of the Israel Philharmonic</p>
- <p><a href="https://connect.afipo.org/site/Donation2?1400.donation=form1&amp;df_id=1400&amp;mfc_pref=T" target="_blank" rel="noopener">Click here</a></p></td>
+ <p><a href="<?php echo ipo_donate_link( 'donate_link_usa' ); ?>" target="_blank" rel="noopener">Click here</a></p></td>
 </tr>
 <tr>
 <td style="text-align: center;"><img class="alignnone wp-image-19887" src="https://www.ipo.co.il/wp-content/uploads/2023/10/canada-150x150-1.png" alt="" width="50" height="50" />
 
 <p class="info_text">To donate
 to the Canadian Friends of the Israel Philharmonic</p>
- <p><a href="https://www.canadahelps.org/en/charities/canadian-friends-of-the-israel-philharmonic-orchestra/" target="_blank" rel="noopener">Click here</a></p></td>
+ <p><a href="<?php echo ipo_donate_link( 'donate_link_canada' ); ?>" target="_blank" rel="noopener">Click here</a></p></td>
 <td style="text-align: center;"><img class="alignnone wp-image-19885" src="https://www.ipo.co.il/wp-content/uploads/2023/10/uk-150x150-1.png" alt="" width="50" height="50" />
 
 <p class="info_text">To donate
 to the Israel Philharmonic Foundation UK</p>
- <p><a href="https://www.ipofoundationuk.com/donate/donation/" target="_blank" rel="noopener">Click here</a></p></td>
+ <p><a href="<?php echo ipo_donate_link( 'donate_link_uk' ); ?>" target="_blank" rel="noopener">Click here</a></p></td>
 </tr>
 <tr>
 <td colspan="2">
 <img class="alignnone wp-image-19895" src="https://www.ipo.co.il/wp-content/uploads/2023/10/globe.png" alt="" width="50" height="50" />
 <p style="text-align: center;">TO DONATE FROM ANY OTHER COUNTRY</p>
 
-  <p><a href="https://donate.ipo.co.il/" target="_blank" rel="noopener">Click here</a></p>
+  <p><a href="<?php echo ipo_donate_link( 'donate_link_other' ); ?>" target="_blank" rel="noopener">Click here</a></p>
 </td>
 </tr>
 </tbody>

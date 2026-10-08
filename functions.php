@@ -37,6 +37,7 @@ require_once(get_template_directory().'/functions.php');
     require_once get_stylesheet_directory() . '/includes/ipo-shortcodes.php';
     require_once get_stylesheet_directory() . '/includes/ipo-bidirectional.php';
     require_once get_stylesheet_directory() . '/includes/serie-category-programs.php';
+    require_once get_stylesheet_directory() . '/includes/ipo-donate-links.php';
     require_once get_stylesheet_directory() . '/includes/ipo-related-programs.php';
     require_once get_stylesheet_directory() . '/includes/ipo-related-programs-admin.php';
     require_once get_stylesheet_directory() . '/includes/ipo-acfml-repeater-sync.php';

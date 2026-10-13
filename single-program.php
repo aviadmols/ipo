@@ -148,7 +148,11 @@ usort($reordered, function($a, $b) {
 ?>
 
 <!-- =============== Time Zone area start =============== -->
-<?php $has_more_dates = count($reordered) > 3; ?>
+<?php
+// Star Wars (HE 66680 / EN 66679): show every date open, without the "more dates" button.
+$show_all_dates = in_array( (int) $post_id, array( 66680, 66679 ), true );
+$has_more_dates = ! $show_all_dates && count($reordered) > 3;
+?>
 <section class="timeZone_area active" <?php echo 'data-items-count="' . count($reordered) . '"'; ?> data-aos="fade-in" data-aos-offset="0" data-aos-duration="500" data-aos-delay="300">
     <div class="container custom max-1440">
         <div class="time_zone<?php echo $has_more_dates ? '' : ' active'; ?>" id="time_zone">

@@ -320,25 +320,30 @@ if(get_field('Hiding_purchase')) {
 
 
 
-		if($apid){
+		// Link priority: the event's own link, then the program's link, then the
+		// ticketing system order page. Manually created events have no API id,
+		// so they only get a button when one of the two links is filled.
+		$program_id = $this->get_program();
+		$program_id = is_object($program_id) ? $program_id->ID : $program_id;
+
+		$url = $this->gf('event_ticket_link');
+
+		if(!$url)
+			$url = get_field('ticket_purchase', $program_id ? $program_id : false);
+
+		if(!$url && $apid){
 			$url = 'https://ipo.pres.global/order/'.$apid;
-		if(ICL_LANGUAGE_CODE == 'he'){
-        
-        }else{
-            $url = $url .'?lang=en';
-        }
-
- if(get_field('ticket_purchase')) { 
-$url = get_field('ticket_purchase');
-
-} 
-
-			if($url_only)
-				return $url;
-			else
-				return '<a class="btn" href="'. $url .'"><span class="hide-mobile">'.$str_ticket_order.'</span><span class="hide-pc">'.$str_ticket_order_mobile.'</span></a>';
-			
+			if(ICL_LANGUAGE_CODE != 'he')
+				$url = $url .'?lang=en';
 		}
+
+		if(!$url)
+			return $url_only ? false : '';
+
+		if($url_only)
+			return $url;
+		else
+			return '<a class="btn" href="'. esc_url($url) .'"><span class="hide-mobile">'.$str_ticket_order.'</span><span class="hide-pc">'.$str_ticket_order_mobile.'</span></a>';
 	}
 
 	public function get_day(){

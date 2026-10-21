@@ -4257,24 +4257,28 @@ margin-left: 15px;
 }
 
 
-/* Serie "הפילהרמונית לילדים העונה ה-90" (64114) — see single-serie.php */
-.postid-64114 .session .wpstack-bg-image {
+/* Serie "הפילהרמונית לילדים העונה ה-90" (64114, EN 64115) — see single-serie.php */
+.postid-64114 .session .wpstack-bg-image,
+.postid-64115 .session .wpstack-bg-image {
     height: auto;
 }
 
-.postid-64114 .session .wpstack-bg-image > .bg_set {
+.postid-64114 .session .wpstack-bg-image > .bg_set,
+.postid-64115 .session .wpstack-bg-image > .bg_set {
     width: 100% !important;
     height: auto !important;
     min-height: 0 !important;
     aspect-ratio: 390 / 233;
 }
 
-.postid-64114 .hero_area-content .hero-mobile-image {
+.postid-64114 .hero_area-content .hero-mobile-image,
+.postid-64115 .hero_area-content .hero-mobile-image {
     display: none;
 }
 
 @media (max-width: 768px) {
-    .postid-64114 section.hero_area-content {
+    .postid-64114 section.hero_area-content,
+    .postid-64115 section.hero_area-content {
         background-image: none !important;
         background-color: #2b888f !important;
         height: auto !important;
@@ -4283,15 +4287,24 @@ margin-left: 15px;
         padding-top: 30px;
     }
 
-    .postid-64114 .hero_area-content .hero-mobile-image {
+    .postid-64114 .hero_area-content .hero-mobile-image,
+    .postid-64115 .hero_area-content .hero-mobile-image {
         display: block;
         width: 100%;
         height: auto;
     }
 
-    .postid-64114 .hero_area-content .content {
+    .postid-64114 .hero_area-content .content,
+    .postid-64115 .hero_area-content .content {
         padding-bottom: 0 !important;
     }
+}
+
+/* Kids lobby (/ילדים/, Lobby-Children.php): the 1920px desktop banner stopped
+   growing on wider screens and left a strip of background colour beside it. */
+.page-template-Lobby-Children .svg-pc img {
+    width: 100%;
+    height: auto;
 }
 
 

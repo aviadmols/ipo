@@ -99,6 +99,10 @@ if ($use_category_programs && $category_programs_term) {
 }
 
 $banner_image = get_field('banner_image');
+// Editors often fill only the "תמונה ראשית דסקטופ" image at the top of the screen.
+if (!$banner_image) {
+    $banner_image = get_field('SVG_pc_img', false, false);
+}
 $banner_image = new wpstack_image($banner_image);
 
 $hide_banner_content = get_field('hide_banner_content');
@@ -127,9 +131,10 @@ if(defined('ICL_LANGUAGE_CODE') && ICL_LANGUAGE_CODE == 'en'){
 
 $program_banner_image_mobile  = get_field('program_banner_image',$post_id);
 
-// "הפילהרמונית לילדים העונה ה-90" only: no bottom gradient, and on mobile the
-// banner is a full-width <img> instead of a cropped background (ipo-custom.css).
-$edge_mobile_banner = (int) get_the_ID() === 64114;
+// "הפילהרמונית לילדים העונה ה-90" (and its EN translation 64115) only: no bottom
+// gradient, and on mobile the banner is a full-width <img> instead of a cropped
+// background (ipo-custom.css).
+$edge_mobile_banner = in_array((int) get_the_ID(), [64114, 64115], true);
 
 
 $class = '';

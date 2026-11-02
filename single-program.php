@@ -155,15 +155,17 @@ $has_more_dates = ! $show_all_dates && count($reordered) > 3;
 ?>
 <section class="timeZone_area active" <?php echo 'data-items-count="' . count($reordered) . '"'; ?> data-aos="fade-in" data-aos-offset="0" data-aos-duration="500" data-aos-delay="300">
     <div class="container custom max-1440">
-        <?php $theme->the_part('program-flash', $post_id); ?>
-        <div class="time_zone<?php echo $has_more_dates ? '' : ' active'; ?>" id="time_zone">
-            <?php
-            foreach ($reordered as $event) {
-                $event = $event['event'];
-                $event_id = $event->get_id();
-                $theme->the_part('loop-program-event', $event_id);
-            }
-            ?>
+        <div class="program-tickets">
+            <?php $theme->the_part('program-flash', $post_id); ?>
+            <div class="time_zone<?php echo $has_more_dates ? '' : ' active'; ?>" id="time_zone">
+                <?php
+                foreach ($reordered as $event) {
+                    $event = $event['event'];
+                    $event_id = $event->get_id();
+                    $theme->the_part('loop-program-event', $event_id);
+                }
+                ?>
+            </div>
         </div>
         <?php if ($has_more_dates) : ?>
             <div class="moreevent">

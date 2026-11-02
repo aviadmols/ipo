@@ -8134,6 +8134,14 @@ header.sticky .desktop-menu .menu > li > .sub-menu:after{
 
 .program-flash + .time_zone {
 	margin-top: 0;
+	box-shadow: none;
+}
+
+/* The card's shadow, around the strip and the card as one block. On mobile it's on .timeZone_area. */
+@media (min-width: 769px) {
+	.program-tickets:has(.program-flash) {
+		box-shadow: 0 12px 53px 0 rgba(0, 0, 0, 0.19);
+	}
 }
 
 @media (max-width: 768px) {

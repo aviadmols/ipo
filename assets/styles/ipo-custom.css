@@ -8123,7 +8123,9 @@ header.sticky .desktop-menu .menu > li > .sub-menu:after{
 	color: #fff;
 	background-color: #faa95a;
 	font-family: 'Mandatory PH';
-	font-size: 5rem;
+	font-size: 7rem;
+	font-weight: 400;
+	font-variation-settings: "wdth" 20, "wght" 400;
 	line-height: 1;
 	letter-spacing: .3em;
 	text-indent: .3em;

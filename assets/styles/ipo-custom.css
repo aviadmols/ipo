@@ -8112,3 +8112,32 @@ header.sticky .desktop-menu .menu > li > .sub-menu:after{
 		filter: none !important;
 	}
 }
+
+/* Flash strip above the ticket cards on a program page (parts/program-flash.php).
+   It takes over the card's pull into the hero. */
+.program-flash {
+	position: relative;
+	z-index: 1;
+	margin-top: -7rem;
+	padding: 1.5rem 2rem;
+	color: #fff;
+	background-color: #faa95a;
+	font-family: 'Mandatory PH';
+	font-size: 5rem;
+	line-height: 1;
+	letter-spacing: .3em;
+	text-indent: .3em;
+	text-align: center;
+}
+
+.program-flash + .time_zone {
+	margin-top: 0;
+}
+
+@media (max-width: 768px) {
+	.program-flash {
+		margin: 0 -25px;
+		padding: 8px 16px;
+		font-size: 28px;
+	}
+}

@@ -1,5 +1,5 @@
 <?php
-// The strip above the ticket cards. Its settings are in includes/ipo-program-flash.php.
+// The strip above the ticket cards. Its fields are in the ACF box "פרטי הקונצרט".
 
 $flash_text = get_field( 'program_flash_text', $post_id );
 

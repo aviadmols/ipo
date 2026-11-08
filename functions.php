@@ -44,6 +44,7 @@ require_once(get_template_directory().'/functions.php');
     require_once get_stylesheet_directory() . '/includes/ipo-acfml-repeater-sync.php';
     require_once get_stylesheet_directory() . '/includes/ipo-wpml-copy-once.php';
     require_once get_stylesheet_directory() . '/includes/ipo-program-artists.php';
+    require_once get_stylesheet_directory() . '/includes/ipo-program-media.php';
     require_once get_stylesheet_directory() . '/includes/ipo-performance.php';
     require_once get_stylesheet_directory() . '/includes/ipo-delay-js.php';
  //  require_once get_stylesheet_directory() . '/includes/acf-event-field.php';

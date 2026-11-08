@@ -4307,6 +4307,14 @@ margin-left: 15px;
     height: auto;
 }
 
+/* Shesh Besh (he 67375, en 67376, Child-streaming.php): same fix. Only these two
+   pages, so the other pages on that template keep their banner as it is. */
+.page-id-67375 .svg-pc img,
+.page-id-67376 .svg-pc img {
+    width: 100%;
+    height: auto;
+}
+
 
 [lang="he-IL"] .rendered-date svg{
 margin-right: 15px!important;	

@@ -25,6 +25,18 @@ $podcast_image = get_field('podcast_image');
 $podcasts = get_field('podcasts');
 $podcast_link = get_field('podcast_link');
 
+// Optional sections (includes/ipo-streaming-extra-fields.php). Empty on pages that don't use them.
+$hero_image       = get_field('streaming_hero_image');
+$members_title    = get_field('streaming_members_title');
+$members          = get_field('streaming_members');
+$more_text        = get_field('streaming_more_text');
+$more_label       = get_field('streaming_more_label');
+$hide_below_clips = get_field('streaming_hide_below_clips');
+
+if (!$more_label) {
+  $more_label = (defined('ICL_LANGUAGE_CODE') && ICL_LANGUAGE_CODE === 'en') ? 'Read more' : 'לקריאה נוספת';
+}
+
 ?>
 
 <div class="main-content">
@@ -63,13 +75,74 @@ $podcast_link = get_field('podcast_link');
         </div>
         <div class="col-lg-6">
           <div class="thumb" data-aos="fade-in" data-aos-duration="300" data-aos-delay="300">
+            <?php if ($hero_image) : ?>
+            <?php echo wp_get_attachment_image($hero_image, 'full', false, array('class' => 'img-fluid streaming-hero-image', 'alt' => esc_attr(wp_strip_all_tags($series_title_22)))); ?>
+            <?php else : ?>
             <iframe width="750" height="420" src="<?php echo $youtube; ?>" title="YouTube video player" frameborder="0" style="max-width: 100%;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            <?php endif; ?>
           </div>
         </div>
       </div>
     </div>
   </section>
   <?php endif;?>
+
+  <?php if ($members) : ?>
+  <section class="streaming-members-section pt-100">
+    <div class="container">
+      <?php if ($members_title) : ?>
+      <div class="title pb-50">
+        <h2 class="lette-sapce-10" data-aos="fade-in" data-aos-duration="100" data-aos-delay="100"><?php echo esc_html($members_title); ?></h2>
+      </div>
+      <?php endif; ?>
+      <div class="streaming-members" data-aos="fade-in" data-aos-duration="250" data-aos-delay="250">
+        <?php foreach ($members as $member) : ?>
+        <div class="streaming-member">
+          <div class="streaming-member-image">
+            <?php if (!empty($member['image'])) : ?>
+            <?php echo wp_get_attachment_image($member['image'], 'large', false, array('alt' => esc_attr($member['name'] ?? ''))); ?>
+            <?php endif; ?>
+          </div>
+          <div class="content">
+            <?php if (!empty($member['name'])) : ?>
+            <p><strong><?php echo esc_html($member['name']); ?></strong></p>
+            <?php endif; ?>
+            <?php if (!empty($member['title'])) : ?>
+            <p class="title"><?php echo esc_html($member['title']); ?></p>
+            <?php endif; ?>
+          </div>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </section>
+  <?php endif; ?>
+
+  <?php if ($more_text) : ?>
+  <section class="streaming-more-section pt-50">
+    <div class="container">
+      <button type="button" class="streaming-more-toggle" aria-expanded="false" aria-controls="streaming-more-text">
+        <span><?php echo esc_html($more_label); ?></span>
+        <svg class="streaming-more-arrow" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="streaming-more-text" id="streaming-more-text" hidden>
+        <?php echo $more_text; ?>
+      </div>
+    </div>
+  </section>
+  <script>
+  (function () {
+    var button = document.querySelector('.streaming-more-toggle');
+    var text = document.getElementById('streaming-more-text');
+    if (!button || !text) return;
+    button.addEventListener('click', function () {
+      var open = button.getAttribute('aria-expanded') === 'true';
+      button.setAttribute('aria-expanded', open ? 'false' : 'true');
+      text.hidden = open;
+    });
+  })();
+  </script>
+  <?php endif; ?>
 
 <section class="recommended-section pt-100 pb-100" id="recommended">
   <div class="container">
@@ -118,7 +191,7 @@ $podcast_link = get_field('podcast_link');
 </section>
 
 
-<?php if ($videos) : ?>
+<?php if ($videos && !$hide_below_clips) : ?>
      <section class="video-section pb-100 pt-100" style="background: #f9f9f9;">
                 <div class="container">
                     <div class="title style-1 pb-75">
@@ -195,7 +268,7 @@ if (!empty($video['image']) && is_object($video['image'])) {
 <?php endif; ?>
 
 
-  <?php if($podcast_title) : ?>
+  <?php if($podcast_title && !$hide_below_clips) : ?>
   <section class="characters-section pt-100 pb-100" style="background: rgba(249, 195, 196, 1);">
     <div class="container">
       <div class="title pb-75">
@@ -318,6 +391,80 @@ if (!empty($video['image']) && is_object($video['image'])) {
 
 .whatsapp-banner img {
   max-width: 100%!important;
+}
+
+.streaming-hero-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.streaming-members {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 30px 20px;
+}
+
+@media (max-width: 1199px) {
+  .streaming-members {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 575px) {
+  .streaming-members {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 25px 15px;
+  }
+}
+
+.streaming-member-image {
+  aspect-ratio: 3 / 4;
+  background: #eee;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.streaming-member-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.streaming-member .content p {
+  margin-bottom: 0;
+  line-height: 1.3;
+}
+
+.streaming-member .content .title {
+  margin-top: 4px;
+}
+
+.streaming-more-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.streaming-more-arrow {
+  transition: transform 0.3s ease;
+}
+
+.streaming-more-toggle[aria-expanded="true"] .streaming-more-arrow {
+  transform: rotate(180deg);
+}
+
+.streaming-more-text {
+  padding-top: 25px;
+  max-width: 900px;
 }
 </style>
 

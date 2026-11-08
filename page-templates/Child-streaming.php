@@ -399,22 +399,37 @@ if (!empty($video['image']) && is_object($video['image'])) {
   height: auto;
 }
 
+/* Centred, so a row with fewer than 6 photos sits in the middle. */
+.streaming-members-section .title,
+.streaming-member .content,
+.streaming-more-section .container {
+  text-align: center;
+}
+
 .streaming-members {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 30px 20px;
 }
 
+.streaming-member {
+  flex: 0 0 calc((100% - 5 * 20px) / 6);
+}
+
 @media (max-width: 1199px) {
-  .streaming-members {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .streaming-member {
+    flex-basis: calc((100% - 2 * 20px) / 3);
   }
 }
 
 @media (max-width: 575px) {
   .streaming-members {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 25px 15px;
+  }
+
+  .streaming-member {
+    flex-basis: calc((100% - 15px) / 2);
   }
 }
 
@@ -465,6 +480,7 @@ if (!empty($video['image']) && is_object($video['image'])) {
 .streaming-more-text {
   padding-top: 25px;
   max-width: 900px;
+  margin: 0 auto;
 }
 </style>
 

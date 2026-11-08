@@ -87,8 +87,12 @@ if (!$more_label) {
   </section>
   <?php endif;?>
 
+  <?php if ($members || $more_text) : ?>
+  <div class="streaming-extra pt-100 pb-100">
+  <?php endif; ?>
+
   <?php if ($members) : ?>
-  <section class="streaming-members-section pt-100">
+  <section class="streaming-members-section">
     <div class="container">
       <?php if ($members_title) : ?>
       <div class="title pb-50">
@@ -119,7 +123,7 @@ if (!$more_label) {
   <?php endif; ?>
 
   <?php if ($more_text) : ?>
-  <section class="streaming-more-section pt-50">
+  <section class="streaming-more-section<?php echo $members ? ' pt-50' : ''; ?>">
     <div class="container">
       <button type="button" class="streaming-more-toggle" aria-expanded="false" aria-controls="streaming-more-text">
         <span><?php echo esc_html($more_label); ?></span>
@@ -142,6 +146,10 @@ if (!$more_label) {
     });
   })();
   </script>
+  <?php endif; ?>
+
+  <?php if ($members || $more_text) : ?>
+  </div><!-- /.streaming-extra -->
   <?php endif; ?>
 
 <section class="recommended-section pt-100 pb-100" id="recommended">
@@ -397,6 +405,11 @@ if (!empty($video['image']) && is_object($video['image'])) {
   display: block;
   width: 100%;
   height: auto;
+}
+
+/* One gray block behind the photo row and the read-more text. */
+.streaming-extra {
+  background: #f4f4f4;
 }
 
 /* Centred, so a row with fewer than 6 photos sits in the middle. */

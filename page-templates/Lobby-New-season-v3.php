@@ -1,10 +1,7 @@
-<?php 
+<?php
 /*
 * Template Name: Lobby New season V3
 */
-get_header();
-
-
 get_header();
 
 global $theme;
@@ -67,7 +64,7 @@ text-shadow: none!important;
 }
 
 if ($banner_image_mobile) {
- 
+
  echo '<style>
  @media (max-width: 768px){
  .hero-section{
@@ -79,7 +76,7 @@ background-image: url(' . wp_get_attachment_url($banner_image_mobile) .')!import
 .hero-section {
     padding: 0px!important;
     }
-    
+
 .hero-section>.container {
     position: absolute;
     bottom: 10px;
@@ -90,7 +87,7 @@ background-image: url(' . wp_get_attachment_url($banner_image_mobile) .')!import
 [lang="he-IL"] .recommended-slider .owl-next img, [lang="he-IL"] .recommended-slider .owl-prev img {
     transform: rotate(0deg)!important;
 }
-</style>'; 
+</style>';
 }
 
 ?>
@@ -101,8 +98,8 @@ background-image: url(' . wp_get_attachment_url($banner_image_mobile) .')!import
 <section class="hero_page-section hide-pc dispaly_for_mobile" style="" >
 <div class="gradient-bottom" > </div>
   <div class="gradient-top"> </div>
-        <div class="banner_image"> 
-            <?php 
+        <div class="banner_image">
+            <?php
 $banner_image_mobile  = get_field('main_banner_image_mobile');
 if ($banner_image_mobile) {
            echo '<img src="'. $banner_image_mobile .'"  style="min-height: 25vh !important;" />';
@@ -112,7 +109,7 @@ if ($banner_image_mobile) {
 if ($banner_image_mobile) {
  echo '<style>
  @media (max-width: 768px){
- 
+
  .key-plan.pt-50 {
  padding-top: 0px!important;
  }
@@ -121,7 +118,7 @@ if ($banner_image_mobile) {
     position: relative;
     overflow: visible!important;
 }
- 
+
  .hero-section{
      min-height: 265px;
 background-image: url(' . $banner_image_mobile .')!important;
@@ -135,16 +132,16 @@ background-image: url(' . $banner_image_mobile .')!important;
 }
 
 }
-</style>'; 
+</style>';
 }
 ?>
       <?php echo do_shortcode('[ipo-breadcrumbs]'); ?>
-        </div>      
+        </div>
 <div class="container flex-pc max-1440" style="background: #fff; padding-top: 15px;">
    <div class="content width-25">
 <h1 class="title-pages" style="    font-size: 60px!important; color: #000000; margin-right: 0px!important; margin-left: 0px!important; letter-spacing: 3px!important;">
 <?php echo get_the_title(); ?></h1>
-       
+
                 </div>
 </div>
   </section>
@@ -154,11 +151,11 @@ background-image: url(' . $banner_image_mobile .')!important;
            if($white) {
    echo '<div class="gradient-bottom" style="max-height: 30%;" >
                                     </div>';
-             
+
                echo '<div class="gradient-top" style="" >
                                     </div>';
-                                      
-                                      
+
+
 }?>
                               <?php
       if($white) {
@@ -168,12 +165,12 @@ $class = 'white-text';
                 <div class="container" style="z-index: 3;">
                     <div class="hero-text">
                         <h1 class="header-title pb-25 <?php echo $class; ?>" style="text-shadow: none !important;"><?php echo get_the_title(); ?></h1>
-                
+
                       	<?php if($subtitle) : ?>
                         <h3 class="sub-title-simpler white-text <?php echo $class; ?>"><?php echo $subtitle;?></h3>
                       	<?php endif;?>
 
-                      
+
                     </div><!-- /.hero-text -->
                 </div><!-- /.container -->
             </section><!-- /.hero-section -->
@@ -181,7 +178,7 @@ $class = 'white-text';
 
 
    <section class="subscribe-section program-info  pt-50 pb-50" style="background-color: #f9f9f9;">
-     
+
      <style>
        .subscribe-section  * {
          color: #000!important;
@@ -193,18 +190,18 @@ $class = 'white-text';
      .program-info.show-read-more .read-more-text {
           display: block;
   }
-       
-   
-       
-       
+
+
+
+
        .program-info.show-read-more  .text_read_more {
-        display: none!important; 
+        display: none!important;
        }
 
-       
-          
+
+
        .program-info.show-read-more  .text_read_lass {
-        display: block!important; 
+        display: block!important;
        }
 
 .text_read_lass {
@@ -216,7 +213,7 @@ $class = 'white-text';
     align-items: flex-start!important;
        }
      </style>
-<?php 
+<?php
 $program_title = get_field('program_title');
 
 ?>
@@ -238,16 +235,16 @@ if(ICL_LANGUAGE_CODE == 'en'){
    $readmoretext  = 'Read More';
 
 }
-                                                
+
 
                                 echo '<div class="read-more-text" data-aos="fade-in" data-aos-offset="0" data-aos-duration="500" data-aos-delay="300">'. do_shortcode($read_more) .'</div>';
                                 echo '<a  class="read-more" style="cursor: pointer;"><span class="text_read_more">'. $readmoretext .'</span><span class="text_read_lass">קרא פחות</span> <img src="'. ipo_arrow_icon_url() .'" alt=""></a>';
 
-                              
+
                             }
 ?>
-               
-                        </div>                        
+
+                        </div>
                     </div>
                 </div><!-- /.container -->
             </section><!-- /.subscribe-section -->
@@ -255,7 +252,7 @@ if(ICL_LANGUAGE_CODE == 'en'){
    <section class="key-plan pb-50 " style="display: none;" >
 
 
-<?php 
+<?php
 $program_title = get_field('program_title');
 $program_subtitle = get_field('program_subtitle');
 $program_text = get_field('program_text');
@@ -272,11 +269,11 @@ $program_image = get_field('program_image');
                                     <h3 class="sub-title-simpler" data-aos-duration="150" data-aos-delay="150"><?php echo $program_subtitle;?></h3>
                                     <?php endif;?>
 
-                                </div>   
-                           
+                                </div>
+
                                      <div class="view-more " data-aos-duration="250" data-aos-delay="250">
-                                <?php 
-                                if( $program_link ): 
+                                <?php
+                                if( $program_link ):
                                     $link_url = $program_link['url'];
                                     $link_title = $program_link['title'];
                                     $link_target = $program_link['target'] ? $program_link['target'] : '_self';
@@ -284,12 +281,12 @@ $program_image = get_field('program_image');
                                     <a class="" href="<?php echo esc_url( $link_url ); ?>" target="<?php echo esc_attr( $link_target ); ?>"><?php echo esc_html( $link_title ); ?> <img src="<?php echo ipo_arrow_icon_url(); ?>" alt=""></a>
                                 <?php endif; ?>
             </div>
-                                            
+
                             </div><!-- /.text -->
                         </div>
                         <div class="col-lg-6">
                             <div class="thumb"  data-aos="fade-in" data-aos-duration="300" data-aos-delay="300">
-                                <?php  
+                                <?php
 
                                     $program_image = new wpstack_image($program_image);
 
@@ -307,14 +304,14 @@ $program_image = get_field('program_image');
             <?php if (!empty(get_field('video_banner_mp4'))) { $theme->the_part('section-video-banner'); }?>
         <!-- =============== video area end =============== -->
 
-      
 
- 
+
+
 		      <!-- =============== Recommended series =============== -->
           <!--   $theme->the_part('Recommended-series'); -->
         <!-- =============== upcoming area end =============== -->
-		
-        
+
+
      <!-- women of jazz banner start -->
 <?php
 
@@ -326,8 +323,8 @@ if( $banner_desktop || $banner_mobile ):
 ?>
 
 <div class="womenOfJazz_banner section-view">
-	
-<?php 
+
+<?php
 echo '<a href="'. $Linknbanner .'">';
 if( $banner_desktop ){
     $banner_desktop = new wpstack_image($banner_desktop);
@@ -367,7 +364,6 @@ echo '</a>';
 
 
     $url_c = get_field('season_program_link');
-}
 ?>
 
 <a href="<?php echo $url_c; ?>" class="btn_cta" style="
@@ -387,7 +383,7 @@ echo '</a>';
 
 
 <?php endif; ?>
-     
+
 
         <!-- women of jazz banner end -->
 
@@ -439,9 +435,12 @@ echo '</a>';
 
 
   <!-- =============== Recommended series 2 =============== -->
-<?php 
+<?php
 $series_title_2 = get_field('series_title_2');
 $series_2 = get_field('series_2');
+if ( ! is_array( $series_2 ) ) {
+    $series_2 = array();
+}
 
 ?>
 
@@ -464,10 +463,10 @@ $series_2 = get_field('series_2');
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
-            </div><!-- /.recommended-slider -->                        
+            </div><!-- /.recommended-slider -->
         </div><!-- /.recommended-content -->
 
-    
+
     </div><!-- /.container -->
 </section><!-- /.recommended-section -->
 <!-- =============== upcoming area end 2 =============== -->
@@ -479,7 +478,7 @@ $series_2 = get_field('series_2');
                                 <?php echo $program_text;?>
                               </div>
   </div>
-  </div>
+  </section>
 
 
 
@@ -508,9 +507,9 @@ $series_2 = get_field('series_2');
 
 <style>
 
-  
+
   .banners_2 {
-    
+
     display: flex;
     width: 100%;
     justify-content: space-between;
@@ -518,10 +517,10 @@ $series_2 = get_field('series_2');
 
 
   .banners_2>div img {
-   width: 100%!important; 
+   width: 100%!important;
   }
 
-  
+
   .banners_2>div {
   width: 48%!important;
 
@@ -583,7 +582,7 @@ body:not(.white-intro) .hero-text h1 {
         background: transparent !important;
 
   }
-  
+
   .pt-50 {
     padding-top: 25px !important;
 }
@@ -609,7 +608,7 @@ body:not(.white-intro) .hero-text h1 {
 .recommended-section_costume .owl-item.cloned {
 display: none!important;
   }
-  
+
     .banners_2{
        overflow-x: auto;
   }
@@ -631,7 +630,7 @@ display: none!important;
  .banners_2.desktop {
     display: none!important;
 }
-  
+
     body:not(.page-template-template-home) .subscribe-content h2.lette-sapce-10 {
         font-size: 28px !important;
         color: #000000;
@@ -650,7 +649,7 @@ letter-spacing: 0!important;
     padding-top: 50px !important;
     margin-top: 50px !important;
   }
-  
+
   .slider-banner {
     padding-right: 15px!important;
   }
@@ -670,8 +669,8 @@ letter-spacing: 0!important;
 }
 
 .owl-stage-outer *{
-    scrollbar-width: none; 
-    -ms-overflow-style: none; 
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 .owl-stage-outer  *::-ms-scrollbar {
@@ -682,13 +681,13 @@ letter-spacing: 0!important;
          overflow: unset!important;
   }
 .owl-carousel *:not(.owl-item ){
-   
-  
+
+
     transition: none!important;
     transform: none!important;
         overflow-x: auto;
 }
-  
+
   .recommended-section_costume .owl-item  {
     min-width: 220px;
 	margin-left: 20px!important;
@@ -704,8 +703,8 @@ letter-spacing: 0!important;
   }
 
 .owl-carousel, .owl-stage-outer, .owl-stage{
-   
-  
+
+
     transition: none!important;
     transform: none!important;
         overflow-x: auto!important;
@@ -722,27 +721,27 @@ letter-spacing: 0!important;
     align-items: center;
     justify-content: center;
     margin-right: -25px!important;
-  
+
     width: calc(100% + 25px) !important;
 }
-  
+
   [lang="he-IL"]  .upcoming_area>.container {
     display: flex;
     align-items: center;
     justify-content: center;
     margin-left: -25px!important;
-  
+
     width: calc(100% + 25px) !important;
 }
-  
+
   }
 
 .recommended  .rd-text, .recommended  .text, .recommended p{
     padding-right: 5px;
     padding-left: 5px;
-}  
-  
-  
+}
+
+
   .btn_cta {
     min-width: 219px;
     margin-left: 25px;
@@ -755,7 +754,7 @@ letter-spacing: 0!important;
     .slider-banner .slick-slide img {
         padding-left: 0!important;
         padding-right: 0px!important;
-   
+
     }
 .recommended .thumb {
     margin-bottom: 0 !important;
@@ -793,7 +792,7 @@ letter-spacing: 0!important;
     object-fit: cover;
 }
 
-  
+
   [lang="en-US"]  .additionalDates img {
    transform: rotate(180deg)!important;
   }

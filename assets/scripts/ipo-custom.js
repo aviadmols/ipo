@@ -1021,7 +1021,11 @@ jQuery(document).ready(function( $ ){
 			$(this).css('top', 'unset');
 
 			$headerWidth = $('header').width();
-			$headerHeight = $('header').height();
+			// outerHeight() of the site header, same as set_submenu_position() above.
+			// height() skips the header's 50px top padding, and since this handler
+			// runs after that one on mouseenter, it put the panel back over the
+			// top-level links (e.g. hovering "עלינו" hid ראשי / קונצרטים / ילדים...).
+			$headerHeight = $('.site > header').outerHeight();
 
 			$(this).css('width', $headerWidth);
 

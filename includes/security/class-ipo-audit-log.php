@@ -223,7 +223,7 @@ class IPO_Audit_Log {
 	public static function settings() {
 		$defaults = array(
 			'alert_emails' => get_option( 'admin_email' ),
-			'two_factor'   => 0,
+			'two_factor'   => 1,
 		);
 		$saved = get_option( self::SETTINGS_OPTION, array() );
 		return wp_parse_args( is_array( $saved ) ? $saved : array(), $defaults );

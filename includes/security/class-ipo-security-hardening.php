@@ -68,7 +68,6 @@ class IPO_Security_Hardening {
 		add_filter( 'wp_mail', array( __CLASS__, 'watch_mail' ), 1 );
 		add_action( 'shutdown', array( __CLASS__, 'scrub_email_log' ), 20 );
 		add_action( 'admin_init', array( __CLASS__, 'scrub_email_log_once' ) );
-		add_action( 'admin_init', array( __CLASS__, 'remove_public_debug_log' ) );
 
 		// Headers + version.
 		add_action( 'send_headers', array( __CLASS__, 'security_headers' ) );
@@ -370,33 +369,6 @@ class IPO_Security_Hardening {
 		}
 		self::run_scrub( false );
 		update_option( 'ipo_sec_email_log_scrubbed', '1', false );
-	}
-
-	/**
-	 * wp-content/debug.log was readable by anyone over HTTP (a stale 2023 log with
-	 * server paths). Remove it the first time an administrator opens wp-admin,
-	 * unless debug logging is switched on right now (then someone is using it).
-	 */
-	public static function remove_public_debug_log() {
-		if ( ! current_user_can( 'manage_options' ) || ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) ) {
-			return;
-		}
-		$file = WP_CONTENT_DIR . '/debug.log';
-		if ( ! file_exists( $file ) ) {
-			return;
-		}
-		$bytes = (int) filesize( $file );
-		$ok    = @unlink( $file ); // phpcs:ignore
-		IPO_Audit_Log::log(
-			'option_deleted',
-			array(
-				'severity'     => $ok ? 'notice' : 'warning',
-				'object_type'  => 'file',
-				'object_id'    => 'wp-content/debug.log',
-				'object_label' => $ok ? 'public debug.log removed' : 'could not remove public debug.log',
-				'details'      => array( 'bytes' => $bytes ),
-			)
-		);
 	}
 
 	protected static function run_scrub( $recent_only ) {

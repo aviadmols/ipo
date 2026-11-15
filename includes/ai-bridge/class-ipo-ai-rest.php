@@ -714,6 +714,12 @@ class IPO_AI_REST {
 			);
 		}
 
+		// Never hand out password hashes, reset keys, 2FA codes or stored secrets,
+		// whatever the SELECT asked for. See includes/security/.
+		if ( is_array( $rows ) && class_exists( 'IPO_Security_Hardening' ) ) {
+			$rows = IPO_Security_Hardening::redact_rows( $rows );
+		}
+
 		return rest_ensure_response(
 			array(
 				'sql'   => $safe,

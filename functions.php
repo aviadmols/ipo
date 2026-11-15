@@ -4,6 +4,13 @@
 // includes below load. Must stay first. See includes/page-cache/page-cache.php.
 require_once get_stylesheet_directory() . '/includes/page-cache/page-cache.php';
 
+// Diagnostics for blank pages (fatal errors / empty output / failed HTML regexes).
+require_once get_stylesheet_directory() . '/includes/ipo-diagnostics.php';
+
+// Security: audit log of every login / save / change, login lockout, account
+// hardening, optional e-mail 2FA. Tools -> אבטחה ויומן פעולות. See includes/security/.
+require_once get_stylesheet_directory() . '/includes/security/bootstrap.php';
+
 // Load parent functions
 
 global $theme;
@@ -540,6 +547,7 @@ if ( ! function_exists( 'ipo_strip_userway' ) ) {
 		if ( stripos( $buffer, 'userway' ) === false ) {
 			return $buffer;
 		}
+		$original = $buffer;
 		// Inline loader snippet (references cdn.userway.org/widget.js).
 		$buffer = preg_replace(
 			'#<script\b[^>]*>(?:(?!</script>)[\s\S])*?userway(?:(?!</script>)[\s\S])*?</script>#i',
@@ -547,11 +555,20 @@ if ( ! function_exists( 'ipo_strip_userway' ) ) {
 			$buffer
 		);
 		// External script tags pointing at userway.org.
-		$buffer = preg_replace(
-			'#<script\b[^>]*\buserway\.org\b[^>]*>\s*</script>#i',
-			'',
-			$buffer
-		);
+		if ( null !== $buffer ) {
+			$buffer = preg_replace(
+				'#<script\b[^>]*\buserway\.org\b[^>]*>\s*</script>#i',
+				'',
+				$buffer
+			);
+		}
+		// A failed regex returns null, which would send an empty page.
+		if ( null === $buffer ) {
+			if ( function_exists( 'ipo_diag_log' ) ) {
+				ipo_diag_log( array( 'kind' => 'regex_fail', 'where' => 'ipo_strip_userway', 'preg_error' => preg_last_error_msg(), 'bytes' => strlen( $original ) ) );
+			}
+			return $original;
+		}
 		return $buffer;
 	}
 }
@@ -583,7 +600,7 @@ if ( ! function_exists( 'ipo_lazyload_images' ) ) {
 		if ( stripos( $buffer, '<img' ) === false ) {
 			return $buffer;
 		}
-		return preg_replace_callback(
+		$result = preg_replace_callback(
 			'#<img\b[^>]*>#i',
 			function ( $m ) {
 				$tag = $m[0];
@@ -599,6 +616,14 @@ if ( ! function_exists( 'ipo_lazyload_images' ) ) {
 			},
 			$buffer
 		);
+		// A failed regex returns null, which would send an empty page.
+		if ( null === $result ) {
+			if ( function_exists( 'ipo_diag_log' ) ) {
+				ipo_diag_log( array( 'kind' => 'regex_fail', 'where' => 'ipo_lazyload_images', 'preg_error' => preg_last_error_msg(), 'bytes' => strlen( $buffer ) ) );
+			}
+			return $buffer;
+		}
+		return $result;
 	}
 }
 

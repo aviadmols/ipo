@@ -1,2 +1,4 @@
 .playwright-mcp/
 *.png.tmp
+
+ipo-diagnostics-log.php

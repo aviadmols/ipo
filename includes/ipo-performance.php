@@ -134,8 +134,24 @@ if ( ! function_exists( 'ipo_perf_filter_html' ) ) {
 			return $buffer;
 		}
 
+		// Every step below is a regex over the whole page. preg_* returns null when
+		// it hits a PCRE limit; without this guard that null goes out as an empty page.
+		$original = $buffer;
+		$failed   = function ( $value, $where ) use ( $original ) {
+			if ( is_string( $value ) && '' !== $value ) {
+				return false;
+			}
+			if ( function_exists( 'ipo_diag_log' ) ) {
+				ipo_diag_log( array( 'kind' => 'regex_fail', 'where' => $where, 'preg_error' => preg_last_error_msg(), 'bytes' => strlen( $original ) ) );
+			}
+			return true;
+		};
+
 		if ( apply_filters( 'ipo_perf_slider_srcset', true ) ) {
 			$buffer = ipo_perf_slider_srcset( $buffer );
+			if ( $failed( $buffer, 'ipo_perf_slider_srcset' ) ) {
+				return $original;
+			}
 		}
 
 		if ( apply_filters( 'ipo_perf_serve_webp', true ) ) {
@@ -162,6 +178,9 @@ if ( ! function_exists( 'ipo_perf_filter_html' ) ) {
 				},
 				$buffer
 			);
+			if ( $failed( $buffer, 'ipo_perf webp' ) ) {
+				return $original;
+			}
 		}
 
 		if ( apply_filters( 'ipo_perf_lcp_priority', true ) ) {
@@ -184,11 +203,18 @@ if ( ! function_exists( 'ipo_perf_filter_html' ) ) {
 				},
 				$buffer
 			);
+			if ( $failed( $buffer, 'ipo_perf lcp' ) ) {
+				return $original;
+			}
 		}
 
 		// Delay JS / lazy backgrounds / lazy iframes — includes/ipo-delay-js.php.
 		if ( function_exists( 'ipo_dj_filter_html' ) ) {
+			$before = $buffer;
 			$buffer = ipo_dj_filter_html( $buffer );
+			if ( $failed( $buffer, 'ipo_dj_filter_html' ) ) {
+				return $before;
+			}
 		}
 
 		return $buffer;

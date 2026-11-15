@@ -230,3 +230,41 @@ if ( ! function_exists( 'ipo_perf_buffer_start' ) ) {
 	}
 }
 add_action( 'template_redirect', 'ipo_perf_buffer_start', 0 );
+
+/**
+ * 3. Keep the two events-API caches out of autoload.
+ *    ipo_events + ipo_new_events (~600KB together) are only read when an editor
+ *    creates or links events, yet update_option() left them autoloaded, so every
+ *    request - including cached-page misses and admin-ajax - pulled them into
+ *    memory. Runs once per option change (update_option() re-enables autoload).
+ */
+if ( ! function_exists( 'ipo_perf_events_autoload_off' ) ) {
+	function ipo_perf_events_autoload_off() {
+		if ( ! function_exists( 'wp_set_options_autoload' ) ) {
+			return;
+		}
+		$alloptions = wp_load_alloptions();
+		$names      = array_values( array_filter( array( 'ipo_events', 'ipo_new_events' ), function ( $name ) use ( $alloptions ) {
+			return isset( $alloptions[ $name ] );
+		} ) );
+		if ( $names ) {
+			wp_set_options_autoload( $names, false );
+		}
+	}
+}
+add_action( 'admin_init', 'ipo_perf_events_autoload_off' );
+add_action( 'ipo_audit_log_prune', 'ipo_perf_events_autoload_off' );
+
+/**
+ * 4. Cap revisions per post.
+ *    14,800 revisions carry ~860,000 postmeta rows (ACF copies every field into
+ *    each revision) - three quarters of the 330MB postmeta table. WordPress drops
+ *    the oldest revisions beyond this number the next time a post is saved.
+ *    Change history is also kept in the security audit log.
+ */
+add_filter(
+	'wp_revisions_to_keep',
+	function ( $num ) {
+		return ( $num < 0 || $num > 30 ) ? 30 : $num;
+	}
+);

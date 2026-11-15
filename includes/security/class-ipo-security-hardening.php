@@ -422,6 +422,7 @@ class IPO_Security_Hardening {
 		if ( headers_sent() ) {
 			return;
 		}
+		header_remove( 'X-Powered-By' );
 		header( 'X-Content-Type-Options: nosniff' );
 		header( 'Referrer-Policy: strict-origin-when-cross-origin' );
 		if ( is_ssl() ) {

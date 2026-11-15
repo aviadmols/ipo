@@ -221,6 +221,13 @@ function ipo_pc_maybe_serve() {
 	if ( ! headers_sent() ) {
 		// Plugins that ran before us may have queued a per-visitor cookie (e.g. _fbp).
 		header_remove( 'Set-Cookie' );
+		header_remove( 'X-Powered-By' );
+		// Same security headers WordPress-built pages get (IPO_Security_Hardening).
+		header( 'X-Content-Type-Options: nosniff' );
+		header( 'Referrer-Policy: strict-origin-when-cross-origin' );
+		if ( ( isset( $_SERVER['HTTPS'] ) && 'off' !== strtolower( (string) $_SERVER['HTTPS'] ) ) || ( isset( $_SERVER['SERVER_PORT'] ) && 443 === (int) $_SERVER['SERVER_PORT'] ) ) {
+			header( 'Strict-Transport-Security: max-age=31536000' );
+		}
 		header( 'Content-Type: text/html; charset=UTF-8' );
 		header( 'X-IPO-Cache: HIT' );
 		header( 'Cache-Control: no-cache, must-revalidate, max-age=0' );

@@ -548,20 +548,29 @@ if ( ! function_exists( 'ipo_strip_userway' ) ) {
 			return $buffer;
 		}
 		$original = $buffer;
-		// Inline loader snippet (references cdn.userway.org/widget.js).
-		$buffer = preg_replace(
-			'#<script\b[^>]*>(?:(?!</script>)[\s\S])*?userway(?:(?!</script>)[\s\S])*?</script>#i',
-			'',
-			$buffer
-		);
-		// External script tags pointing at userway.org.
-		if ( null !== $buffer ) {
-			$buffer = preg_replace(
-				'#<script\b[^>]*\buserway\.org\b[^>]*>\s*</script>#i',
-				'',
-				$buffer
-			);
+		// Drop every <script> (inline loader or external userway.org tag) that
+		// mentions userway. Plain string scanning, no regex: the old tempered-token
+		// regex ran out of PCRE JIT stack on long inline scripts (Gravity Forms 3
+		// prints big ones) and blanked whole pages; any regex has some size limit.
+		$out = '';
+		$pos = 0;
+		$len = strlen( $buffer );
+		while ( $pos < $len ) {
+			$start = stripos( $buffer, '<script', $pos );
+			if ( false === $start ) {
+				break;
+			}
+			$close = stripos( $buffer, '</script>', $start );
+			if ( false === $close ) {
+				break;
+			}
+			$end   = $close + 9;
+			$tag   = substr( $buffer, $start, $end - $start );
+			$out  .= substr( $buffer, $pos, $start - $pos );
+			$out  .= ( stripos( $tag, 'userway' ) === false ) ? $tag : '';
+			$pos   = $end;
 		}
+		$buffer = $out . substr( $buffer, $pos );
 		// A failed regex returns null, which would send an empty page.
 		if ( null === $buffer ) {
 			if ( function_exists( 'ipo_diag_log' ) ) {

@@ -194,8 +194,13 @@ class IPO_Audit_Log {
 				'details'      => $details ? wp_json_encode( $details, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR ) : null,
 			);
 
+			// Explicit formats: wpdb::$field_types maps any column named object_id
+			// to %d (term_relationships), which turned option names into 0.
+			$formats = array_fill_keys( array_keys( $row ), '%s' );
+			$formats['user_id'] = '%d';
+
 			$suppress = $wpdb->suppress_errors( true );
-			$wpdb->insert( self::table(), $row );
+			$wpdb->insert( self::table(), $row, array_values( $formats ) );
 			$wpdb->suppress_errors( $suppress );
 
 			if ( 'critical' === $severity ) {

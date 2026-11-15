@@ -860,16 +860,15 @@ class IPO_Audit_Events {
 	}
 
 	protected static function option_values( $option, $old, $new ) {
-		if ( self::is_secret_name( $option ) ) {
-			return array( 'value' => 'changed (not stored: may contain a secret)' );
-		}
 		if ( 'active_plugins' === $option && is_array( $old ) && is_array( $new ) ) {
 			return array(
 				'added'   => array_values( array_diff( $new, $old ) ),
 				'removed' => array_values( array_diff( $old, $new ) ),
 			);
 		}
-		if ( in_array( $option, array( 'ipo_ai_bridge_tokens' ), true ) && is_array( $old ) && is_array( $new ) ) {
+		// Checked before the secret-name rule: every bridge call rewrites this option
+		// (last_used), and only an added/removed token is worth a row.
+		if ( 'ipo_ai_bridge_tokens' === $option && is_array( $old ) && is_array( $new ) ) {
 			$labels = function ( $list ) {
 				return array_map(
 					function ( $t ) {
@@ -884,6 +883,9 @@ class IPO_Audit_Events {
 				return null; // Only last_used moved.
 			}
 			return array( 'added' => array_values( array_diff( $n, $o ) ), 'removed' => array_values( array_diff( $o, $n ) ) );
+		}
+		if ( self::is_secret_name( $option ) ) {
+			return array( 'value' => 'changed (not stored: may contain a secret)' );
 		}
 		return array(
 			'from' => self::short( $old, 600 ),

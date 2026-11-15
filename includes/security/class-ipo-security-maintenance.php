@@ -24,7 +24,10 @@ class IPO_Security_Maintenance {
 	const CRON_HOOK          = 'ipo_sec_daily';
 	const PRUNED_OPTION      = 'ipo_sec_plugins_pruned';
 	const UPLOAD_PHP_OPTION  = 'ipo_sec_upload_php_known';
-	const PRIVILEGED_ROLES   = array( 'administrator', 'editor' );
+	const UPLOAD_SCAN_OPTION = 'ipo_sec_upload_php_scan';
+	const EXEC_CHECK_TRANSIENT = 'ipo_sec_uploads_exec';
+	const EXEC_PROBE_PREFIX  = 'ipo-exec-probe-';
+	const PRIVILEGED_ROLES  = array( 'administrator', 'editor' );
 	const MIN_PASSWORD_CHARS = 12;
 	const TOKEN_UNUSED_DAYS  = 3;
 	const TOKEN_IDLE_DAYS    = 90;
@@ -45,6 +48,7 @@ class IPO_Security_Maintenance {
 		add_action( self::CRON_HOOK, array( __CLASS__, 'daily' ) );
 		add_action( 'admin_init', array( __CLASS__, 'admin_tick' ) );
 		add_action( 'upgrader_process_complete', array( __CLASS__, 'remove_exposed_files' ), 99 );
+		add_action( 'admin_post_ipo_security_run_checks', array( __CLASS__, 'handle_run_checks' ) );
 
 		add_action( 'user_profile_update_errors', array( __CLASS__, 'check_profile_password' ), 10, 3 );
 		add_action( 'validate_password_reset', array( __CLASS__, 'check_reset_password' ), 10, 2 );
@@ -60,6 +64,24 @@ class IPO_Security_Maintenance {
 		self::remove_exposed_files();
 		self::revoke_stale_bridge_tokens();
 		self::scan_uploads_for_php();
+		self::check_uploads_exec( true );
+	}
+
+	/** "Run checks now" button on the security settings tab. */
+	public static function handle_run_checks() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( 'אין הרשאה.' );
+		}
+		check_admin_referer( 'ipo_security_run_checks' );
+		self::scan_uploads_for_php();
+		self::check_uploads_exec( true );
+		wp_safe_redirect( admin_url( 'tools.php?page=' . IPO_Security_Admin::PAGE_SLUG . '&tab=settings&ipo_msg=checked' ) );
+		exit;
+	}
+
+	/** nginx rule the host has to add when uploads run PHP. */
+	public static function nginx_rule() {
+		return "location ~* ^/wp-content/uploads/.*\\.(php\\d?|phtml|phar|phps|pht)$ {\n    deny all;\n}";
 	}
 
 	/** An admin screen: do the quick jobs at most every 12 hours, and the one-time plugin clean-up. */
@@ -230,23 +252,150 @@ class IPO_Security_Maintenance {
 			return;
 		}
 
+		// Our own exec probe (check_uploads_exec) lives for a fraction of a second.
+		foreach ( array_keys( $found ) as $rel ) {
+			if ( 0 === strpos( basename( $rel ), self::EXEC_PROBE_PREFIX ) ) {
+				unset( $found[ $rel ] );
+			}
+		}
+
+		// Classify every current file, so the status screen always shows the full picture.
+		$suspects = array();
+		foreach ( array_keys( $found ) as $rel ) {
+			if ( ! self::is_compiled_twig( $base . '/' . $rel, $rel ) ) {
+				$suspects[] = $rel;
+			}
+		}
+
 		$known = get_option( self::UPLOAD_PHP_OPTION, null );
 		update_option( self::UPLOAD_PHP_OPTION, $found, false );
+		update_option(
+			self::UPLOAD_SCAN_OPTION,
+			array(
+				'time'     => time(),
+				'total'    => count( $found ),
+				'suspects' => array_slice( $suspects, 0, 100 ),
+			),
+			false
+		);
 
 		$new = is_array( $known ) ? array_diff_assoc( $found, $known ) : $found;
 		if ( ! $new ) {
 			return;
 		}
-		IPO_Audit_Log::log(
-			'php_in_uploads',
-			array(
-				'severity'     => 'critical',
-				'object_type'  => 'file',
-				'object_id'    => 'uploads',
-				'object_label' => count( $new ) . ' PHP file(s) in wp-content/uploads — uploads should never hold code; check and delete',
-				'details'      => array_slice( array_keys( $new ), 0, 50 ),
-			)
-		);
+
+		$new_suspects = array_values( array_intersect( array_keys( $new ), $suspects ) );
+		$new_twig     = array_values( array_diff( array_keys( $new ), $suspects ) );
+
+		if ( $new_suspects ) {
+			IPO_Audit_Log::log(
+				'php_in_uploads',
+				array(
+					'severity'     => 'critical',
+					'object_type'  => 'file',
+					'object_id'    => 'uploads',
+					'object_label' => count( $new_suspects ) . ' PHP file(s) in wp-content/uploads — uploads should never hold code; check and delete',
+					'details'      => array_slice( $new_suspects, 0, 50 ),
+				)
+			);
+		}
+		if ( $new_twig ) {
+			IPO_Audit_Log::log(
+				'php_in_uploads',
+				array(
+					'severity'     => 'notice',
+					'object_type'  => 'file',
+					'object_id'    => 'uploads',
+					'object_label' => count( $new_twig ) . ' compiled WPML Twig template(s) (cache, checked clean)',
+					'details'      => array_slice( $new_twig, 0, 50 ),
+				)
+			);
+		}
+	}
+
+	/**
+	 * A WPML Twig cache file: compiled template class, nothing that runs input or hidden code.
+	 * Anything that fails one check stays "suspect" (critical).
+	 *
+	 * @param string $path Absolute path.
+	 * @param string $rel  Path relative to uploads.
+	 */
+	public static function is_compiled_twig( $path, $rel ) {
+		if ( 0 !== strpos( $rel, 'cache/wpml/twig/' ) || ! is_file( $path ) || filesize( $path ) > 2 * MB_IN_BYTES ) {
+			return false;
+		}
+		$code = (string) @file_get_contents( $path ); // phpcs:ignore
+		if ( 0 !== strpos( $code, '<?php' ) ) {
+			return false;
+		}
+
+		// Twig 1 "Twig_Template", or a namespaced \Twig\Template (WPML prefixes it, e.g. WPML\Core\Twig\Template),
+		// either written out or imported with "use ...Twig\Template;" and extended as "Template".
+		$extends_full = preg_match( '/\bclass\s+__TwigTemplate_\w+\s+extends\s+\\\\?(?:[A-Za-z0-9_]+\\\\)*(?:Twig\\\\Template|Twig_Template)\b/', $code );
+		$extends_use  = preg_match( '/\bclass\s+__TwigTemplate_\w+\s+extends\s+Template\b/', $code )
+			&& preg_match( '/^use\s+(?:[A-Za-z0-9_]+\\\\)*Twig\\\\Template\s*;/m', $code );
+		if ( ! $extends_full && ! $extends_use ) {
+			return false;
+		}
+
+		$danger = '/\b(?:eval|assert|system|exec|shell_exec|passthru|popen|proc_open|pcntl_exec|base64_decode|gzinflate|gzuncompress|gzdecode|str_rot13|create_function|move_uploaded_file|file_put_contents|fsockopen|curl_exec)\s*\(|\$_(?:POST|GET|REQUEST|COOKIE|FILES|SERVER)\b/i';
+		return ! preg_match( $danger, $code );
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Does the web server run PHP inside uploads?                         */
+	/* ------------------------------------------------------------------ */
+
+	/**
+	 * Drop a tiny PHP file in uploads, request it over HTTP, delete it at once.
+	 *
+	 * @return array{status:string,code:int,time:int} status: executes | blocked | unknown
+	 */
+	public static function check_uploads_exec( $force = false ) {
+		$cached = get_transient( self::EXEC_CHECK_TRANSIENT );
+		if ( ! $force && is_array( $cached ) ) {
+			return $cached;
+		}
+
+		$result  = array( 'status' => 'unknown', 'code' => 0, 'time' => time() );
+		$uploads = wp_get_upload_dir();
+		if ( empty( $uploads['basedir'] ) || empty( $uploads['baseurl'] ) || ! wp_is_writable( $uploads['basedir'] ) ) {
+			set_transient( self::EXEC_CHECK_TRANSIENT, $result, HOUR_IN_SECONDS );
+			return $result;
+		}
+
+		$name = self::EXEC_PROBE_PREFIX . wp_generate_password( 16, false ) . '.php';
+		$file = trailingslashit( $uploads['basedir'] ) . $name;
+		// The marker is only assembled when PHP runs, so a server that sends the file as text never matches.
+		$ok = false !== @file_put_contents( $file, "<?php echo 'IPO-EXEC-' . 'RAN';\n" ); // phpcs:ignore
+
+		if ( $ok ) {
+			$response = wp_remote_get(
+				trailingslashit( $uploads['baseurl'] ) . $name,
+				array(
+					'timeout'     => 10,
+					'redirection' => 0,
+					'sslverify'   => apply_filters( 'https_local_ssl_verify', false ),
+					'headers'     => array( 'Cache-Control' => 'no-cache' ),
+				)
+			);
+			@unlink( $file ); // phpcs:ignore
+
+			if ( ! is_wp_error( $response ) ) {
+				$code = (int) wp_remote_retrieve_response_code( $response );
+				$body = (string) wp_remote_retrieve_body( $response );
+
+				$result['code'] = $code;
+				if ( false !== strpos( $body, 'IPO-EXEC-RAN' ) ) {
+					$result['status'] = 'executes';
+				} elseif ( in_array( $code, array( 401, 403, 404, 405, 410 ), true ) || false !== strpos( $body, "'IPO-EXEC-' . 'RAN'" ) ) {
+					$result['status'] = 'blocked';
+				}
+			}
+		}
+
+		set_transient( self::EXEC_CHECK_TRANSIENT, $result, 12 * HOUR_IN_SECONDS );
+		return $result;
 	}
 
 	/* ------------------------------------------------------------------ */

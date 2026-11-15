@@ -256,8 +256,8 @@ class IPO_Audit_Log {
 		$title   = isset( $labels[ $row['event'] ] ) ? $labels[ $row['event'] ] : $row['event'];
 		$subject = sprintf( '[%s] התראת אבטחה: %s', $site, $title );
 
-		$offset = (float) get_option( 'gmt_offset' );
-		$local  = gmdate( 'Y-m-d H:i:s', strtotime( $row['created_at'] . ' UTC' ) + (int) ( $offset * HOUR_IN_SECONDS ) );
+		// wp_date() follows the site time zone (DST-aware when a city is set).
+		$local = wp_date( 'Y-m-d H:i:s', strtotime( $row['created_at'] . ' UTC' ) );
 
 		unset( $details['_x_forwarded_for'] );
 		$lines = array(

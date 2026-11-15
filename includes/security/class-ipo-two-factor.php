@@ -152,8 +152,7 @@ class IPO_Two_Factor {
 		);
 
 		$site    = wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES );
-		$offset  = (float) get_option( 'gmt_offset' );
-		$when    = gmdate( 'd/m/Y H:i', time() + (int) ( $offset * HOUR_IN_SECONDS ) );
+		$when    = wp_date( 'd/m/Y H:i' );
 		$message = implode(
 			"\n",
 			array(

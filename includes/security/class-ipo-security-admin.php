@@ -168,6 +168,7 @@ class IPO_Security_Admin {
 		$map = array(
 			'saved'      => array( 'success', 'ההגדרות נשמרו.' ),
 			'unlocked'   => array( 'success', 'כתובת ה-IP שוחררה.' ),
+			'checked'    => array( 'success', 'הבדיקות הורצו. התוצאות מעודכנות בטבלת מצב האבטחה.' ),
 			'mail_ok'    => array( 'success', 'מייל בדיקה נשלח. אם הגיע לתיבה — אפשר להפעיל אימות דו-שלבי בבטחה.' ),
 			'mail_fail'  => array( 'error', 'שליחת מייל הבדיקה נכשלה. אל תפעילו אימות דו-שלבי לפני שהמייל עובד.' ),
 		);
@@ -366,8 +367,60 @@ class IPO_Security_Admin {
 				<tr><td><?php echo $ok; ?></td><td>קישורי איפוס סיסמה וקודי אימות מושחרים בטבלת Email Log.</td></tr>
 				<tr><td><?php echo $ok; ?></td><td>AI Bridge: קריאות SQL לא מחזירות hash-ים של סיסמאות, מפתחות איפוס או סודות (SMTP וכו'), וכל קריאה נרשמת ביומן.</td></tr>
 				<tr><td><?php echo $s['two_factor'] ? $ok : $no; ?></td><td>אימות דו-שלבי במייל למנהלים ועורכים: <strong><?php echo $s['two_factor'] ? 'פעיל' : 'כבוי'; ?></strong></td></tr>
+				<?php
+				$tz_city = (string) get_option( 'timezone_string' );
+				?>
+				<tr><td><?php echo $tz_city ? $ok : $no; ?></td><td>אזור זמן: <strong class="ltr"><?php echo esc_html( wp_timezone_string() ); ?></strong>
+					<?php if ( ! $tz_city ) : ?>
+						— הפרש קבוע, בלי מעבר שעון קיץ/חורף, ולכן חלק מהשנה כל השעות באתר וביומן זזות בשעה. לתקן ב<a href="<?php echo esc_url( admin_url( 'options-general.php' ) ); ?>">הגדרות ← כללי</a>: לבחור "ירושלים".
+					<?php endif; ?>
+				</td></tr>
+				<?php
+				if ( class_exists( 'IPO_Security_Maintenance' ) ) :
+					$exec = IPO_Security_Maintenance::check_uploads_exec();
+					$scan = get_option( IPO_Security_Maintenance::UPLOAD_SCAN_OPTION );
+					?>
+					<tr><td><?php echo 'blocked' === $exec['status'] ? $ok : $no; ?></td><td>
+						הרצת PHP בתיקיית ההעלאות:
+						<?php if ( 'blocked' === $exec['status'] ) : ?>
+							<strong>חסומה</strong> (HTTP <?php echo (int) $exec['code']; ?>).
+						<?php elseif ( 'executes' === $exec['status'] ) : ?>
+							<strong style="color:#b32d2e">השרת מריץ קבצי PHP מתוך wp-content/uploads.</strong>
+							קובץ זדוני שיעלה לשם (דרך תוסף פגיע או טופס) ירוץ. האתר עובד על nginx, ולכן ‎.htaccess לא עוזר: צריך לבקש מחברת האחסון להוסיף לשרת את הכלל הבא, לפני הבלוק שמעביר קבצי PHP ל-php-fpm:
+							<pre class="ltr" style="background:#f6f7f7;padding:8px;margin:6px 0;white-space:pre-wrap"><?php echo esc_html( IPO_Security_Maintenance::nginx_rule() ); ?></pre>
+						<?php else : ?>
+							<strong>לא ידוע</strong> — הבדיקה לא הצליחה (HTTP <?php echo (int) $exec['code']; ?>; ייתכן שהשרת חוסם פניות לעצמו).
+						<?php endif; ?>
+						<span class="muted">נבדק: <?php echo esc_html( wp_date( 'd/m/Y H:i', (int) $exec['time'] ) ); ?></span>
+					</td></tr>
+					<tr><td><?php echo ( is_array( $scan ) && empty( $scan['suspects'] ) ) ? $ok : $no; ?></td><td>
+						קבצי PHP בתוך wp-content/uploads:
+						<?php if ( ! is_array( $scan ) ) : ?>
+							עוד לא נסרק.
+						<?php else : ?>
+							<?php echo (int) $scan['total']; ?> בסך הכול,
+							<?php echo (int) $scan['total'] - count( $scan['suspects'] ); ?> מהם תבניות Twig מקומפלות של WPML (מטמון תקין, נבדקו שאין בהן קוד חשוד).
+							<?php if ( $scan['suspects'] ) : ?>
+								<br><strong style="color:#b32d2e">חשודים — לבדוק ולמחוק:</strong>
+								<ul class="ltr" style="margin:4px 0 0 0">
+									<?php foreach ( $scan['suspects'] as $rel ) : ?>
+										<li><code><?php echo esc_html( $rel ); ?></code></li>
+									<?php endforeach; ?>
+								</ul>
+							<?php endif; ?>
+							<span class="muted">נסרק: <?php echo esc_html( wp_date( 'd/m/Y H:i', (int) $scan['time'] ) ); ?></span>
+						<?php endif; ?>
+					</td></tr>
+				<?php endif; ?>
 			</tbody>
 		</table>
+		<?php if ( class_exists( 'IPO_Security_Maintenance' ) ) : ?>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:8px 0 16px">
+				<?php wp_nonce_field( 'ipo_security_run_checks' ); ?>
+				<input type="hidden" name="action" value="ipo_security_run_checks">
+				<button class="button">להריץ עכשיו את בדיקות ההעלאות</button>
+			</form>
+		<?php endif; ?>
 
 		<h2>הגדרות</h2>
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">

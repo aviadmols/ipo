@@ -380,8 +380,8 @@ class IPO_Security_Hardening {
 		$recent = $recent_only ? " AND sent_date >= DATE_SUB(NOW(), INTERVAL 1 DAY)" : '';
 		$suppress = $wpdb->suppress_errors( true );
 		// phpcs:disable WordPress.DB.PreparedSQL
-		$wpdb->query( "UPDATE {$table} SET message = REGEXP_REPLACE(message, '([?&;]key=)[A-Za-z0-9]{8,}', '\\\\1[REDACTED]') WHERE message REGEXP '[?&;]key=[A-Za-z0-9]{8,}'{$recent}" );
-		$wpdb->query( "UPDATE {$table} SET message = REGEXP_REPLACE(message, '(IPO-CODE: )[0-9]{6}', '\\\\1******') WHERE message LIKE '%IPO-CODE: %'{$recent}" );
+		$wpdb->query( "UPDATE {$table} SET sent_date = sent_date, message = REGEXP_REPLACE(message, '([?&;]key=)[A-Za-z0-9]{8,}', '\\\\1[REDACTED]') WHERE message REGEXP '[?&;]key=[A-Za-z0-9]{8,}'{$recent}" );
+		$wpdb->query( "UPDATE {$table} SET sent_date = sent_date, message = REGEXP_REPLACE(message, '(IPO-CODE: )[0-9]{6}', '\\\\1******') WHERE message LIKE '%IPO-CODE: %'{$recent}" );
 		// phpcs:enable
 		$wpdb->suppress_errors( $suppress );
 	}

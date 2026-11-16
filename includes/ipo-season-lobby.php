@@ -270,6 +270,36 @@ function ipo_sl_create_field_group() {
 }
 
 /**
+ * Move a group created as "normal" under the title, once.
+ *
+ * The first version created the group in the "normal" position, which the
+ * edit screen never reaches while ACF Extended Pro 0.8.9.2 crashes on ACF 6.8
+ * (see ipo_sl_field_group()). The same crash stops the field group screen
+ * before its Position setting, so it can't be changed by hand either.
+ */
+const IPO_SL_FIELDS_UNDER_TITLE = 'ipo_season_lobby_fields_under_title';
+
+add_action( 'admin_init', 'ipo_sl_move_field_group_under_title', 20 );
+function ipo_sl_move_field_group_under_title() {
+
+	if ( get_option( IPO_SL_FIELDS_UNDER_TITLE ) || ! current_user_can( 'manage_options' ) || ! function_exists( 'acf_update_field_group' ) ) {
+		return;
+	}
+
+	$group = acf_get_field_group( 'group_ipo_season_lobby' );
+	if ( ! $group || empty( $group['ID'] ) ) {
+		return;
+	}
+
+	update_option( IPO_SL_FIELDS_UNDER_TITLE, 1, false );
+
+	if ( 'acf_after_title' !== $group['position'] ) {
+		$group['position'] = 'acf_after_title';
+		acf_update_field_group( $group );
+	}
+}
+
+/**
  * The field group, as ACF imports it.
  */
 function ipo_sl_field_group() {

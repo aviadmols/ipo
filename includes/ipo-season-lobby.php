@@ -48,30 +48,6 @@ function ipo_sl_card_fields( $p ) {
 			'ui'            => 1,
 		),
 		array(
-			'key'           => "field_ipo_sl_{$p}_button_color",
-			'label'         => 'צבע הכפתור',
-			'name'          => 'button_color',
-			'type'          => 'color_picker',
-			'default_value' => IPO_SL_DEFAULT_BUTTON,
-			'wrapper'       => array( 'width' => '50' ),
-		),
-		array(
-			'key'          => "field_ipo_sl_{$p}_button_text",
-			'label'        => 'טקסט הכפתור',
-			'name'         => 'button_text',
-			'type'         => 'text',
-			'placeholder'  => 'לכרטיסים',
-			'instructions' => 'ריק = "לכרטיסים".',
-			'wrapper'      => array( 'width' => '50' ),
-		),
-
-		array(
-			'key'   => "field_ipo_sl_{$p}_acc_override",
-			'label' => 'דריסת התוכן שנמשך (לא חובה)',
-			'type'  => 'accordion',
-			'open'  => 0,
-		),
-		array(
 			'key'          => "field_ipo_sl_{$p}_label",
 			'label'        => 'כותרת עליונה',
 			'name'         => 'label',
@@ -98,6 +74,30 @@ function ipo_sl_card_fields( $p ) {
 			'preview_size'  => 'medium',
 			'instructions'  => 'ריק = התמונה הרגילה.',
 			'wrapper'       => array( 'width' => '50' ),
+		),
+		array(
+			'key'           => "field_ipo_sl_{$p}_button_color",
+			'label'         => 'צבע הכפתור',
+			'name'          => 'button_color',
+			'type'          => 'color_picker',
+			'default_value' => IPO_SL_DEFAULT_BUTTON,
+			'wrapper'       => array( 'width' => '50' ),
+		),
+		array(
+			'key'          => "field_ipo_sl_{$p}_button_text",
+			'label'        => 'טקסט הכפתור',
+			'name'         => 'button_text',
+			'type'         => 'text',
+			'placeholder'  => 'לכרטיסים',
+			'instructions' => 'ריק = "לכרטיסים".',
+			'wrapper'      => array( 'width' => '50' ),
+		),
+
+		array(
+			'key'   => "field_ipo_sl_{$p}_acc_override",
+			'label' => 'דריסת התוכן שנמשך (לא חובה)',
+			'type'  => 'accordion',
+			'open'  => 0,
 		),
 		array(
 			'key'          => "field_ipo_sl_{$p}_artists",
@@ -296,6 +296,43 @@ function ipo_sl_move_field_group_under_title() {
 	if ( 'acf_after_title' !== $group['position'] ) {
 		$group['position'] = 'acf_after_title';
 		acf_update_field_group( $group );
+	}
+}
+
+/**
+ * Put the card fields of a group that already exists in the order
+ * ipo_sl_card_fields() lists them, once. In both sections (main grid and
+ * carousel), the top title and the two images moved from the override
+ * accordion into the event one.
+ */
+const IPO_SL_FIELDS_ORDER = 'ipo_season_lobby_fields_order_2';
+
+add_action( 'admin_init', 'ipo_sl_reorder_card_fields', 30 );
+function ipo_sl_reorder_card_fields() {
+
+	if ( get_option( IPO_SL_FIELDS_ORDER ) || ! current_user_can( 'manage_options' ) || ! function_exists( 'acf_update_field' ) ) {
+		return;
+	}
+
+	if ( ! acf_get_field_group( 'group_ipo_season_lobby' ) ) {
+		return;
+	}
+
+	update_option( IPO_SL_FIELDS_ORDER, 1, false );
+
+	foreach ( array( 'sl_featured', 'sl_carousel' ) as $prefix ) {
+		$order = 0;
+
+		foreach ( ipo_sl_card_fields( $prefix ) as $wanted ) {
+			$field = acf_get_field( $wanted['key'] );
+
+			if ( $field && ! empty( $field['ID'] ) && (int) $field['menu_order'] !== $order ) {
+				$field['menu_order'] = $order;
+				acf_update_field( $field );
+			}
+
+			$order++;
+		}
 	}
 }
 

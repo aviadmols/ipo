@@ -380,12 +380,16 @@
 	height: auto;
 }
 
-.ipo-sl-splide .splide__arrow {
+/* style-sagi.css flips the RTL "prev" button (.splide__arrows--rtl
+   .splide__arrow--prev) for the theme's other sliders. Here the images already
+   point the right way, so neither button is flipped. */
+.ipo-sl .ipo-sl-splide .splide__arrow {
 	background: transparent;
 	opacity: 1;
 	width: 40px;
 	height: 40px;
-	top: calc(50% - 20px);
+	top: 50%;
+	transform: translateY(-50%);
 }
 
 .ipo-sl-splide .splide__arrow img {

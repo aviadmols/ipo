@@ -354,7 +354,11 @@ function ipo_sl_field_group() {
 			),
 		),
 		'menu_order'            => 0,
-		'position'              => 'normal',
+		// Under the title, not "normal": with ACF Extended Pro 0.8.9.2 on ACF 6.8
+		// the edit screen dies while printing the sidebar (Protect page checkbox),
+		// and every "normal" box comes after that point. Boxes under the title
+		// are printed before it, which is why "תמונה ראשית בהירה" still shows.
+		'position'              => 'acf_after_title',
 		'style'                 => 'default',
 		'label_placement'       => 'top',
 		'instruction_placement' => 'label',

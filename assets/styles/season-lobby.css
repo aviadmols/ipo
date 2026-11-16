@@ -1,0 +1,577 @@
+/**
+ * Season lobby — page-templates/Lobby-season-events.php
+ * Markup: includes/ipo-season-lobby.php (ipo_sl_render_card).
+ * Loaded on that template only. Everything is scoped under .ipo-sl.
+ * Sizes are in px: the theme sets html { font-size: 62.5% } (48% on mobile).
+ */
+
+.ipo-sl {
+	--ipo-sl-panel: #f6f6f6;
+	--ipo-sl-line: #b9b9b9;
+	--ipo-sl-muted: #555;
+	--ipo-sl-gap: 64px;
+	--ipo-sl-btn: #ef5a41;
+	background: #fff;
+	color: #000;
+}
+
+.ipo-sl-wrap {
+	max-width: 1800px;
+	margin: 0 auto;
+	padding: 0 100px;
+	box-sizing: border-box;
+}
+
+.ipo-sl img {
+	display: block;
+	max-width: 100%;
+}
+
+.ipo-sl ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.ipo-sl p {
+	margin: 0;
+}
+
+/* ------------------------------------------------------------------ Banner */
+
+.ipo-sl-hero picture,
+.ipo-sl-hero img {
+	display: block;
+	width: 100%;
+}
+
+.ipo-sl-hero img {
+	height: auto;
+	object-fit: cover;
+}
+
+/* ------------------------------------------------------------------- Intro */
+
+.ipo-sl-intro {
+	background: var(--ipo-sl-panel);
+	padding: 56px 0 64px;
+}
+
+.ipo-sl-intro__grid {
+	display: flex;
+	align-items: flex-start;
+	gap: 120px;
+}
+
+.ipo-sl .ipo-sl-intro__title {
+	flex: 0 0 auto;
+	max-width: 4em;
+	margin: 0;
+	font-size: 100px;
+	line-height: 0.95;
+	letter-spacing: 1px;
+}
+
+.ipo-sl-intro__text {
+	flex: 0 1 720px;
+	font-size: 15px;
+	line-height: 1.75;
+	color: #222;
+}
+
+.ipo-sl-intro__text p + p {
+	margin-top: 14px;
+}
+
+.ipo-sl-intro__text strong,
+.ipo-sl-intro__text b {
+	font-weight: 700;
+	color: #000;
+}
+
+/* ----------------------------------------------------------- Section head */
+
+.ipo-sl-section {
+	padding: 80px 0 40px;
+}
+
+.ipo-sl-section--carousel {
+	padding-bottom: 100px;
+}
+
+.ipo-sl-head {
+	display: flex;
+	align-items: flex-end;
+	flex-wrap: wrap;
+	gap: 8px 24px;
+	margin-bottom: 48px;
+}
+
+.ipo-sl .ipo-sl-head__title {
+	margin: 0;
+	font-size: 72px;
+	line-height: 0.9;
+	letter-spacing: 1px;
+}
+
+.ipo-sl-head__subtitle {
+	font-size: 17px;
+	line-height: 1.3;
+	color: var(--ipo-sl-muted);
+	padding-bottom: 4px;
+}
+
+/* -------------------------------------------------------------------- Card */
+
+.ipo-sl-card {
+	display: flex;
+	background: var(--ipo-sl-panel);
+	height: 100%;
+}
+
+.ipo-sl-card__media a,
+.ipo-sl-card__media picture {
+	display: block;
+	height: 100%;
+}
+
+.ipo-sl-card__media img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.ipo-sl-card__body {
+	display: flex;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.ipo-sl-card__inner {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	width: 100%;
+	text-align: start;
+}
+
+.ipo-sl .ipo-sl-card__label {
+	font-family: 'Simpler', sans-serif;
+	font-size: 16px;
+	font-weight: 700;
+	line-height: 1.3;
+	margin-bottom: 18px;
+}
+
+.ipo-sl-card__label a:hover {
+	text-decoration: underline;
+}
+
+.ipo-sl .ipo-sl-card__small-heading {
+	font-size: 13px;
+	line-height: 1.3;
+	margin-bottom: 8px;
+}
+
+.ipo-sl-card__artists li {
+	display: flex;
+	flex-direction: column;
+}
+
+.ipo-sl-card__artist-name {
+	font-family: 'Mandatory PH', sans-serif;
+	font-weight: 400;
+	font-variation-settings: "wght" 400, "wdth" 20;
+	font-size: 40px;
+	line-height: 1;
+	letter-spacing: 1px;
+}
+
+.ipo-sl-card__artist-role {
+	font-size: 15px;
+	font-weight: 700;
+	line-height: 1.3;
+	margin-top: 2px;
+}
+
+/* The two separators: under the artists and under the pieces. */
+.ipo-sl-card__program,
+.ipo-sl-card__when {
+	position: relative;
+	padding-top: 22px;
+	margin-top: 22px;
+	width: 100%;
+}
+
+.ipo-sl-card__program::before,
+.ipo-sl-card__when::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	width: 150px;
+	max-width: 100%;
+	height: 1px;
+	background: var(--ipo-sl-line);
+}
+
+/* Nothing above the block: no separator either. */
+.ipo-sl-card__label + .ipo-sl-card__program,
+.ipo-sl-card__label + .ipo-sl-card__when,
+.ipo-sl-card__inner > .ipo-sl-card__program:first-child,
+.ipo-sl-card__inner > .ipo-sl-card__when:first-child {
+	padding-top: 0;
+	margin-top: 0;
+}
+
+.ipo-sl-card__label + .ipo-sl-card__program::before,
+.ipo-sl-card__label + .ipo-sl-card__when::before,
+.ipo-sl-card__inner > .ipo-sl-card__program:first-child::before,
+.ipo-sl-card__inner > .ipo-sl-card__when:first-child::before {
+	display: none;
+}
+
+.ipo-sl .ipo-sl-card__program-heading {
+	font-size: 17px;
+	font-weight: 700;
+	line-height: 1.3;
+	margin-bottom: 6px;
+}
+
+.ipo-sl-card__program li {
+	font-size: 14px;
+	line-height: 1.45;
+}
+
+.ipo-sl-card__program strong {
+	font-weight: 700;
+}
+
+.ipo-sl .ipo-sl-card__date {
+	font-size: 19px;
+	font-weight: 700;
+	line-height: 1.3;
+}
+
+.ipo-sl .ipo-sl-card__location {
+	font-size: 15px;
+	line-height: 1.4;
+}
+
+.ipo-sl .ipo-sl-card__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 170px;
+	min-height: 42px;
+	margin-top: 26px;
+	padding: 6px 28px;
+	border-radius: 999px;
+	background: var(--ipo-sl-btn);
+	color: #fff;
+	font-size: 18px;
+	font-weight: 700;
+	line-height: 1.2;
+	text-align: center;
+	transition: filter .2s ease, transform .2s ease;
+}
+
+.ipo-sl a.ipo-sl-card__btn:hover,
+.ipo-sl a.ipo-sl-card__btn:focus-visible {
+	color: #fff;
+	filter: brightness(0.9);
+}
+
+.ipo-sl a.ipo-sl-card__btn:focus-visible {
+	outline: 2px solid #000;
+	outline-offset: 3px;
+}
+
+.ipo-sl .ipo-sl-card__btn.is-disabled {
+	background: #cfcfcf;
+	color: #333;
+	cursor: default;
+}
+
+/* -------------------------------------------- Featured: image beside text */
+
+.ipo-sl-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 72px var(--ipo-sl-gap);
+}
+
+.ipo-sl-card--featured .ipo-sl-card__media {
+	flex: 0 0 54%;
+	aspect-ratio: 3 / 4;
+	overflow: hidden;
+}
+
+.ipo-sl-card--featured .ipo-sl-card__body {
+	padding: 32px 48px 40px 32px;
+}
+
+[lang="en-US"] .ipo-sl-card--featured .ipo-sl-card__body {
+	padding: 32px 32px 40px 48px;
+}
+
+.ipo-sl-card--featured .ipo-sl-card__artists li + li {
+	margin-top: 22px;
+}
+
+/* --------------------------------------------- Carousel: image above text */
+
+.ipo-sl-card--carousel {
+	flex-direction: column;
+}
+
+.ipo-sl-card--carousel .ipo-sl-card__media {
+	aspect-ratio: 5 / 3;
+	overflow: hidden;
+}
+
+.ipo-sl-card--carousel .ipo-sl-card__body {
+	padding: 26px 32px 40px;
+}
+
+.ipo-sl-card--carousel .ipo-sl-card__artists {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 18px 20px;
+	width: 100%;
+}
+
+.ipo-sl-card--carousel .ipo-sl-card__artist-name {
+	font-size: 30px;
+}
+
+.ipo-sl-card--carousel .ipo-sl-card__artist-role {
+	font-size: 13px;
+}
+
+/* Splide hides itself until it mounts, and ipo-delay-js may hold the script
+   back until the first interaction: show a scrolling row until then. */
+.ipo-sl .ipo-sl-splide {
+	visibility: visible;
+}
+
+.ipo-sl-splide:not(.is-initialized) .splide__list {
+	display: flex;
+	gap: 40px;
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	scrollbar-width: none;
+}
+
+.ipo-sl-splide:not(.is-initialized) .splide__list::-webkit-scrollbar {
+	display: none;
+}
+
+.ipo-sl-splide:not(.is-initialized) .splide__slide {
+	flex: 0 0 calc((100% - 80px) / 3);
+	scroll-snap-align: start;
+}
+
+.ipo-sl-splide .splide__slide {
+	height: auto;
+}
+
+.ipo-sl-splide .splide__arrow {
+	background: transparent;
+	opacity: 1;
+	width: 40px;
+	height: 40px;
+	top: calc(50% - 20px);
+}
+
+.ipo-sl-splide .splide__arrow img {
+	width: 22px;
+	height: auto;
+}
+
+.ipo-sl-splide .splide__arrow:disabled {
+	opacity: 0.25;
+}
+
+.ipo-sl-splide .splide__arrow--prev {
+	right: -60px;
+	left: auto;
+}
+
+.ipo-sl-splide .splide__arrow--next {
+	left: -60px;
+	right: auto;
+}
+
+[lang="en-US"] .ipo-sl-splide .splide__arrow--prev {
+	left: -60px;
+	right: auto;
+}
+
+[lang="en-US"] .ipo-sl-splide .splide__arrow--next {
+	right: -60px;
+	left: auto;
+}
+
+/* Splide's own arrow sets transform: scaleX(-1) on prev; the images already point the right way. */
+.ipo-sl-splide .splide__arrow svg,
+.ipo-sl-splide .splide__arrow--prev img,
+.ipo-sl-splide .splide__arrow--next img {
+	transform: none;
+}
+
+/* ---------------------------------------------------------------- Laptops */
+
+@media (max-width: 1499px) {
+	.ipo-sl-wrap {
+		padding: 0 60px;
+	}
+
+	.ipo-sl {
+		--ipo-sl-gap: 40px;
+	}
+
+	.ipo-sl-card--featured .ipo-sl-card__body {
+		padding: 28px 32px 32px 24px;
+	}
+
+	[lang="en-US"] .ipo-sl-card--featured .ipo-sl-card__body {
+		padding: 28px 24px 32px 32px;
+	}
+
+	.ipo-sl-card__artist-name {
+		font-size: 34px;
+	}
+
+	.ipo-sl-splide .splide__arrow--prev {
+		right: -48px;
+	}
+
+	.ipo-sl-splide .splide__arrow--next {
+		left: -48px;
+	}
+
+	[lang="en-US"] .ipo-sl-splide .splide__arrow--prev {
+		left: -48px;
+	}
+
+	[lang="en-US"] .ipo-sl-splide .splide__arrow--next {
+		right: -48px;
+	}
+}
+
+/* ---------------------------------------------------------------- Tablets */
+
+@media (max-width: 1199px) {
+	.ipo-sl-grid {
+		grid-template-columns: minmax(0, 1fr);
+		max-width: 820px;
+		gap: 40px;
+	}
+
+	.ipo-sl-intro__grid {
+		gap: 60px;
+	}
+
+	.ipo-sl-splide:not(.is-initialized) .splide__slide {
+		flex-basis: calc((100% - 40px) / 2);
+	}
+}
+
+/* ----------------------------------------------------------------- Mobile */
+
+@media (max-width: 767px) {
+	.ipo-sl-wrap {
+		padding: 0 16px;
+	}
+
+	.ipo-sl-intro {
+		padding: 28px 0 36px;
+		background: #fff;
+	}
+
+	.ipo-sl-intro__grid {
+		flex-direction: column;
+		gap: 18px;
+	}
+
+	.ipo-sl .ipo-sl-intro__title {
+		max-width: none;
+		font-family: 'Simpler', sans-serif;
+		font-variation-settings: normal !important;
+		font-size: 30px;
+		font-weight: 300 !important;
+		letter-spacing: 0;
+		line-height: 1.2;
+	}
+
+	.ipo-sl-intro__text {
+		flex-basis: auto;
+		font-size: 17px;
+		line-height: 1.75;
+	}
+
+	.ipo-sl-section {
+		padding: 32px 0 16px;
+	}
+
+	.ipo-sl-section--carousel {
+		padding-bottom: 56px;
+	}
+
+	.ipo-sl-head {
+		gap: 4px 14px;
+		margin-bottom: 24px;
+	}
+
+	.ipo-sl .ipo-sl-head__title {
+		font-size: 46px;
+	}
+
+	.ipo-sl-head__subtitle {
+		font-size: 14px;
+	}
+
+	.ipo-sl-grid {
+		gap: 32px;
+	}
+
+	.ipo-sl-card--featured {
+		flex-direction: column;
+	}
+
+	.ipo-sl-card--featured .ipo-sl-card__media {
+		flex: none;
+		aspect-ratio: 5 / 3;
+	}
+
+	.ipo-sl-card--featured .ipo-sl-card__body,
+	[lang="en-US"] .ipo-sl-card--featured .ipo-sl-card__body,
+	.ipo-sl-card--carousel .ipo-sl-card__body {
+		padding: 22px 24px 28px;
+	}
+
+	.ipo-sl-card__artist-name {
+		font-size: 36px;
+	}
+
+	.ipo-sl-card--carousel .ipo-sl-card__artist-name {
+		font-size: 26px;
+	}
+
+	.ipo-sl-card--featured .ipo-sl-card__artists li + li {
+		margin-top: 16px;
+	}
+
+	.ipo-sl .ipo-sl-card__btn {
+		margin-top: 22px;
+	}
+
+	.ipo-sl-splide:not(.is-initialized) .splide__list {
+		gap: 16px;
+	}
+
+	.ipo-sl-splide:not(.is-initialized) .splide__slide {
+		flex-basis: 85%;
+	}
+}

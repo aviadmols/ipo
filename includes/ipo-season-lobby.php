@@ -241,12 +241,38 @@ function ipo_sl_section_fields( $p, $tab_label, $defaults ) {
 	);
 }
 
-add_action( 'acf/init', 'ipo_sl_register_fields' );
-function ipo_sl_register_fields() {
+/**
+ * Create the field group in ACF once, on the first admin load after deploy.
+ *
+ * Field groups defined only in code (acf_add_local_field_group) don't reach the
+ * edit screens on this site, the same reason the program flash fields moved
+ * into ACF (includes/ipo-program-flash.php). Once created, the group is an
+ * ordinary ACF field group: it shows under ACF -> Field Groups and is edited
+ * there. Delete the option ipo_season_lobby_fields_created to create it again.
+ */
+const IPO_SL_FIELDS_CREATED = 'ipo_season_lobby_fields_created';
 
-	if ( ! function_exists( 'acf_add_local_field_group' ) ) {
+add_action( 'admin_init', 'ipo_sl_create_field_group' );
+function ipo_sl_create_field_group() {
+
+	if ( get_option( IPO_SL_FIELDS_CREATED ) || ! current_user_can( 'manage_options' ) || ! function_exists( 'acf_import_field_group' ) ) {
 		return;
 	}
+
+	update_option( IPO_SL_FIELDS_CREATED, 1, false );
+
+	// Already there (created by hand or by an earlier run): leave it as it is.
+	if ( acf_get_field_group( 'group_ipo_season_lobby' ) ) {
+		return;
+	}
+
+	acf_import_field_group( ipo_sl_field_group() );
+}
+
+/**
+ * The field group, as ACF imports it.
+ */
+function ipo_sl_field_group() {
 
 	$intro = array(
 		array(
@@ -314,7 +340,7 @@ function ipo_sl_register_fields() {
 		)
 	);
 
-	acf_add_local_field_group( array(
+	return array(
 		'key'                   => 'group_ipo_season_lobby',
 		'title'                 => 'עמוד עונה – כרטיסי אירועים',
 		'fields'                => array_merge( $intro, $featured, $carousel ),
@@ -334,7 +360,7 @@ function ipo_sl_register_fields() {
 		'instruction_placement' => 'label',
 		'hide_on_screen'        => array( 'the_content' ),
 		'active'                => true,
-	) );
+	);
 }
 
 /**

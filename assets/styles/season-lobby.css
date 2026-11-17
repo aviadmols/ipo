@@ -69,13 +69,15 @@
 	margin: 0;
 	font-size: 100px;
 	line-height: 0.95;
-	letter-spacing: 1px;
+	/* The site's big Mandatory headings run about a tenth of the size apart. */
+	letter-spacing: 0.1em;
 }
 
 .ipo-sl-intro__text {
 	flex: 0 1 720px;
-	font-size: 15px;
-	line-height: 1.75;
+	/* The site's body text, as on the program pages. */
+	font-size: 18px;
+	line-height: 1.55;
 	color: #222;
 }
 
@@ -111,7 +113,7 @@
 	margin: 0;
 	font-size: 72px;
 	line-height: 0.9;
-	letter-spacing: 1px;
+	letter-spacing: 0.1em;
 }
 
 .ipo-sl-head__subtitle {
@@ -184,7 +186,8 @@
 	font-variation-settings: "wght" 400, "wdth" 20;
 	font-size: 40px;
 	line-height: 1;
-	letter-spacing: 1px;
+	/* As the artist names on the home page (2px at 40-50px). */
+	letter-spacing: 0.05em;
 }
 
 .ipo-sl-card__artist-role {
@@ -515,8 +518,6 @@
 
 	.ipo-sl-intro__text {
 		flex-basis: auto;
-		font-size: 17px;
-		line-height: 1.75;
 	}
 
 	.ipo-sl-section {

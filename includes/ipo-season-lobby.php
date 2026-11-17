@@ -173,10 +173,10 @@ function ipo_sl_card_fields( $p ) {
 		),
 		array(
 			'key'          => "field_ipo_sl_{$p}_ticket_link",
-			'label'        => 'לינק לרכישת כרטיסים',
+			'label'        => 'לינק לכפתור',
 			'name'         => 'ticket_link',
 			'type'         => 'url',
-			'instructions' => 'ריק = הלינק של האירוע (או של התוכנית, או של מערכת הכרטיסים). לינק כאן מציג תמיד כפתור פעיל, גם כשהאירוע אזל או עבר.',
+			'instructions' => 'ריק = דף התוכנית של האירוע. לינק כאן מציג תמיד כפתור פעיל, גם כשהאירוע אזל או עבר.',
 		),
 	);
 }
@@ -303,9 +303,11 @@ function ipo_sl_move_field_group_under_title() {
  * Put the card fields of a group that already exists in the order
  * ipo_sl_card_fields() lists them, once. In both sections (main grid and
  * carousel), the top title and the two images moved from the override
- * accordion into the event one.
+ * accordion into the event one. Labels and help texts are brought in line with
+ * the code too (the button link field now defaults to the program page). Bump
+ * the option name to run it again after changing a card field.
  */
-const IPO_SL_FIELDS_ORDER = 'ipo_season_lobby_fields_order_2';
+const IPO_SL_FIELDS_ORDER = 'ipo_season_lobby_fields_order_3';
 
 add_action( 'admin_init', 'ipo_sl_reorder_card_fields', 30 );
 function ipo_sl_reorder_card_fields() {
@@ -326,9 +328,20 @@ function ipo_sl_reorder_card_fields() {
 		foreach ( ipo_sl_card_fields( $prefix ) as $wanted ) {
 			$field = acf_get_field( $wanted['key'] );
 
-			if ( $field && ! empty( $field['ID'] ) && (int) $field['menu_order'] !== $order ) {
-				$field['menu_order'] = $order;
-				acf_update_field( $field );
+			// Order, label and help text as in the code.
+			if ( $field && ! empty( $field['ID'] ) ) {
+				$synced = $field;
+
+				$synced['menu_order'] = $order;
+				foreach ( array( 'label', 'instructions' ) as $prop ) {
+					if ( isset( $wanted[ $prop ] ) ) {
+						$synced[ $prop ] = $wanted[ $prop ];
+					}
+				}
+
+				if ( $synced != $field ) { // phpcs:ignore Universal.Operators.StrictComparisons
+					acf_update_field( $synced );
+				}
 			}
 
 			$order++;
@@ -715,8 +728,9 @@ function ipo_sl_event_location( $event_id ) {
  *
  * An override link always gives an active button. Otherwise: sold out shows
  * the event's sold-out text, a past event says so, a program with purchase
- * hidden shows its own note, and the link is the event's, then the program's,
- * then the ticketing system's order page.
+ * hidden shows its own note, and the button opens the program page on this
+ * event (an event with no program goes to its own purchase link, then the
+ * ticketing system's order page).
  */
 function ipo_sl_ticket( $row, $event_id, $program_id ) {
 	$is_en = ipo_sl_is_en();
@@ -745,9 +759,12 @@ function ipo_sl_ticket( $row, $event_id, $program_id ) {
 		return array( '', $note ? $note : ( $is_en ? 'Coming soon' : 'בקרוב' ), false );
 	}
 
-	$url = get_field( 'event_ticket_link', $event_id );
-	if ( ! $url && $program_id ) {
-		$url = get_field( 'ticket_purchase', $program_id );
+	// The program page, opened on this event; tickets are bought from there.
+	$url = $program_id ? add_query_arg( 'event_id', $event_id, get_permalink( $program_id ) ) : '';
+
+	// An event without a program page: straight to its purchase link.
+	if ( ! $url ) {
+		$url = get_field( 'event_ticket_link', $event_id );
 	}
 	if ( ! $url ) {
 		$api_id = get_field( 'event_api_id', $event_id );

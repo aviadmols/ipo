@@ -7,6 +7,7 @@
 
 .ipo-sl {
 	--ipo-sl-panel: #f6f6f6;
+	--ipo-sl-card: #f1f1f1;
 	--ipo-sl-line: #b9b9b9;
 	--ipo-sl-muted: #555;
 	--ipo-sl-gap: 64px;
@@ -133,7 +134,7 @@
 
 .ipo-sl-card {
 	display: flex;
-	background: var(--ipo-sl-panel);
+	background: var(--ipo-sl-card);
 	height: 100%;
 }
 

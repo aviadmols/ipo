@@ -47,6 +47,7 @@ require_once(get_template_directory().'/functions.php');
     require_once get_stylesheet_directory() . '/includes/ipo-donate-links.php';
     require_once get_stylesheet_directory() . '/includes/ipo-event-ticket-link.php';
     require_once get_stylesheet_directory() . '/includes/ipo-season-lobby.php';
+require_once get_stylesheet_directory() . '/includes/ipo-season-lobby-en.php';
     require_once get_stylesheet_directory() . '/includes/ipo-acfe-compat.php';
     require_once get_stylesheet_directory() . '/includes/ipo-related-programs.php';
     require_once get_stylesheet_directory() . '/includes/ipo-related-programs-admin.php';

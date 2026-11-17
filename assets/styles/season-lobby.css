@@ -16,6 +16,13 @@
 	color: #000;
 }
 
+/* English: the site's Additional CSS (Customizer) sets p, headings, span and a
+   to RTL in every language, which right-aligns lines and moves punctuation. */
+[lang="en-US"] .ipo-sl,
+[lang="en-US"] .ipo-sl * {
+	direction: ltr;
+}
+
 .ipo-sl-wrap {
 	max-width: 1800px;
 	margin: 0 auto;

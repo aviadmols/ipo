@@ -783,7 +783,13 @@ function ipo_sl_event_location( $event_id ) {
 	$terms = wp_get_post_terms( $event_id, 'location' );
 
 	if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
-		$term = $terms[0];
+		// In the page's language: an English page can show a Hebrew event (one
+		// without a translation), whose venue term has an English twin.
+		$term_id = (int) apply_filters( 'wpml_object_id', $terms[0]->term_id, 'location', true );
+		$term    = get_term( $term_id, 'location' );
+		if ( ! $term || is_wp_error( $term ) ) {
+			$term = $terms[0];
+		}
 		if ( $term->parent ) {
 			$parent = get_term( $term->parent, 'location' );
 			if ( $parent && ! is_wp_error( $parent ) ) {
@@ -796,6 +802,27 @@ function ipo_sl_event_location( $event_id ) {
 	$location = (string) get_field( 'imported_location', $event_id );
 
 	return trim( str_replace( ',', ', ', $location ) );
+}
+
+/**
+ * The program page, opened on this event. A translation still in draft has no
+ * public page, so its original (which visitors can open) is linked instead.
+ */
+function ipo_sl_program_url( $program_id, $event_id ) {
+	if ( ! $program_id ) {
+		return '';
+	}
+
+	if ( 'publish' !== get_post_status( $program_id ) ) {
+		$default  = apply_filters( 'wpml_default_language', null );
+		$original = $default ? (int) apply_filters( 'wpml_object_id', $program_id, 'program', true, $default ) : 0;
+		if ( ! $original || 'publish' !== get_post_status( $original ) ) {
+			return '';
+		}
+		$program_id = $original;
+	}
+
+	return add_query_arg( 'event_id', $event_id, get_permalink( $program_id ) );
 }
 
 /**
@@ -835,7 +862,7 @@ function ipo_sl_ticket( $row, $event_id, $program_id ) {
 	}
 
 	// The program page, opened on this event; tickets are bought from there.
-	$url = $program_id ? add_query_arg( 'event_id', $event_id, get_permalink( $program_id ) ) : '';
+	$url = ipo_sl_program_url( $program_id, $event_id );
 
 	// An event without a program page: straight to its purchase link.
 	if ( ! $url ) {
@@ -929,7 +956,7 @@ function ipo_sl_card_data( $row, $max_artists ) {
 		'label'           => $label,
 		'image'           => $image,
 		'image_mobile'    => $image_mobile,
-		'link'            => $program_id ? add_query_arg( 'event_id', $event_id, get_permalink( $program_id ) ) : '',
+		'link'            => ipo_sl_program_url( $program_id, $event_id ),
 		'artists'         => $artists,
 		'program_heading' => $program_heading,
 		'pieces'          => $pieces,

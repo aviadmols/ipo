@@ -186,8 +186,8 @@
 	font-variation-settings: "wght" 400, "wdth" 20;
 	font-size: 40px;
 	line-height: 1;
-	/* As the artist names on the home page (2px at 40-50px). */
-	letter-spacing: 0.05em;
+	/* Spaced like the big headings. */
+	letter-spacing: 0.1em;
 }
 
 .ipo-sl-card__artist-role {

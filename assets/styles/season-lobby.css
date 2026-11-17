@@ -91,6 +91,12 @@
 	color: #000;
 }
 
+/* Bottom text: the intro's look. Without a title, the text column sits in the
+   middle of the page grid. */
+.ipo-sl-outro--centered .ipo-sl-intro__grid {
+	justify-content: center;
+}
+
 /* ----------------------------------------------------------- Section head */
 
 .ipo-sl-section {

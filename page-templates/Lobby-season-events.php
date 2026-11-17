@@ -123,6 +123,24 @@ $sections = array(
 
 	<?php endforeach; ?>
 
+	<?php
+	// Bottom text. Without a title, the text sits alone in the middle.
+	$outro_title = get_field( 'sl_outro_title' );
+	$outro_text  = get_field( 'sl_outro_text' );
+	?>
+	<?php if ( $outro_title || $outro_text ) : ?>
+		<section class="ipo-sl-intro ipo-sl-outro<?php echo $outro_title ? '' : ' ipo-sl-outro--centered'; ?>">
+			<div class="ipo-sl-wrap ipo-sl-intro__grid">
+				<?php if ( $outro_title ) : ?>
+					<h2 class="ipo-sl-intro__title"><?php echo esc_html( $outro_title ); ?></h2>
+				<?php endif; ?>
+				<?php if ( $outro_text ) : ?>
+					<div class="ipo-sl-intro__text"><?php echo wp_kses_post( $outro_text ); ?></div>
+				<?php endif; ?>
+			</div>
+		</section>
+	<?php endif; ?>
+
 </div>
 
 <?php get_footer(); ?>

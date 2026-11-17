@@ -350,6 +350,69 @@ function ipo_sl_reorder_card_fields() {
 }
 
 /**
+ * The text at the bottom of the page: a title and a text, like the intro.
+ */
+function ipo_sl_outro_fields() {
+	return array(
+		array(
+			'key'   => 'field_ipo_sl_outro_tab',
+			'label' => 'טקסט תחתון',
+			'type'  => 'tab',
+		),
+		array(
+			'key'          => 'field_ipo_sl_outro_title',
+			'label'        => 'כותרת',
+			'name'         => 'sl_outro_title',
+			'type'         => 'text',
+			'instructions' => 'ריק = בלי כותרת, והטקסט במרכז העמוד.',
+		),
+		array(
+			'key'          => 'field_ipo_sl_outro_text',
+			'label'        => 'טקסט',
+			'name'         => 'sl_outro_text',
+			'type'         => 'wysiwyg',
+			'tabs'         => 'all',
+			'toolbar'      => 'basic',
+			'media_upload' => 0,
+			'instructions' => 'ריק = האזור לא מוצג.',
+		),
+	);
+}
+
+/**
+ * Add the bottom text fields to a group that already exists, once, after its
+ * other fields. A new group gets them from ipo_sl_field_group().
+ */
+const IPO_SL_OUTRO_FIELDS = 'ipo_season_lobby_outro_fields';
+
+add_action( 'admin_init', 'ipo_sl_add_outro_fields', 40 );
+function ipo_sl_add_outro_fields() {
+
+	if ( get_option( IPO_SL_OUTRO_FIELDS ) || ! current_user_can( 'manage_options' ) || ! function_exists( 'acf_update_field' ) ) {
+		return;
+	}
+
+	$group = acf_get_field_group( 'group_ipo_season_lobby' );
+	if ( ! $group || empty( $group['ID'] ) ) {
+		return;
+	}
+
+	update_option( IPO_SL_OUTRO_FIELDS, 1, false );
+
+	$order = count( (array) acf_get_fields( $group ) );
+
+	foreach ( ipo_sl_outro_fields() as $field ) {
+		if ( acf_get_field( $field['key'] ) ) {
+			continue;
+		}
+
+		$field['parent']     = $group['ID'];
+		$field['menu_order'] = $order++;
+		acf_update_field( $field );
+	}
+}
+
+/**
  * The field group, as ACF imports it.
  */
 function ipo_sl_field_group() {
@@ -423,7 +486,7 @@ function ipo_sl_field_group() {
 	return array(
 		'key'                   => 'group_ipo_season_lobby',
 		'title'                 => 'עמוד עונה – כרטיסי אירועים',
-		'fields'                => array_merge( $intro, $featured, $carousel ),
+		'fields'                => array_merge( $intro, $featured, $carousel, ipo_sl_outro_fields() ),
 		'location'              => array(
 			array(
 				array(

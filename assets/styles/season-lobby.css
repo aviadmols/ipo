@@ -310,13 +310,9 @@
 	gap: 72px var(--ipo-sl-gap);
 }
 
-/* A framed poster inside the gray card, about a third of its width. */
 .ipo-sl-card--featured .ipo-sl-card__media {
-	flex: 0 0 34%;
+	flex: 0 0 54%;
 	aspect-ratio: 3 / 4;
-	align-self: flex-start;
-	margin: 28px;
-	margin-inline-end: 0;
 	overflow: hidden;
 }
 
@@ -558,8 +554,6 @@
 	.ipo-sl-card--featured .ipo-sl-card__media {
 		flex: none;
 		aspect-ratio: 5 / 3;
-		align-self: stretch;
-		margin: 0;
 	}
 
 	.ipo-sl-card--featured .ipo-sl-card__body,

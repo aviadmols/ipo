@@ -562,12 +562,21 @@
 		padding: 22px 24px 28px;
 	}
 
-	/* Two artists to a row, on every card. */
+	/* The artists read like the program below them: the heading as its
+	   heading, the name bold like a composer, the instrument like a piece.
+	   Two artists to a row, on every card. */
+	.ipo-sl .ipo-sl-card__small-heading {
+		font-size: 17px;
+		font-weight: 700;
+		line-height: 1.3;
+		margin-bottom: 6px;
+	}
+
 	.ipo-sl-card__artists,
 	.ipo-sl-card--carousel .ipo-sl-card__artists {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 16px 20px;
+		gap: 10px 20px;
 		width: 100%;
 	}
 
@@ -575,13 +584,22 @@
 		margin-top: 0;
 	}
 
-	/* Small enough for a name to fit half the card on one line. */
-	.ipo-sl-card__artist-name {
-		font-size: 30px;
+	.ipo-sl-card__artist-name,
+	.ipo-sl-card--carousel .ipo-sl-card__artist-name {
+		font-family: 'Simpler', sans-serif;
+		font-variation-settings: normal;
+		font-size: 14px;
+		font-weight: 700;
+		line-height: 1.45;
+		letter-spacing: 0;
 	}
 
-	.ipo-sl-card--carousel .ipo-sl-card__artist-name {
-		font-size: 26px;
+	.ipo-sl-card__artist-role,
+	.ipo-sl-card--carousel .ipo-sl-card__artist-role {
+		font-size: 14px;
+		font-weight: 300;
+		line-height: 1.45;
+		margin-top: 0;
 	}
 
 	.ipo-sl .ipo-sl-card__btn {

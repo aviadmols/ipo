@@ -625,6 +625,18 @@ function ipo_sl_carousel_script() {
 				prev.innerHTML = isEn ? arrowLeft : arrowRight;
 				next.innerHTML = isEn ? arrowRight : arrowLeft;
 			});
+			// Stop at the first and last card. Splide otherwise lets a swipe pull
+			// past the edge, showing an empty white strip until it springs back.
+			splide.on('dragging', (function (s) {
+				return function () {
+					var move = s.Components.Move;
+					if (move.exceededLimit(false)) {
+						move.translate(move.getLimit(false));
+					} else if (move.exceededLimit(true)) {
+						move.translate(move.getLimit(true));
+					}
+				};
+			})(splide));
 			splide.mount();
 		}
 	}

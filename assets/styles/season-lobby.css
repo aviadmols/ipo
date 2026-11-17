@@ -562,16 +562,26 @@
 		padding: 22px 24px 28px;
 	}
 
+	/* Two artists to a row, on every card. */
+	.ipo-sl-card__artists,
+	.ipo-sl-card--carousel .ipo-sl-card__artists {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 16px 20px;
+		width: 100%;
+	}
+
+	.ipo-sl-card--featured .ipo-sl-card__artists li + li {
+		margin-top: 0;
+	}
+
+	/* Small enough for a name to fit half the card on one line. */
 	.ipo-sl-card__artist-name {
-		font-size: 36px;
+		font-size: 30px;
 	}
 
 	.ipo-sl-card--carousel .ipo-sl-card__artist-name {
 		font-size: 26px;
-	}
-
-	.ipo-sl-card--featured .ipo-sl-card__artists li + li {
-		margin-top: 16px;
 	}
 
 	.ipo-sl .ipo-sl-card__btn {

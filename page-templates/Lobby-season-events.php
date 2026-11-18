@@ -87,7 +87,7 @@ $sections = array(
 							<h2 class="ipo-sl-head__title"><?php echo esc_html( $title ); ?></h2>
 						<?php endif; ?>
 						<?php if ( $subtitle ) : ?>
-							<p class="ipo-sl-head__subtitle"><?php echo wp_kses( $subtitle, array( 'br' => array() ) ); ?></p>
+							<div class="ipo-sl-head__subtitle"><?php echo wp_kses_post( $subtitle ); ?></div>
 						<?php endif; ?>
 					</div>
 				<?php endif; ?>

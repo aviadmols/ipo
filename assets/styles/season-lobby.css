@@ -146,6 +146,22 @@
 	padding-bottom: 4px;
 }
 
+.ipo-sl-head__subtitle p {
+	margin: 0 0 0.5em;
+	font-size: inherit;
+	line-height: inherit;
+	color: inherit;
+}
+
+.ipo-sl-head__subtitle p:last-child {
+	margin-bottom: 0;
+}
+
+.ipo-sl-head__subtitle strong,
+.ipo-sl-head__subtitle b {
+	font-weight: 700;
+}
+
 /* -------------------------------------------------------------------- Card */
 
 .ipo-sl-card {

@@ -416,6 +416,46 @@ function ipo_sl_add_outro_fields() {
 }
 
 /**
+ * Turn the section subheadings of a group that already exists into a basic
+ * editor (so words can be set in bold), once. The group lives in the database,
+ * so changing ipo_sl_section_fields() alone only affects a new group.
+ */
+const IPO_SL_SUBTITLE_EDITOR = 'ipo_season_lobby_subtitle_editor';
+
+add_action( 'admin_init', 'ipo_sl_subtitle_to_editor', 50 );
+function ipo_sl_subtitle_to_editor() {
+
+	if ( get_option( IPO_SL_SUBTITLE_EDITOR ) || ! current_user_can( 'manage_options' ) || ! function_exists( 'acf_update_field' ) ) {
+		return;
+	}
+
+	if ( ! acf_get_field_group( 'group_ipo_season_lobby' ) ) {
+		return;
+	}
+
+	update_option( IPO_SL_SUBTITLE_EDITOR, 1, false );
+
+	foreach ( array( 'sl_featured', 'sl_carousel' ) as $prefix ) {
+		$key   = "field_ipo_sl_{$prefix}_subtitle";
+		$field = acf_get_field( $key );
+		if ( ! $field || empty( $field['ID'] ) || 'wysiwyg' === $field['type'] ) {
+			continue;
+		}
+
+		foreach ( ipo_sl_section_fields( $prefix, '', array( 'title' => '', 'subtitle' => '', 'max_artists' => 0, 'artists_heading' => '' ) ) as $wanted ) {
+			if ( $key !== $wanted['key'] ) {
+				continue;
+			}
+			unset( $field['rows'], $field['new_lines'], $field['maxlength'], $field['placeholder'], $field['acfe_textarea_code'] );
+			foreach ( array( 'type', 'tabs', 'toolbar', 'media_upload', 'delay', 'instructions' ) as $prop ) {
+				$field[ $prop ] = $wanted[ $prop ];
+			}
+			acf_update_field( $field );
+		}
+	}
+}
+
+/**
  * The field group, as ACF imports it.
  */
 function ipo_sl_field_group() {

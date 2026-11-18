@@ -715,7 +715,8 @@ function ipo_sl_program_artists( $program_id, $max ) {
 		$role = get_field( 'artist_role_override', $artist_id );
 		if ( ! $role ) {
 			$terms = get_the_terms( $artist_id, 'artist_role' );
-			$role  = is_array( $terms ) ? implode( ', ', wp_list_pluck( $terms, 'name' ) ) : '';
+			// Once each: some artists carry the same role twice ("pianist, pianist").
+			$role = is_array( $terms ) ? implode( ', ', array_unique( wp_list_pluck( $terms, 'name' ) ) ) : '';
 		}
 
 		$artists[] = array(
@@ -805,24 +806,25 @@ function ipo_sl_event_location( $event_id ) {
 }
 
 /**
- * The program page, opened on this event. A translation still in draft has no
- * public page, so its original (which visitors can open) is linked instead.
+ * The program page, opened on this event. Always the program page, never the
+ * purchase page: a program not published yet gets the address it will have
+ * once it is (it answers 404 to visitors until then).
  */
 function ipo_sl_program_url( $program_id, $event_id ) {
-	if ( ! $program_id ) {
+	$post = $program_id ? get_post( $program_id ) : null;
+	if ( ! $post ) {
 		return '';
 	}
 
-	if ( 'publish' !== get_post_status( $program_id ) ) {
-		$default  = apply_filters( 'wpml_default_language', null );
-		$original = $default ? (int) apply_filters( 'wpml_object_id', $program_id, 'program', true, $default ) : 0;
-		if ( ! $original || 'publish' !== get_post_status( $original ) ) {
-			return '';
+	if ( 'publish' !== $post->post_status ) {
+		$post              = clone $post;
+		$post->post_status = 'publish';
+		if ( '' === $post->post_name ) {
+			$post->post_name = sanitize_title( $post->post_title, (string) $post->ID );
 		}
-		$program_id = $original;
 	}
 
-	return add_query_arg( 'event_id', $event_id, get_permalink( $program_id ) );
+	return add_query_arg( 'event_id', $event_id, get_permalink( $post ) );
 }
 
 /**

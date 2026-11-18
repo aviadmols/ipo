@@ -23,6 +23,15 @@
 	direction: ltr;
 }
 
+/* English: everything in the display font (Mandatory) in capitals. On mobile
+   the intro title and the carousel artists switch to Simpler, and stay as
+   typed (see the mobile section). */
+[lang="en-US"] .ipo-sl .ipo-sl-intro__title,
+[lang="en-US"] .ipo-sl .ipo-sl-head__title,
+[lang="en-US"] .ipo-sl .ipo-sl-card__artist-name {
+	text-transform: uppercase;
+}
+
 .ipo-sl-wrap {
 	max-width: 1800px;
 	margin: 0 auto;
@@ -616,6 +625,12 @@
 		font-weight: 300;
 		line-height: 1.45;
 		margin-top: 0;
+	}
+
+	/* English capitals are for the display font only. */
+	[lang="en-US"] .ipo-sl .ipo-sl-intro__title,
+	[lang="en-US"] .ipo-sl .ipo-sl-card--carousel .ipo-sl-card__artist-name {
+		text-transform: none;
 	}
 
 	.ipo-sl .ipo-sl-card__btn {
